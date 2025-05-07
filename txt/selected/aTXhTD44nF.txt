@@ -1,0 +1,2208 @@
+USDC: A Dataset of User Stance and Dogmatism in
+Long Conversations
+Anonymous Author(s)
+Affiliation
+Address
+email
+Submission Title: Capitalism vs. Socialism
+Submission Body: What are your thoughts on capitalism vs. socialism ? I feel socialism is 
+somewhat better. Which system do you think is better and why?
+𝑐𝑐1: I believe capitalism drives innovation and economic growth. It rewards hard work and creativity.
+𝑐𝑐2: But capitalism also leads to income inequality and can neglect social welfare.
+𝑐𝑐3: True, but socialism can stifle innovation & lead to inefficiencies. There's a balance to be found.
+𝑐𝑐5: A mixed economy that combines elements of both systems might be the best approach. What do 
+you all think?
+𝑐𝑐4: Agreed. Capitalism inherently nurtures innovation and efficiency. Socialism often suffers from 
+bureaucratic red tape and lack of competition.
+𝑐𝑐6: I appreciate your perspective, but now I feel that capitalism, when allowed to operate with 
+minimal interference, has consistently proven to drive innovation, efficiency, and economic growth.
+𝑎𝑎1
+𝑎𝑎2
+𝑎𝑎1
+𝑎𝑎2
+𝑎𝑎1
+𝑎𝑎3
+𝑎𝑎1
+𝐜𝐜𝟏𝟏 𝐜𝐜𝟐𝟐 𝐜𝐜𝟑𝟑 𝐜𝐜𝟒𝟒 𝐜𝐜𝟓𝟓 𝒄𝒄𝟔𝟔
+Mistral 
+Large
+Strongly 
+Against
+Somewhat 
+In Favor
+Somewhat 
+Against
+Somewhat 
+Against
+Stance Not 
+Inferrable
+Strongly In 
+Favor
+GPT4 Strongly 
+Against
+Somewhat 
+In Favor
+Somewhat 
+Against
+Strongly 
+Against
+Stance Not 
+Inferrable
+Somewhat 
+In Favor
+𝒂𝒂𝟏𝟏 𝒂𝒂𝟐𝟐 𝒂𝒂𝟑𝟑
+Mistral 
+Large
+Firm But 
+Open
+Open To 
+Dialogue Flexible
+GPT4 Firm But 
+Open
+Open To 
+Dialogue Flexible
+Stance
+Dogmatism
+Figure 1: Sample Reddit conversation on “Capitalism vs. Socialism” with Stance (for every comment
+{ci}6
+i=1) and Dogmatism (for every author {aj }3
+j=1) labels from Mistral Large and GPT-4. The
+submission content favors to socialism and examines how the authors position their opinions regarding
+socialism vs. capitalism.
+Abstract
+Identifying user’s opinions and stances in long conversation threads on various1
+topics can be extremely critical for enhanced personalization, market research,2
+political campaigns, customer service, conflict resolution, targeted advertising and3
+content moderation. Hence, training language models to automate this task is4
+critical. However, to train such models, gathering manual annotations has multiple5
+challenges: 1) It is time-consuming and costly; 2) Conversation threads could be6
+very long, increasing chances of noisy annotations; and 3) Interpreting instances7
+where a user changes their opinion within a conversation is difficult because often8
+such transitions are subtle and not expressed explicitly. Inspired by the recent9
+success of large language models (LLMs) for complex natural language process-10
+ing (NLP) tasks, we leverage Mistral Large and GPT-4 to automate the human11
+annotation process on the following two tasks while also providing reasoning: i)12
+User Stance classification, which involves labeling a user’s Stance of a post in a13
+conversation on a five-point scale; ii) User Dogmatism classification, which deals14
+with labeling a user’s overall opinion in the conversation on a four-point scale. The15
+majority voting on zero-shot, one-shot, and few-shot annotations from these two16
+LLMs on 764 multi-user Reddit conversations helps us curate the USDC dataset.17
+USDC is then used to finetune and instruction-tune multiple deployable small18
+Submitted to 38th Conference on Neural Information Processing Systems (NeurIPS 2024). Do not distribute.
+
+language models for the 5-class stance and 4-class dogmatism classification tasks.19
+We make the code and dataset publicly available1.20
+.21
+1 Introduction22
+Understanding the user’s (or author’s) opinion in a conversation is a fundamental aspect of successful23
+interpersonal interactions, and it is essential for developing better interpersonal communication skills,24
+empathy development, and informed decision-making. This user understanding is particularly relevant25
+in the context of dogmatism, a phenomenon observed in various areas such as politics, religion,26
+culture, intellect, and science, where rigid adherence to beliefs often hinders open-mindedness and27
+empathy (Rokeach, 1954). Advertisers can target their campaigns more effectively by aligning28
+with the opinions and stances of potential customers. Companies can use this information for29
+market research to tailor products and services to meet consumer needs and preferences. Political30
+groups can gauge public reaction to policies and campaigns and adjust their strategies accordingly.31
+Identifying differing opinions can help conflict resolution by understanding the perspectives of all32
+parties’ perspectives. Society can promote tolerance and maintain social harmony by recognizing and33
+respecting diverse opinions.34
+Fig. 1 shows a sample Reddit conversation on the topic of Capitalism vs. Socialism. We refer to an35
+author’s initial post (containing title and body) as a submission. Multiple authors can then share their36
+opinions as comments on the submission. Specifically this example contains 6 comments {ci}6
+i=137
+from 3 authors {aj }3
+j=1. We also show stance and dogmatism predictions from two large language38
+models (LLMs): Mistral Large and GPT-4. Some authors like a1 change their views during the39
+discussion based on the beliefs or opinions of others. At the beginning of the dialogue, we note that40
+author a1 is somewhat favoring socialism (in submission and c2). But the author shifts their stance41
+to somewhat favors capitalism (in c4) after considering the viewpoints of author a2 in comments c142
+and c3, illustrating author a1’s firm yet open-minded approach. On the other hand, author a3 seems43
+very flexible based on their comment c5. Understanding conversations requires understanding the44
+fine-grained topics being discussed and the dynamic viewpoints of the individual users.45
+Given the importance of understanding these user dynamics in conversations, training language46
+models to perform this task automatically at scale is critical. While numerous datasets are available47
+for analyzing individual user posts (Fast & Horvitz, 2016; Sakketou et al., 2022), typically through48
+random subsampling of posts or selecting posts with a limited number of tokens, the exploration of a49
+specific user’s opinion across each post within an entire conversational thread remains under-explored.50
+Crowdsourcing is one possible approach to address the need for a suitable dataset. However, a51
+significant limitation in manually annotating datasets for user opinions is the time-consuming nature52
+of the process, as annotators must read entire conversations to label each user’s post, making data53
+acquisition costly. Additionally, manual annotation often faces challenges related to quality, as accu-54
+rately labeling opinions requires understanding demographic details and domain-specific knowledge.55
+Given these limitations, achieving a comprehensive and accurate set of user opinions corresponding56
+to posts about a topic often requires multiple annotators or iterative rounds of annotation. Since users57
+could change their opinion (often times with subtle transitions and not with explicit statements) within58
+a conversation, tracking such changes across multiple users manually becomes very cumbersome.59
+Recently, large language models (LLMs), especially those built on Transformer architectures (Vaswani60
+et al., 2017) and pretrained on large datasets, have resulted in state-of-the-art accuracies on several61
+complex natural language processing (NLP) tasks (Brown et al., 2020; Chung et al., 2024). LLMs62
+are also being frequently used for dialog response generation (Zhang et al., 2020; Bao et al., 2019;63
+Roller et al., 2021; Adiwardana et al., 2020). Given the complex and cumbersome nature of con-64
+versation understanding, we hypothesize that LLMs can be effective in capturing nuances involved65
+in understanding user opinions and their shifts in multi-user conversational contexts. Also, since66
+these models possess long-range memory capabilities, we believe that they can reason over extended67
+conversational threads involving numerous participants, as good as human annotators, if not better.68
+In this work, we leverage LLMs like Mistral Large and GPT-4 to perform two tasks: i) User Stance69
+classification, which involves labeling a user’s stance of a post in a conversation on a five-point70
+1https://anonymous.4open.science/r/USDC-0F7F
+2
+
+Figure 2: Generating annotations using LLMs: We pass the entire conversation for each Reddit thread
+in JSON format. The JSON highlights the top two authors who posted the most comments, alongside
+annotation guidelines for stance and dogmatism labels in the system prompt.
+scale; ii) User Dogmatism classification, which deals with labeling a user’s overall opinion in71
+the conversation on a four-point scale. Besides the class labels, we also obtain reasoning behind72
+these labels from these LLMs. We experiment with these two models as human-like annotators to73
+generate user opinions in full-length, multi-user Reddit conversations in a zero-shot, one-shot as74
+well as few-shot setup. Thus, overall for every sample, we obtain six annotations ({Mistral Large,75
+GPT-4}×{zero-shot, one-shot, few-shot}). Fig. 2 presents our LLM-based annotation pipeline for76
+user-level Stance and Dogmatism tasks. We consider majority voting over these six as our final77
+annotations. Overall, this helps us curate our USDC (a dataset of user stance and dogmatism in78
+conversations) dataset, which consists of 764 multi-user conversations from 22 subreddits, including79
+1,528 user-level dogmatism samples and 9,618 stance samples across all posts from selected users.80
+Overall, the annotations in the dataset highlight specific user opinions in each post related to stance,81
+track opinion fluctuations leading to a dogmatic nature, and provide reasoning about why users hold82
+specific opinions.83
+USDC addresses several weaknesses of existing post-level stance and dogmatism datasets. First, the84
+full-length multi-user conversation aspect of USDC enables it to capture contextual and opinion shifts85
+of multiple users. This feature allows it to serve as both an instruction-tuning user opinion dataset and86
+an evaluation benchmark. We believe that the ability to perform instruction tuning for user opinions87
+at a large scale can bridge the gap between open-source and commercial user trait understanding88
+models. Additionally, the in-context learning annotations using state-of-the-art LLMs in USDC make89
+it a more comprehensive measure of how current LLMs understand complex tasks like capturing90
+opinions. This aspect makes it a valuable resource, especially for social media agents seeking deeper91
+insights into user behavior.92
+In this work, we utilize our USDC dataset to finetune as well as instruction-tune open-source LLMs93
+for generating stance and dogmatism labels for users. We experiment with three pretrained small94
+language models (SLMs) like LLaMA-2-7B, LLaMA-3-8B, and Falcon-7B. We also experiment with95
+four instruction-tuned SLMs like LLaMA-2-chat-7B, LLaMA-3-8B-instruct, Vicuna-7B-v.1.5, and96
+Falcon-7B-instruct. We report weighted F1 scores obtained using these models for both the tasks.97
+We make the following contributions: 1) We contribute USDC (a dataset ofuser stance and dogmatism98
+in conversations) dataset consisting of 764 multi-user conversations labeled with 1,528 user-level99
+dogmatism samples and 9,618 stance samples. 2) We report initial results for the stance and100
+dogmatism detection tasks using seven small language models for the UDSC dataset. We find that101
+stance detection performance improves with instruction-tuning (F1-score of 56.2) compared to fine-102
+tuning (F1-score of 54.9). However, dogmatism detection performs worse with instruction-tuning103
+(F1-score of 49.2) compared to fine-tuning (F1-score of 51.4), highlighting the complexity of this104
+task. 3) We make the code and dataset publicly available1. Also, the finetuned and instruction-tuned105
+models are made available as well.106
+3
+
+2 Related Work107
+Opinion fluctuations in user conversations. Our work is closely related to previous studies (Fast108
+& Horvitz, 2016; Sakketou et al., 2022), which explore Stance and Dogmatism at the post level,109
+where posts are randomly sampled from conversation threads. Fast & Horvitz (2016) predicted user110
+dogmatism on randomly sampled Reddit posts from conversations, with each post limited to 200-300111
+characters. One major limitation of this work is the unavailability of a public dataset and missing112
+annotator demographic details. Sakketou et al. (2022) created the post-level Stance dataset, SPINOS,113
+where each post is considered independent, and submission posts are missing while annotators label114
+the data. Additionally, the quality of the dataset is not validated due to missing demographic details115
+of these annotators. Our work overcomes the limitations of previous studies and presents Stance116
+detection for posts and Dogmatism labels of users in conversations, considering the entire context,117
+while preserving submission IDs. Hence, our dataset provides clear user-level posts and dogmatism118
+data, which are useful for modeling dynamic user representations.119
+Generating annotations for NLP tasks using Large Language Models Our work also relates to a120
+growing body of literature suggesting that large language models can perform similarly to human121
+annotators in labeling complex NLP tasks (Zhou et al., 2022; Zhang et al., 2023; Bansal & Sharma,122
+2023; Lowmanstone et al., 2023; Wadhwa et al., 2023; Honovich et al., 2023; Zheng et al., 2024; Ye123
+et al., 2022a; Meng et al., 2022). Several studies have explored LLM-based annotation generation124
+in zero-shot or few-shot task settings (Ye et al., 2022a; Meng et al., 2022; Ye et al., 2022b), while125
+others have compared pairs of language models to assess the quality of annotations generated by126
+these LLMs (Zheng et al., 2024). However, these studies focused on generating annotations for NLP127
+tasks such as sentiment analysis, natural language inference (Gilardi et al., 2023; Alizadeh et al.,128
+2023), or creating synthetic dialogues, but only for dyadic conversations (Lee et al., 2023). Our129
+approach complements these previous studies by focusing on generating annotations of user opinions130
+in complex multi-user conversations.131
+3 USDC Dataset Curation132
+In this section, we will discuss three main things: 1) Collection of Reddit conversations, 2) Obtaining133
+LLM annotations, and 3) Inter-annotator agreement with LLMs as annotators.134
+3.1 Collection of Reddit Conversation Threads135
+Initial crawl. We crawl an year (2022) worth of multi-user conversation data from 22 subreddits of136
+Reddit 2 using praw API 3. This dataset includes submissions and all associated user comments. Each137
+submission, which serves as the initial message of the conversation, contains a title and content body.138
+This is followed by comments and replies to the submission or other comments. Overall, we crawled139
+3,619 Reddit conversations across the 22 subreddits. A sample Reddit conversation is displayed in140
+Fig. 1.141
+Quality filtering of conversations. Since submission content on Reddit can sometimes include142
+videos, we perform the following filtering steps. 1) We only consider submissions where the content is143
+text. 2) We remove conversations with [deleted] tags and empty content. 3) We exclude conversations144
+where the posts were either discarded by users or removed by moderators.145
+Reddit user conversations can be very long and we observed up to 591 comments in a single crawled146
+conversation data. Considering the maximum sequence length allowed by various language models,147
+we retained only those conversations that contain at least 20 and at most 70 comments. Considering148
+conversations with fewer than 20 comments results in too few comments to accurately gauge user149
+opinions based on small samples. Further, we ensure that at least two users covering ∼50% of the150
+comments in the conversations. We did not remove any comments or reduce the post length in the151
+selected conversations. Out of the initial 3,619 conversations, these filtering steps result into 764152
+conversations getting selected. Table. 4 in the Appendix shows detailed subreddit level statistics.153
+2https://www.reddit.com/
+3https://github.com/praw-dev/praw
+4
+
+Submission ID: drq2co
+𝑎𝑎1 IDs: {'f6laqfs' , 'f6mr52d' , 'f6l9r75' , 'f6mmzx1' , 'f6mna88'}
+𝑎𝑎2 IDs: {'drq2co' , 'f6lijhv' , 'f6li730' , 'f6li2n3' , 'f6liboo'}
+'id': 'f6laqfs' , 'label': 'somewhat_against'
+'id': 'f6mr52d' , 'label': 'somewhat_against'
+'id': 'f6l9r75' , 'label': 'somewhat_against'
+'id': 'f9mmzx1' , 'label': 'stance_not_inferrable'
+'id': 'f9mna88' , 'label': 'stance_not_inferrable'
+'id': 'drq2co' , 'label': 'somewhat_against',
+'id': 'f6lijhv' , 'label': 'somewhat_against'
+'id': 'f6li730' , 'label': 'stance_not_inferrable'
+'id': 'f6li2n3' , 'label': 'stance_not_inferrable'
+'id': 'f6liboo' , 'label': 'somewhat_against'
+Submission ID: e8ja1o
+𝑎𝑎1 IDs: {'fad308g' , 'fad7y5w' , 'fad8t5b' , 'fad33tu' , 'fad2weo'}
+𝑎𝑎2 IDs: {'fadk1jm' , 'fadjycs' , 'fadk08d'}
+'id': 'fad308g' , 'label': 'somewhat_in_favor'
+'id': 'fad7y5w' , 'label': 'somewhat_in_favor’
+'id': 'fad8t5b' , 'label': 'somewhat_in_favor'
+'id': 'fad33tu' , 'label': 'strongly_against’
+'id': 'fad2weo' , 'label': 'somewhat_in_favor'
+'id': 'fadk1jm' , 'label': 'strongly_against'
+'id': 'fadjycs' , 'label': 'strongly_against'
+'id': 'fadk08d' , 'body': 'stance_not_inferrable'
+𝑎𝑎1
+𝑎𝑎2
+𝑎𝑎1
+𝑎𝑎2
+Figure 3: Failure cases of LLMs: Mistral Large few-shot output (left), the ids (“f6mmzx1”,“f6mna88”)
+were mismatched with generated ids (“f9mmzx1”,“f9mna88”), GPT-4 zero-shot output (right), the
+key “label” was mismatched with generated key “body”.
+3.2 Obtaining LLM Annotations154
+Representing Reddit conversations in JSON format.155
+To create the prompt, we follow the nested hierarchical structure of Reddit conversations to maintain156
+the context. Specifically, we maintain a JSON structure for each conversation, where each author has157
+their post IDs, and comments or replies are available in the body section. An example of a Reddit158
+conversation in JSON format is provided in Appendix D. Note that the JSON explicitly includes the159
+top-2 authors who posted the most comments in the conversation, as well as their respective post IDs.160
+Our emphasis on these top-2 users (covering 47% posts of total posts on average) aimed at accurately161
+assigning Stance and Dogmatism labels, acknowledging the challenge of modeling a user’s opinion162
+belief based on a very number of posts within a conversation.163
+Using LLMs as human-like annotators. To annotate the position (or Stance) of a user towards a164
+subreddit topic at each post and the overall opinion (or Dogmatism level) of a user in a conversation,165
+we employ two well-known commercialized API-based LLMs: GPT-4 (OpenAI, 2023) and Mistral166
+Large (Jiang et al., 2024). OpenAI GPT-4 is a decoder-based language model which features a context167
+window of 32k to 128k tokens. Mistral Large features a context window of 32k tokens. Additionally,168
+we also examined other versions of these models, such as GPT-3.5 and Mistral-small and medium,169
+but found that these models failed to produce annotations in the desired format. We briefly discuss170
+these limitations in Section 6.171
+For both GPT-4 and Mistral Large, we supplied a system prompt that contains the definition of Stance172
+and Dogmatism, guidelines for annotating each user conversation, and the necessary labels for Stance173
+and Dogmatism, as shown in Fig 2. The system prompt is detailed in the Appendix B. Along with the174
+system prompt, we provided a user prompt comprising the entire user conversation in a structured175
+JSON format, as discussed above. Additionally, we prompted the model to generate reasoning for176
+each label, explaining why the LLMs assigned a particular label to a specific user post. We used177
+zero-shot, one-shot, and few-shot settings to get the LLM-based annotations. For the few-shot setting,178
+we added two examples in the prompt. Samples of generated outputs using GPT-4 in zero-shot,179
+one-shot, and few-shot settings are shown in Appendix E.1, E.2, E.3 respectively. Similarly, samples180
+of generated outputs using Mistral Large in zero-shot, one-shot, and few-shot settings are shown in181
+Appendix E.4, E.5, E.6 respectively.182
+Annotation tasks. We prompt the LLMs to perform two annotation tasks: 1) Stance detection, which183
+determines if a user comment or post is Strongly In Favor, Strongly Against, Stance Not Inferrable,184
+Somewhat In Favor, or Somewhat Againsttowards specific subreddit submission content; 2) Dog-185
+matism identification, which evaluates the user’s overall opinion in conversation and categorizes186
+them into one of four categories: Firm but Open, Open to Dialogue, Flexible or Deeply Rooted.187
+This assessment reveals whether a user is open to changing their beliefs or remains steadfast in their188
+opinions based on interactions with other users.189
+Addressing LLM response and JSON parsing failures. Sometimes the LLMs got confused with190
+the author IDs and missed Stance labels for some author IDs (Fig. 3 (left)). Sometimes, there were191
+minor errors in key naming (‘label’ vs ‘body’ in Fig. 3 (right)). For each LLM setting, we observed192
+5
+
+0
+500
+1000
+1500
+2000
+2500
+3000Frequency
+Stance
+Somewhat In Favor
+Stance Not Inferrable
+Somewhat Against
+Strongly Against
+Strongly In Favor
+0
+100
+200
+300
+400
+500
+600Frequency
+Dogmatism
+Open to Dialogue
+Firm but Open
+Deeply Rooted
+Flexible
+Figure 4: Distribution of class labels for Stance (left) and Dogmatism (right) tasks. These class labels
+are determined by majority voting across GPT-4 and Mistral Large models.
+such errors in around 15 cases on average. We manually fixed such JSON parse errors and missing193
+Stance labels for some author IDs.194
+Majority voting. After obtaining six annotations ({Mistral Large, GPT-4}×{zero-shot, one-shot,195
+few-shot}) for each sample, we aggregate using majority voting to determine the final gold annotations196
+for the Stance and Dogmatism tasks. Fig. 4 presents the class distributions for both the annotation197
+tasks. Additionally, we present the class distributions obtained from each model with the three198
+settings (zero-shot, one-shot and few-shot) for two tasks in Appendix Figs. 5 and 6 respectively.199
+3.3 Inter-annotator Agreement with LLMs as Annotators200
+As the quality of labeling on subjective tasks is challenging, we validated the inter-annotator agree-201
+ment (IAA) between the six LLMs (GPT-4 Zero-shot, GPT-4 One-shot, GPT-4 Few-shot, Mistral202
+Large Zero-shot, Mistral Large One-shot, and Mistral Large Few-shot) for the Stance as well as203
+Dogmatism tasks. We perform IAA using two approaches: i) Cohen’s kappa score (Cohen, 1960)204
+and ii) Fleiss’ kappa score (Fleiss, 1971). Cohen’s kappa measures the agreement between two raters,205
+while Fleiss’ kappa extends this to multiple raters. Hence, we employed Cohen’s kappa for pairwise206
+comparisons and Fleiss’ kappa for overall agreement across all models.207
+Fig. 7 in Appendix shows the pairwise Cohen’s kappa values for both Stance and Dogmatism tasks.208
+We observe that Cohen’s kappa values range from 0.36 to 0.72 for Stance and 0.31 to 0.61 for209
+dogmatism, indicating moderate agreement between the models. Broadly kappa values are higher for210
+model pairs within a family (GPT-4 or Mistral large). Thus, the large variance in the kappa scores211
+is not due to the various in-context learning settings (ZS, OS, FS) but rather due to architectural212
+differences.213
+The overall Fleiss’ kappa value was calculated as 0.485 for Stance and 0.435 for Dogmatism,214
+suggesting moderate agreement among all six models. Comparing LLM IAA with previous studies,215
+we observe that for dogmatism, the LLM IAA of 0.435 matches with 0.44 as mentioned in Fast &216
+Horvitz (2016). Similarly, for Stance, the LLM IAA of 0.485 is much higher than 0.34 as reported217
+in Sakketou et al. (2022). It is important to note that previous studies on Stance and Dogmatism218
+datasets were created on post-level data with limited token lengths, whereas our work focuses on219
+entire user conversations. This suggests that LLMs can be considered as competent annotators220
+for complex subjective tasks. However, the moderate agreement levels indicate potential areas for221
+improvement and align with the observed performance variations among the models.222
+4 Training Small Language Models223
+In this section, we briefly discuss the small language models that we experiment with. We also224
+discuss their finetuning and instruction tuning details.225
+6
+
+4.1 Small Language Models226
+we train three pretrained small language models (LLaMA-2-7B, LLaMA-3-8B, Falcon-7B) and227
+four instruction-tuned small language models (LLaMA-2-chat-7B, LLaMA-3-8B-instruct, Vicuna-228
+7B-v.1.5, and Falcon-7B-instruct). We finetune as well as instruction tune these models using the229
+proposed USDC dataset. We use pretrained models checkpoints from Hugging Face. All of these230
+LLMs have context length of 4096 tokens.231
+LLaMA models (Touvron et al., 2023a) are decoder-only LLMs trained on 1.6 trillion tokens from a232
+mixture of corpora including C4, English CommonCrawl, Wikipedia, Github, and more. We use two233
+versions of models in our study: LLaMa-2-7B (Touvron et al., 2023b) and LLaMa-3-8B and their234
+instruction tuned variants.235
+Falcon models (Almazrouei et al., 2023) are decoder-only LLMs trained on ≥ 1 trillion tokens of236
+text, with a particular emphasis on the RefinedWeb corpus. For Falcon, we use both the pretrained237
+and instruction tuned 7B parameter variants in our study.238
+Vicuna model (Chiang et al., 2023) is finetuned from the LLaMA 7B model on approximately 70K239
+user-shared conversations gathered from ShareGPT.com and we used the 7B parameter variants.240
+4.2 Experimental Setup241
+Train-test setup. We conducted both finetuning and instruction-tuning of small language models. For242
+this purpose, we divided the dataset of 764 conversations into train (∼ 75%) and test splits (∼ 25%).243
+The training dataset comprised 564 conversations, including 1128 samples of Dogmatism labels and244
+7520 samples of Stance labels. Conversely, the testing dataset consisted of 200 conversations, with245
+400 samples of Dogmatism labels and 1831 samples of Stance labels across two authors posts.246
+Implementation details for reproducibility.All experiments were conducted on a machine equipped247
+with an NVIDIA A100 GPU with 80 GB of GPU RAM, partitioned into two devices of 40 GB248
+each. We employed 4-bit quantization with normalized floating precision (nf4) from the bitsandbytes249
+library 4. Additionally, we utilized LoRA (Hu et al., 2021) with a rank of 64 and an alpha value of250
+16 during task-based instruction tuning. Finally, we use PEFT (Parameter Efficient Finetuning) 5251
+library to train large language models with SFTT (Supervised Finetuning Trainer) setting. To further252
+enhance performance, we divided the training dataset into a validation set, comprising a randomly253
+chosen 10% subset from the training set, used exclusively for hyperparameter tuning. More details254
+about bitsandbytes, PEFT and SFTT parameters are reported in Appendix.255
+4.3 Finetuning and Instruction Tuning of Small Language Models (SLMs)256
+Finetuning of SLMs. For Stance classification, we treat each user post as an independent sample. In257
+contrast, for Dogmatism classification, we consider the entire user conversation as a single sample258
+by concatenating all the threads from a user in that conversation. To load the pretrained SLMs, we259
+perform 4-bit quantization, apply the LoRA technique (Hu et al., 2021), and fine-tune the models with260
+SFTT before saving the fine-tuned model. For finetuning, we used prompt for Stance classification as261
+shown in Fig. 8 (see Appendix). Similarly, Fig. 9 (see Appendix) displays prompt for Dogmatism262
+identification.263
+Instruction tuning of SLMs. We instruction tune the SLMs on user conversations along with their264
+gold labels from the training part of the USDC dataset. For instruction tuning, we use the same265
+prompt as used for LLMs to generate the USDC dataset (also shown in Appendix B). Similar to266
+finetuning, we use same train-test splits for instruction tuning.267
+5 Results268
+Do SLMs finetuned with task-specific LLM annotations accurately perform Stance and Dogma-269
+tism tasks on user opinions? We show the weighted F1 of various SLMs finetuned with task-specific270
+LLM annotations on the stance and dogmatism detection tasks on the USDC test set in Table 1. We271
+4https://pypi.org/project/bitsandbytes/
+5https://github.com/huggingface/peft
+7
+
+Table 1: Finetuning: weighted F1 score for Stance classification using SLMs on USDC test set. ZS:
+Zero-shot, OS: One-shot, FS: Few-shot.
+Stance Classification Dogmatism Classification
+Model GPT-4 Mistral Large Majority GPT-4 Mistral Large MajorityZS OS FS ZS OS FS ZS OS FS ZS OS FS
+LLaMA-2-7B 51.8 52.9 52.7 35.1 49.2 46.0 54.0 42.1 44.2 45.2 39.3 47.6 43.7 43.4
+LLaMA-2-chat-7B 52.8 51.4 51.8 34.7 47.5 46.5 51.3 42.1 42.5 48.8 41.1 49.7 45.5 48.3
+LLaMA-3-8B 51.3 52.2 52.9 34.9 48.5 47.0 54.9 42.0 47.8 45.3 39.9 47.4 36.3 51.4
+LLaMA-3-8B-instruct51.2 52.6 52.7 33.9 49.5 45.6 54.5 44.8 46.2 49.7 46.1 45.8 46.1 50.8
+Falcon-7B 50.7 51.1 51.6 34.9 47.2 43.9 53.2 41.5 42.1 43.3 36.5 38.4 37.5 40.1
+Falcon-7B-instruct 51.2 51.5 51.6 35.1 47.7 44.2 51.0 41.7 42.1 42.9 36.8 38.5 36.9 39.7
+Vicuna-7B-v.1.5 51.0 53.0 53.2 35.1 48.5 45.8 54.7 42.9 48.3 40.8 45.9 42.6 46.2 42.3
+Table 2: Instruction-tuning: weighted F1 score for Stance classification using SLMs on USDC test
+set. ZS: Zero-shot, OS: One-shot, FS: Few-shot.
+Stance Classification Dogmatism Classification
+Model GPT-4 Mistral Large Majority GPT-4 Mistral Large MajorityZS OS FS ZS OS FS ZS OS FS ZS OS FS
+LLaMA-2-7B 53.2 54.0 54.5 36.8 50.3 47.2 55.5 43.0 45.0 46.3 40.6 48.2 45.0 44.0
+LLaMA-2-chat-7B 54.0 54.5 55.0 36.5 50.7 47.6 54.0 43.2 45.5 47.0 40.8 48.5 45.5 43.8
+LLaMA-3-8B 53.5 54.8 55.5 37.0 50.5 48.0 56.2 43.5 46.0 47.5 41.0 48.8 45.8 45.1
+LLaMA-3-8B-instruct53.0 54.2 55.0 36.0 50.0 47.0 55.5 43.8 46.5 47.8 41.5 49.2 46.0 44.8
+Falcon-7B 52.8 53.4 54.0 36.5 49.5 46.5 54.8 42.5 44.6 45.8 39.8 47.0 44.0 43.8
+Falcon-7B-instruct 53.0 53.8 54.2 36.8 49.8 46.8 54.5 42.8 44.8 46.0 40.0 47.2 44.2 43.0
+Vicuna-7B-v.1.5 53.3 54.5 55.2 37.0 50.2 47.8 55.2 43.7 46.8 47.2 41.2 48.2 46.5 44.8
+report AUC scores and other qualitative analysis in Appendix F (Fig. 11 and 12). We make the272
+following observations from these results: 1) For both tasks, the majority voting labels as ground273
+truth, has a relatively high performance, scoring above 50% weighted F1-score across several models.274
+2) LLaMa-3 models (LLaMA-3-8B and LLaMA-3-8B-instruct) perform better across both the tasks.275
+3) For GPT-4 annotations, in most cases, SLMs finetuned with few-shot annotations outperform276
+those trained with zero and one-shot annotations. For Mistral Large annotations, typically SLMs277
+finetuned with one-shot annotations performs the best. 4) Specifically, for Stance detection task,278
+Vicuna-7B-v.1.5 finetuned using few-shot annotations is the best model trained with GPT-4 anno-279
+tations. Similarly, LLaMA-3-8B-instruct finetuned with one-shot annotations is the best model280
+trained with Mistral Large annotations. 5) For the Dogmatism detection task, LLaMA-3-8B-instruct281
+finetuned using few-shot annotations is the best model trained with GPT-4 annotations. Similarly,282
+LLaMA-2-chat-7B finetuned with one-shot annotations is the best model trained with Mistral Large283
+annotations. 6) Overall, we observe that instruction tuned SLMs perform better than the pretrained284
+SLMs.285
+Do SLMs instruction-tuned with task-specific LLM annotations perform better than SLMs286
+finetuned with task-specific LLM annotations for the Stance and Dogmatism tasks? We show287
+the weighted F1 of various SLMs instruction-tuned with task-specific LLM annotations, on the288
+stance and dogmatism detection tasks on the USDC test set in Table 2. We report AUC scores and289
+other qualitative analysis in Appendix F (see Fig. 13). We make the following observations from290
+these results: 1) SLMs with instruction-tuning result in higher weighted F1-scores than SLMs with291
+finetuning for stance detection, while SLMs with finetuning outperform SLMs with instruction-tuning292
+in dogmatism detection. 2) Contrary to results in Table 1, Table 2 demonstrates that using majority293
+voting labels as ground truth, SLM instruction-tuning yields relatively high performance only for the294
+stance detection task, but not for the dogmatism detection. 3) Similar to results in Table 1, LLaMA-3295
+models (LLaMA-3-8B and LLaMA-3-8B-instruct) perform better across both tasks. Additionally,296
+GPT-4 annotations yield the best results in the few-shot setting, while Mistral Large annotations297
+perform best in the one-shot setting.298
+Overall, we draw the following conclusions when comparing SLM finetuning and instruction-tuning:299
+(1) Since dogmatism detection is inherently a more complex and varied task than stance detection,300
+the model might struggle to generalize from the instructional data. (2) The system prompt used301
+in finetuning is much simpler than the original system prompt for instruction-tuning, making it302
+challenging to handle the context length for longer conversations. We perform an error analysis to303
+further analyze the results in the next subsection.304
+Error Analysis Table 3 illustrates the confusion matrix for stance detection for LLaMa-3-8B305
+finetuning and instruction-tuning. We make the following observations this table: 1) For both306
+finetuning and instruction-tuning, there is a significant misclassification between “Somewhat Against”307
+and “Somewhat In Favor,” as well as between “Somewhat In Favor” and “Stance Not Inferrable.”308
+These overlaps suggest challenges in distinguishing moderate stances, indicating a need for enhanced309
+8
+
+Predicted
+SOA SOIF SNI SGA SIF
+SOA 151 132 34 44 2
+SOIF 93 537 113 17 14
+SNI 23 78 259 5 0
+SGA 52 35 13 115 17
+Actual
+SIF 18 50 12 25 27
+Predicted
+SOA SOIF SNI SGA SIF
+SOA 143 125 37 54 4
+SOIF 82 543 106 27 16
+SNI 22 82 253 6 2
+SGA 41 35 11 131 14
+Actual
+SIF 16 53 10 23 30
+Table 3: Confusion matrix for LLaMa-3-8B Stance detection models on USDC test set: finetuning
+(left) and instruction-tuning (right). SOA: Somewhat Against, SOIF: Somewhat In Favor, SNI: Stance
+Not Inferrable, SGA: Strongly Against, SIF: Strongly In Favor.
+feature representation and clearer class definitions to improve model performance. We report the310
+confusion matrix for dogmatism detection task in Appendix Fig. 10. Fig. 10 shows significant311
+misclassifications, especially for the “Deeply Rooted” and “Flexible” labels, with both having zero312
+accuracy and F1-scores. On the other hand, the model performs moderately better for “Firm but Open”313
+and “Open to Dialogue” classes with accuracies of 48.7% and 64.4% respectively. The confusion314
+matrix also indicates substantial confusion to distinguish between intermediate levels of dogmatism,315
+such as “Firm but Open” and “Open to Dialogue”. The area under the ROC curve (AUC) is a measure316
+of the model’s ability to distinguish between classes. Hence, we further report the ROC curve which317
+shows the trade-off between the true positive rate (TPR) and false positive rate (FPR) for each class318
+for stance and dogmatism tasks, see Figs. 11 and. 12 in Appendix F.319
+Verification using Human Interaction. Due to the time-consuming nature of the manual annotation320
+process, we perform human annotations on the set of 200 test conversations. In the forms for human321
+annotations, we displayed the top 2 author’s Reddit posts from the conversation, along with the322
+submission title and content. We also provided a link to the original Reddit URL for annotators323
+to look at the full conversation. We provided detailed annotation guidelines (similar to the ones324
+mentioned in the prompt in Appendix B) to instruct human annotators in carrying out these tasks.325
+Here is a sample Google form6. With three human annotators on a sample of 10 conversations, the326
+agreement of majority labels (i.e., USDC test set labels) with human labels is 0.56 for the stance327
+detection task and 0.45 for the dogmatism task. The annotators included two males and one female,328
+affiliated with both academia and industry, aged between 20 and 40, and were very familiar with329
+Reddit topics.330
+6 Conclusion331
+In this paper, we focused on the problems of 5-class stance and 4-class dogmatism classification in332
+long conversations. Using LLMs as human-like annotators, we introduced USDC, a large-scale dataset333
+of user stance and dogmatism in conversations. This is achieved by providing detailed annotation334
+guidelines in the system prompt and full-length conversation as user prompt. Commercialized API-335
+based LLMs generate author-level stance and dogmatism labels via zero, one and few-shot settings.336
+The full-length multi-user conversation aspect of USDC allows it to capture the contextual and337
+opinion shifts of multiple users in a conversation. We believe that the ability to perform finetuning338
+or instruction tuning SLMs for user opinions at a large scale can bridge the gap between SLMs and339
+commercial LLMs for understanding user traits. While finetuning SLMs shows F1-score on both340
+stance and dogmatism tasks, the F1-score remains below 60% (54.9% for Stance and 51.4% for341
+Dogmatism). On the other hand, instruction tuning of SLMs only improves F1-score performance342
+on stance, not the dogmatism task. Further, the performance still falls short of 60%, with weighted343
+F1-scores of 56.2% for stance and 49.2% for dogmatism. These findings indicate that there is still344
+significant room for improvement in understanding user opinions from a text segment.345
+Limitations. We plan to extend this work along the following directions in the future. 1) We346
+performed this work on English conversations only. It would be nice to extend this to multi-lingual347
+conversations and verify how accurately SLMs and LLMs perform on the Stance and Dogmatism348
+tasks in the multi-lingual scenario. 2) We analyzed user dogmatism based on their posts within a349
+single conversation. This approach could be extended to include posts across multiple conversations350
+and utilize similar profile information if available. 3) We analyzed dogmatism information for only the351
+top two authors. This was mainly because considering more authors increases the output generation352
+length, and we were constrained by our budget. This implies that our current models have not been353
+evaluated for authors who do not post frequently.354
+6https://forms.gle/dbPQBsNyfNJjvUeR9
+9
+
+References355
+Daniel Adiwardana, Minh-Thang Luong, David R So, Jamie Hall, Noah Fiedel, Romal Thoppilan,356
+Zi Yang, Apoorv Kulshreshtha, Gaurav Nemade, Yifeng Lu, et al. Towards a human-like open-357
+domain chatbot. arXiv preprint arXiv:2001.09977, 2020.358
+Meysam Alizadeh, Maël Kubli, Zeynab Samei, Shirin Dehghani, Juan Diego Bermeo, Maria Ko-359
+robeynikova, and Fabrizio Gilardi. Open-source large language models outperform crowd workers360
+and approach chatgpt in text-annotation tasks. arXiv preprint arXiv:2307.02179, 2023.361
+Ebtesam Almazrouei, Hamza Alobeidli, Abdulaziz Alshamsi, Alessandro Cappelli, Ruxandra Cojo-362
+caru, Mérouane Debbah, Étienne Goffinet, Daniel Hesslow, Julien Launay, Quentin Malartic, et al.363
+The falcon series of open language models. arXiv preprint arXiv:2311.16867, 2023.364
+Parikshit Bansal and Amit Sharma. Large language models as annotators: Enhancing generalization365
+of nlp models at minimal cost. arXiv preprint arXiv:2306.15766, 2023.366
+Siqi Bao, Huang He, Fan Wang, Hua Wu, and Haifeng Wang. Plato: Pre-trained dialogue generation367
+model with discrete latent variable. arXiv preprint arXiv:1910.07931, 2019.368
+Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared D Kaplan, Prafulla Dhariwal,369
+Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, et al. Language models are370
+few-shot learners. Advances in neural information processing systems, 33:1877–1901, 2020.371
+Wei-Lin Chiang, Zhuohan Li, Zi Lin, Ying Sheng, Zhanghao Wu, Hao Zhang, Lianmin Zheng,372
+Siyuan Zhuang, Yonghao Zhuang, Joseph E. Gonzalez, Ion Stoica, and Eric P. Xing. Vicuna:373
+An open-source chatbot impressing gpt-4 with 90%* chatgpt quality, March 2023. URL https:374
+//lmsys.org/blog/2023-03-30-vicuna/ .375
+Hyung Won Chung, Le Hou, Shayne Longpre, Barret Zoph, Yi Tay, William Fedus, Yunxuan Li,376
+Xuezhi Wang, Mostafa Dehghani, Siddhartha Brahma, et al. Scaling instruction-finetuned language377
+models. Journal of Machine Learning Research, 25(70):1–53, 2024.378
+Jacob Cohen. A coefficient of agreement for nominal scales. Educational and psychological379
+measurement, 20(1):37–46, 1960.380
+Ethan Fast and Eric Horvitz. Identifying dogmatism in social media: Signals and models. In381
+Proceedings of the 2016 Conference on Empirical Methods in Natural Language Processing, pp.382
+690–699, 2016.383
+Joseph L Fleiss. Measuring nominal scale agreement among many raters. Psychological bulletin, 76384
+(5):378, 1971.385
+Fabrizio Gilardi, Meysam Alizadeh, and Maël Kubli. Chatgpt outperforms crowd workers for386
+text-annotation tasks. Proceedings of the National Academy of Sciences, 120(30):e2305016120,387
+2023.388
+Or Honovich, Thomas Scialom, Omer Levy, and Timo Schick. Unnatural instructions: Tuning389
+language models with (almost) no human labor. In Proceedings of the 61st Annual Meeting of the390
+Association for Computational Linguistics (Volume 1: Long Papers), pp. 14409–14428, 2023.391
+Edward J Hu, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen,392
+et al. Lora: Low-rank adaptation of large language models. In International Conference on393
+Learning Representations, 2021.394
+Albert Q Jiang, Alexandre Sablayrolles, Antoine Roux, Arthur Mensch, Blanche Savary, Chris395
+Bamford, Devendra Singh Chaplot, Diego de las Casas, Emma Bou Hanna, Florian Bressand, et al.396
+Mixtral of experts. arXiv preprint arXiv:2401.04088, 2024.397
+Dong-Ho Lee, Jay Pujara, Mohit Sewak, Ryen White, and Sujay Jauhar. Making large language398
+models better data creators. In Proceedings of the 2023 Conference on Empirical Methods in399
+Natural Language Processing, pp. 15349–15360, 2023.400
+10
+
+London Lowmanstone, Ruyuan Wan, Risako Owan, Jaehyung Kim, and Dongyeop Kang. Annota-401
+tion imputation to individualize predictions: Initial studies on distribution dynamics and model402
+predictions. arXiv preprint arXiv:2305.15070, 2023.403
+Yu Meng, Jiaxin Huang, Yu Zhang, and Jiawei Han. Generating training data with language models:404
+Towards zero-shot language understanding. Advances in Neural Information Processing Systems,405
+35:462–477, 2022.406
+R OpenAI. Gpt-4 technical report. arxiv 2303.08774. View in Article, 2(5), 2023.407
+Milton Rokeach. The nature and meaning of dogmatism. Psychological Review, 61(3), 1954.408
+Stephen Roller, Emily Dinan, Naman Goyal, Da Ju, Mary Williamson, Yinhan Liu, Jing Xu, Myle409
+Ott, Eric Michael Smith, Y-Lan Boureau, and Jason Weston. Recipes for building an open-domain410
+chatbot. In Proceedings of the 16th Conference of the European Chapter of the Association for Com-411
+putational Linguistics: Main Volume, pp. 300–325, Online, 2021. Association for Computational412
+Linguistics.413
+Flora Sakketou, Allison Lahnala, Liane V ogel, and Lucie Flek. Investigating user radicaliza-414
+tion: A novel dataset for identifying fine-grained temporal shifts in opinion. arXiv preprint415
+arXiv:2204.10190, 2022.416
+Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée417
+Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, et al. Llama: Open and418
+efficient foundation language models. arXiv preprint arXiv:2302.13971, 2023a.419
+Hugo Touvron, Louis Martin, Kevin Stone, Peter Albert, Amjad Almahairi, Yasmine Babaei, Nikolay420
+Bashlykov, Soumya Batra, Prajjwal Bhargava, Shruti Bhosale, et al. Llama 2: Open foundation421
+and fine-tuned chat models. arXiv preprint arXiv:2307.09288, 2023b.422
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz423
+Kaiser, and Illia Polosukhin. Attention is all you need. Advances in neural information processing424
+systems, 30, 2017.425
+Manya Wadhwa, Jifan Chen, Junyi Jessy Li, and Greg Durrett. Using natural language explanations426
+to rescale human judgments. arXiv preprint arXiv:2305.14770, 2023.427
+Jiacheng Ye, Jiahui Gao, Qintong Li, Hang Xu, Jiangtao Feng, Zhiyong Wu, Tao Yu, and Lingpeng428
+Kong. Zerogen: Efficient zero-shot learning via dataset generation. In Proceedings of the 2022429
+Conference on Empirical Methods in Natural Language Processing, pp. 11653–11669, 2022a.430
+Jiacheng Ye, Jiahui Gao, Zhiyong Wu, Jiangtao Feng, Tao Yu, and Lingpeng Kong. Progen:431
+Progressive zero-shot dataset generation via in-context feedback. In Findings of the Association432
+for Computational Linguistics: EMNLP 2022, pp. 3671–3683, 2022b.433
+Ruoyu Zhang, Yanzeng Li, Yongliang Ma, Ming Zhou, and Lei Zou. Llmaaa: Making large language434
+models as active annotators. arXiv preprint arXiv:2310.19596, 2023.435
+Yizhe Zhang, Siqi Sun, Michel Galley, Yen-Chun Chen, Chris Brockett, Xiang Gao, Jianfeng436
+Gao, Jingjing Liu, and Bill Dolan. DIALOGPT : Large-scale generative pre-training for con-437
+versational response generation. In Proceedings of the 58th Annual Meeting of the Associa-438
+tion for Computational Linguistics: System Demonstrations, pp. 270–278, Online, 2020. As-439
+sociation for Computational Linguistics. doi: 10.18653/v1/2020.acl-demos.30. URL https:440
+//aclanthology.org/2020.acl-demos.30.441
+Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu, Yonghao Zhuang,442
+Zi Lin, Zhuohan Li, Dacheng Li, Eric Xing, et al. Judging llm-as-a-judge with mt-bench and443
+chatbot arena. Advances in Neural Information Processing Systems, 36, 2024.444
+Yongchao Zhou, Andrei Ioan Muresanu, Ziwen Han, Keiran Paster, Silviu Pitis, Harris Chan,445
+and Jimmy Ba. Large language models are human-level prompt engineers. arXiv preprint446
+arXiv:2211.01910, 2022.447
+11
+
+NeurIPS Paper Checklist448
+1. Claims449
+Question: Do the main claims made in the abstract and introduction accurately reflect the450
+paper’s contributions and scope?451
+Answer: [Yes]452
+Justification: We have ensured that the main claims made in the abstract and introduction453
+are directly correlating to the research findings and the methods we have employed.454
+Guidelines:455
+• The answer NA means that the abstract and introduction do not include the claims456
+made in the paper.457
+• The abstract and/or introduction should clearly state the claims made, including the458
+contributions made in the paper and important assumptions and limitations. A No or459
+NA answer to this question will not be perceived well by the reviewers.460
+• The claims made should match theoretical and experimental results, and reflect how461
+much the results can be expected to generalize to other settings.462
+• It is fine to include aspirational goals as motivation as long as it is clear that these goals463
+are not attained by the paper.464
+2. Limitations465
+Question: Does the paper discuss the limitations of the work performed by the authors?466
+Answer: [Yes]467
+Justification: The paper discusses the main limitations of the work performed by the authors468
+in the discussion section.469
+Guidelines:470
+• The answer NA means that the paper has no limitation while the answer No means that471
+the paper has limitations, but those are not discussed in the paper.472
+• The authors are encouraged to create a separate "Limitations" section in their paper.473
+• The paper should point out any strong assumptions and how robust the results are to474
+violations of these assumptions (e.g., independence assumptions, noiseless settings,475
+model well-specification, asymptotic approximations only holding locally). The authors476
+should reflect on how these assumptions might be violated in practice and what the477
+implications would be.478
+• The authors should reflect on the scope of the claims made, e.g., if the approach was479
+only tested on a few datasets or with a few runs. In general, empirical results often480
+depend on implicit assumptions, which should be articulated.481
+• The authors should reflect on the factors that influence the performance of the approach.482
+For example, a facial recognition algorithm may perform poorly when image resolution483
+is low or images are taken in low lighting. Or a speech-to-text system might not be484
+used reliably to provide closed captions for online lectures because it fails to handle485
+technical jargon.486
+• The authors should discuss the computational efficiency of the proposed algorithms487
+and how they scale with dataset size.488
+• If applicable, the authors should discuss possible limitations of their approach to489
+address problems of privacy and fairness.490
+• While the authors might fear that complete honesty about limitations might be used by491
+reviewers as grounds for rejection, a worse outcome might be that reviewers discover492
+limitations that aren’t acknowledged in the paper. The authors should use their best493
+judgment and recognize that individual actions in favor of transparency play an impor-494
+tant role in developing norms that preserve the integrity of the community. Reviewers495
+will be specifically instructed to not penalize honesty concerning limitations.496
+3. Theory Assumptions and Proofs497
+Question: For each theoretical result, does the paper provide the full set of assumptions and498
+a complete (and correct) proof?499
+12
+
+Answer: [NA]500
+Justification: Our paper does not require any explicit theorems and proofs.501
+Guidelines:502
+• The answer NA means that the paper does not include theoretical results.503
+• All the theorems, formulas, and proofs in the paper should be numbered and cross-504
+referenced.505
+• All assumptions should be clearly stated or referenced in the statement of any theorems.506
+• The proofs can either appear in the main paper or the supplemental material, but if507
+they appear in the supplemental material, the authors are encouraged to provide a short508
+proof sketch to provide intuition.509
+• Inversely, any informal proof provided in the core of the paper should be complemented510
+by formal proofs provided in appendix or supplemental material.511
+• Theorems and Lemmas that the proof relies upon should be properly referenced.512
+4. Experimental Result Reproducibility513
+Question: Does the paper fully disclose all the information needed to reproduce the main ex-514
+perimental results of the paper to the extent that it affects the main claims and/or conclusions515
+of the paper (regardless of whether the code and data are provided or not)?516
+Answer: [Yes]517
+Justification: The paper has delineated all the information related to the experimental setup518
+in the experimental setup section.519
+Guidelines:520
+• The answer NA means that the paper does not include experiments.521
+• If the paper includes experiments, a No answer to this question will not be perceived522
+well by the reviewers: Making the paper reproducible is important, regardless of523
+whether the code and data are provided or not.524
+• If the contribution is a dataset and/or model, the authors should describe the steps taken525
+to make their results reproducible or verifiable.526
+• Depending on the contribution, reproducibility can be accomplished in various ways.527
+For example, if the contribution is a novel architecture, describing the architecture fully528
+might suffice, or if the contribution is a specific model and empirical evaluation, it may529
+be necessary to either make it possible for others to replicate the model with the same530
+dataset, or provide access to the model. In general. releasing code and data is often531
+one good way to accomplish this, but reproducibility can also be provided via detailed532
+instructions for how to replicate the results, access to a hosted model (e.g., in the case533
+of a large language model), releasing of a model checkpoint, or other means that are534
+appropriate to the research performed.535
+• While NeurIPS does not require releasing code, the conference does require all submis-536
+sions to provide some reasonable avenue for reproducibility, which may depend on the537
+nature of the contribution. For example538
+(a) If the contribution is primarily a new algorithm, the paper should make it clear how539
+to reproduce that algorithm.540
+(b) If the contribution is primarily a new model architecture, the paper should describe541
+the architecture clearly and fully.542
+(c) If the contribution is a new model (e.g., a large language model), then there should543
+either be a way to access this model for reproducing the results or a way to reproduce544
+the model (e.g., with an open-source dataset or instructions for how to construct545
+the dataset).546
+(d) We recognize that reproducibility may be tricky in some cases, in which case547
+authors are welcome to describe the particular way they provide for reproducibility.548
+In the case of closed-source models, it may be that access to the model is limited in549
+some way (e.g., to registered users), but it should be possible for other researchers550
+to have some path to reproducing or verifying the results.551
+5. Open access to data and code552
+13
+
+Question: Does the paper provide open access to the data and code, with sufficient instruc-553
+tions to faithfully reproduce the main experimental results, as described in supplemental554
+material?555
+Answer: [Yes]556
+Justification: We have released the code and dataset, making the dataset publicly available557
+under a license.558
+Guidelines:559
+• The answer NA means that paper does not include experiments requiring code.560
+• Please see the NeurIPS code and data submission guidelines ( https://nips.cc/561
+public/guides/CodeSubmissionPolicy) for more details.562
+• While we encourage the release of code and data, we understand that this might not be563
+possible, so “No” is an acceptable answer. Papers cannot be rejected simply for not564
+including code, unless this is central to the contribution (e.g., for a new open-source565
+benchmark).566
+• The instructions should contain the exact command and environment needed to run to567
+reproduce the results. See the NeurIPS code and data submission guidelines (https:568
+//nips.cc/public/guides/CodeSubmissionPolicy) for more details.569
+• The authors should provide instructions on data access and preparation, including how570
+to access the raw data, preprocessed data, intermediate data, and generated data, etc.571
+• The authors should provide scripts to reproduce all experimental results for the new572
+proposed method and baselines. If only a subset of experiments are reproducible, they573
+should state which ones are omitted from the script and why.574
+• At submission time, to preserve anonymity, the authors should release anonymized575
+versions (if applicable).576
+• Providing as much information as possible in supplemental material (appended to the577
+paper) is recommended, but including URLs to data and code is permitted.578
+6. Experimental Setting/Details579
+Question: Does the paper specify all the training and test details (e.g., data splits, hyper-580
+parameters, how they were chosen, type of optimizer, etc.) necessary to understand the581
+results?582
+Answer: [Yes]583
+Justification: We provided all the training and testing details in the experimental setup.584
+Guidelines:585
+• The answer NA means that the paper does not include experiments.586
+• The experimental setting should be presented in the core of the paper to a level of detail587
+that is necessary to appreciate the results and make sense of them.588
+• The full details can be provided either with the code, in appendix, or as supplemental589
+material.590
+7. Experiment Statistical Significance591
+Question: Does the paper report error bars suitably and correctly defined or other appropriate592
+information about the statistical significance of the experiments?593
+Answer: [Yes]594
+Justification: We conducted our experiments on all LLM-generated annotations across595
+zero-shot, one-shot, and few-shot settings, using majority voting as labels. Our reported596
+results represent the average performance across all test samples.597
+Guidelines:598
+• The answer NA means that the paper does not include experiments.599
+• The authors should answer "Yes" if the results are accompanied by error bars, confi-600
+dence intervals, or statistical significance tests, at least for the experiments that support601
+the main claims of the paper.602
+14
+
+• The factors of variability that the error bars are capturing should be clearly stated (for603
+example, train/test split, initialization, random drawing of some parameter, or overall604
+run with given experimental conditions).605
+• The method for calculating the error bars should be explained (closed form formula,606
+call to a library function, bootstrap, etc.)607
+• The assumptions made should be given (e.g., Normally distributed errors).608
+• It should be clear whether the error bar is the standard deviation or the standard error609
+of the mean.610
+• It is OK to report 1-sigma error bars, but one should state it. The authors should611
+preferably report a 2-sigma error bar than state that they have a 96% CI, if the hypothesis612
+of Normality of errors is not verified.613
+• For asymmetric distributions, the authors should be careful not to show in tables or614
+figures symmetric error bars that would yield results that are out of range (e.g. negative615
+error rates).616
+• If error bars are reported in tables or plots, The authors should explain in the text how617
+they were calculated and reference the corresponding figures or tables in the text.618
+8. Experiments Compute Resources619
+Question: For each experiment, does the paper provide sufficient information on the com-620
+puter resources (type of compute workers, memory, time of execution) needed to reproduce621
+the experiments?622
+Answer: [Yes]623
+Justification: We have included the specifications of the hardware and software environments624
+to ensure the reproducibility of our results.625
+Guidelines:626
+• The answer NA means that the paper does not include experiments.627
+• The paper should indicate the type of compute workers CPU or GPU, internal cluster,628
+or cloud provider, including relevant memory and storage.629
+• The paper should provide the amount of compute required for each of the individual630
+experimental runs as well as estimate the total compute.631
+• The paper should disclose whether the full research project required more compute632
+than the experiments reported in the paper (e.g., preliminary or failed experiments that633
+didn’t make it into the paper).634
+9. Code Of Ethics635
+Question: Does the research conducted in the paper conform, in every respect, with the636
+NeurIPS Code of Ethics https://neurips.cc/public/EthicsGuidelines?637
+Answer: [Yes]638
+Justification: The research conducted in this paper fully conforms with the NeurIPS Code of639
+Ethics in every respect.640
+Guidelines:641
+• The answer NA means that the authors have not reviewed the NeurIPS Code of Ethics.642
+• If the authors answer No, they should explain the special circumstances that require a643
+deviation from the Code of Ethics.644
+• The authors should make sure to preserve anonymity (e.g., if there is a special consid-645
+eration due to laws or regulations in their jurisdiction).646
+10. Broader Impacts647
+Question: Does the paper discuss both potential positive societal impacts and negative648
+societal impacts of the work performed?649
+Answer: [Yes]650
+Justification: The paper explores how advancements and applications of our findings could651
+benefit society by capturing opinions of users in conversation benefit interpersonal skills.652
+Specifically, we investigate the effectiveness of current state-of-the-art large language models653
+in this context.654
+15
+
+Guidelines:655
+• The answer NA means that there is no societal impact of the work performed.656
+• If the authors answer NA or No, they should explain why their work has no societal657
+impact or why the paper does not address societal impact.658
+• Examples of negative societal impacts include potential malicious or unintended uses659
+(e.g., disinformation, generating fake profiles, surveillance), fairness considerations660
+(e.g., deployment of technologies that could make decisions that unfairly impact specific661
+groups), privacy considerations, and security considerations.662
+• The conference expects that many papers will be foundational research and not tied663
+to particular applications, let alone deployments. However, if there is a direct path to664
+any negative applications, the authors should point it out. For example, it is legitimate665
+to point out that an improvement in the quality of generative models could be used to666
+generate deepfakes for disinformation. On the other hand, it is not needed to point out667
+that a generic algorithm for optimizing neural networks could enable people to train668
+models that generate Deepfakes faster.669
+• The authors should consider possible harms that could arise when the technology is670
+being used as intended and functioning correctly, harms that could arise when the671
+technology is being used as intended but gives incorrect results, and harms following672
+from (intentional or unintentional) misuse of the technology.673
+• If there are negative societal impacts, the authors could also discuss possible mitigation674
+strategies (e.g., gated release of models, providing defenses in addition to attacks,675
+mechanisms for monitoring misuse, mechanisms to monitor how a system learns from676
+feedback over time, improving the efficiency and accessibility of ML).677
+11. Safeguards678
+Question: Does the paper describe safeguards that have been put in place for responsible679
+release of data or models that have a high risk for misuse (e.g., pretrained language models,680
+image generators, or scraped datasets)?681
+Answer: [NA]682
+Justification: Our research does not pose any risks for misuse.683
+Guidelines:684
+• The answer NA means that the paper poses no such risks.685
+• Released models that have a high risk for misuse or dual-use should be released with686
+necessary safeguards to allow for controlled use of the model, for example by requiring687
+that users adhere to usage guidelines or restrictions to access the model or implementing688
+safety filters.689
+• Datasets that have been scraped from the Internet could pose safety risks. The authors690
+should describe how they avoided releasing unsafe images.691
+• We recognize that providing effective safeguards is challenging, and many papers do692
+not require this, but we encourage authors to take this into account and make a best693
+faith effort.694
+12. Licenses for existing assets695
+Question: Are the creators or original owners of assets (e.g., code, data, models), used in696
+the paper, properly credited and are the license and terms of use explicitly mentioned and697
+properly respected?698
+Answer: [Yes]699
+Justification: We have explicitly cited the crawled websites, code and models used.700
+Guidelines:701
+• The answer NA means that the paper does not use existing assets.702
+• The authors should cite the original paper that produced the code package or dataset.703
+• The authors should state which version of the asset is used and, if possible, include a704
+URL.705
+• The name of the license (e.g., CC-BY 4.0) should be included for each asset.706
+16
+
+• For scraped data from a particular source (e.g., website), the copyright and terms of707
+service of that source should be provided.708
+• If assets are released, the license, copyright information, and terms of use in the709
+package should be provided. For popular datasets, paperswithcode.com/datasets710
+has curated licenses for some datasets. Their licensing guide can help determine the711
+license of a dataset.712
+• For existing datasets that are re-packaged, both the original license and the license of713
+the derived asset (if it has changed) should be provided.714
+• If this information is not available online, the authors are encouraged to reach out to715
+the asset’s creators.716
+13. New Assets717
+Question: Are new assets introduced in the paper well documented and is the documentation718
+provided alongside the assets?719
+Answer: [Yes]720
+Justification: We open-source the code and the new USDC dataset, and we provide complete721
+documentation on how the dataset was created.722
+Guidelines:723
+• The answer NA means that the paper does not release new assets.724
+• Researchers should communicate the details of the dataset/code/model as part of their725
+submissions via structured templates. This includes details about training, license,726
+limitations, etc.727
+• The paper should discuss whether and how consent was obtained from people whose728
+asset is used.729
+• At submission time, remember to anonymize your assets (if applicable). You can either730
+create an anonymized URL or include an anonymized zip file.731
+14. Crowdsourcing and Research with Human Subjects732
+Question: For crowdsourcing experiments and research with human subjects, does the paper733
+include the full text of instructions given to participants and screenshots, if applicable, as734
+well as details about compensation (if any)?735
+Answer: [Yes]736
+Justification: We provide full instructions on how we surveyed our LLM generated annota-737
+tions using human participants in the Results section.738
+Guidelines:739
+• The answer NA means that the paper does not involve crowdsourcing nor research with740
+human subjects.741
+• Including this information in the supplemental material is fine, but if the main contribu-742
+tion of the paper involves human subjects, then as much detail as possible should be743
+included in the main paper.744
+• According to the NeurIPS Code of Ethics, workers involved in data collection, curation,745
+or other labor should be paid at least the minimum wage in the country of the data746
+collector.747
+15. Institutional Review Board (IRB) Approvals or Equivalent for Research with Human748
+Subjects749
+Question: Does the paper describe potential risks incurred by study participants, whether750
+such risks were disclosed to the subjects, and whether Institutional Review Board (IRB)751
+approvals (or an equivalent approval/review based on the requirements of your country or752
+institution) were obtained?753
+Answer: [NA]754
+Justification: We use publicly available Reddit user conversations to create the USDC755
+dataset, and we do not collect any new data that would require IRB approval.756
+Guidelines:757
+17
+
+• The answer NA means that the paper does not involve crowdsourcing nor research with758
+human subjects.759
+• Depending on the country in which research is conducted, IRB approval (or equivalent)760
+may be required for any human subjects research. If you obtained IRB approval, you761
+should clearly state this in the paper.762
+• We recognize that the procedures for this may vary significantly between institutions763
+and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the764
+guidelines for their institution.765
+• For initial submissions, do not include any information that would break anonymity (if766
+applicable), such as the institution conducting the review.767
+18
+
+A Detailed Statistics of the USDC Dataset768
+Table 4 shows the detailed statistics of our USDC dataset at the sub-reddit level. Fig. 5 shows the769
+distribution of stance labels across LLM annotations across zero-shot, one-shot and few-shot settings.770
+Fig. 6 shows the distribution of dogmatism labels across LLM annotations across zero-shot, one-shot771
+and few-shot settings.
+Table 4: Statistics of the User Conversation Dataset.
+subreddit num_conversations min_total_token_count max_total_token_count
+DebateCommunism 73 529 11557
+Abortiondebate 70 1271 7401
+CapitalismVSocialism 61 665 16927
+prochoice 60 582 7278
+brexit 56 637 4553
+climateskeptics 56 734 7550
+prolife 54 672 13342
+gunpolitics 52 683 7889
+MensRights 52 623 5774
+climatechange 49 520 7427
+nuclear 41 572 5282
+progun 39 436 3632
+NuclearPower 23 629 4589
+Vegetarianism 22 627 3958
+AntiVegan 20 351 5052
+climate 13 701 4678
+Egalitarianism 10 665 4060
+VeganActivism 8 460 3685
+Veganism 2 1332 1738
+AnimalRights 1 845 845
+animalwelfare 1 1363 1363
+GunsAreCool 1 2945 2945
+772
+0
+500
+1000
+1500
+2000
+2500
+3000
+3500Frequency
+GPT-4: Zero-shot
+0
+500
+1000
+1500
+2000
+2500
+3000
+3500Frequency
+GPT-4: One-shot
+0
+500
+1000
+1500
+2000
+2500
+3000Frequency
+GPT-4: Few-shot
+0
+500
+1000
+1500
+2000Frequency
+Mistral Large: Zero-shot
+0
+500
+1000
+1500
+2000
+2500Frequency
+Mistral Large: One-shot
+0
+500
+1000
+1500
+2000
+2500Frequency
+Mistral Large: Few-shot
+Figure 5: Distribution of Stance labels across LLM annotations.
+19
+
+0
+100
+200
+300
+400
+500
+600
+700Frequency
+GPT-4: Zero-shot
+0
+100
+200
+300
+400
+500
+600
+700Frequency
+GPT-4: One-shot
+0
+100
+200
+300
+400
+500
+600Frequency
+GPT-4: Few-shot
+0
+100
+200
+300
+400
+500
+600
+700Frequency
+Mistral Large: Zero-shot
+0
+100
+200
+300
+400
+500
+600
+700Frequency
+Mistral Large: One-shot
+0
+100
+200
+300
+400
+500
+600
+700Frequency
+Mistral Large: Few-shot
+Figure 6: Distribution of dogmatism labels across LLM annotations.
+GPT-4: ZSGPT-4: OSGPT-4: FS
+Mistral Large: ZSMistral Large: OSMistral Large: FS
+GPT-4: ZS
+GPT-4: OS
+GPT-4: FS
+Mistral Large: ZS
+Mistral Large: OS
+Mistral Large: FS
+1.00 0.65 0.60 0.38 0.41 0.41
+0.65 1.00 0.65 0.36 0.42 0.40
+0.60 0.65 1.00 0.40 0.47 0.47
+0.38 0.36 0.40 1.00 0.53 0.58
+0.41 0.42 0.47 0.53 1.00 0.72
+0.41 0.40 0.47 0.58 0.72 1.00
+Inter-Annotator Agreement (Cohen's Kappa)
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+GPT-4: ZSGPT-4: OSGPT-4: FS
+Mistral Large: ZSMistral Large: OSMistral Large: FS
+GPT-4: ZS
+GPT-4: OS
+GPT-4: FS
+Mistral Large: ZS
+Mistral Large: OS
+Mistral Large: FS
+1.00 0.55 0.51 0.37 0.45 0.43
+0.55 1.00 0.61 0.35 0.41 0.38
+0.51 0.61 1.00 0.31 0.36 0.34
+0.37 0.35 0.31 1.00 0.46 0.44
+0.45 0.41 0.36 0.46 1.00 0.59
+0.43 0.38 0.34 0.44 0.59 1.00
+Inter-Annotator Agreement (Cohen's Kappa)
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+Figure 7: Inter-annotator agreement (IAA): Cohen’s Kappa score across six different models (2
+models×3 settings) for Stance (left) and Dogmatism (right) tasks.
+B System Prompt for LLM Annotation773
+We used the following prompt for getting annotations from LLMs as well as for instruction-tuning of774
+SLMs.775
+"""776
+### Introduction777
+**Objective**: Analyze Reddit conversations to identify the stance of778
+specific authors on sociopolitical topics and determine their level of779
+dogmatism.780
+**Stance Definition**: Stance is defined as the expression of the author’s781
+standpoint and judgement towards a given topic.782
+**Dogmatism Definition**: Dogmatism is an opinion strongly believed as a fact783
+to support a stance without a question or allowance for conversation.784
+**Task**: Given a JSON formatted Reddit submission and its comment thread,785
+classify the stance of text segments related to ‘‘author1’’ and786
+‘‘author2’’ by assigning one of the following five predefined stance787
+labels: ‘strongly_against’, ‘somewhat_against’, ‘somewhat_in_favor’,788
+‘strongly_in_favor’, ‘stance_not_inferrable’. Also, assign a dogmatism789
+20
+
+label for each author by assigning one of the following four predefined790
+labels: ‘Deeply Rooted’, ‘Firm but Open’, ‘Open to Dialogue’, ‘Flexible’.791
+792
+### Description of Stance Labels:793
+1. **strongly_against / strongly_in_favor**: Marks text showing strong794
+opinions, emotional expressions, or argumentative tones.795
+2. **somewhat_against / somewhat_in_favor**: Identifies texts with openness796
+to discussion, less certainty, or showing interest in different797
+viewpoints.798
+3. **stance_not_inferrable**: Use for texts that are neutral, support both799
+stances, or where the stance is unclear despite being on-topic.800
+801
+### Description of Dogmatism Labels:802
+1. **Deeply Rooted**: Reflects a strong, unchangeable belief. This label803
+conveys the idea of someone who is firm in their opinion and unlikely to804
+be swayed.805
+2. **Firm but Open**: Indicates a person who is not likely to change their806
+mind but does not impose their views authoritatively. It captures the807
+essence of being steadfast in one’s beliefs without being dismissive of808
+others.809
+3. **Open to Dialogue**: Describes someone who holds a certain opinion but is810
+genuinely interested in considering other viewpoints. This label suggests811
+a willingness to engage in meaningful conversation about differing812
+perspectives.813
+4. **Flexible**: Denotes a person who is not firmly committed to their stance814
+and is open to changing their opinion. This label is indicative of815
+flexibility and openness to new information or arguments.816
+817
+### Input Data Format818
+The input data will be in JSON format and will include several key elements819
+to represent a Reddit submission and its associated comments. Each820
+element provides specific information as described below:821
+822
+- ‘id’: This is the unique identifier for the Reddit submission.823
+- ‘title’: The title of the post. This is what users see first and often824
+summarizes or hints at the content of the submission.825
+- ‘content’: The main post’s detailed description. This text segment provides826
+the core message or information the author wishes to communicate with the827
+Reddit community. It may include narratives, questions, or any828
+information relevant to the title.829
+- ‘author1’ or ‘author2’: The username of our focus author. This field is830
+applicable if the post or comment is made by one of the specific authors831
+we are tracking in the dataset.832
+- ‘comments’: An array (list) of comments related to the Reddit submission.833
+Each comment in this array includes the following fields:834
+- ‘id’: The unique identifier for the comment, allowing for identification835
+and reference within the dataset.836
+- ‘author1’ or ‘author2’: The username of the comment’s author, if it is837
+made by one of our focus authors. This helps in tracking contributions838
+by specific individuals.839
+- ‘body’: The text of the comment. This is the main content of the comment840
+where the author responds to the post or another comment, providing841
+insights, opinions, or further information.842
+- ‘replies’: An array of comments that are direct responses to this843
+comment. The structure of each reply follows the same format as the844
+initial comment, including ‘id’, ‘author1’ or ‘author2’ (if845
+applicable), ‘body’, and potentially more ‘replies’.846
+847
+### Output Data Format848
+Submit your annotations in JSON format, grouping all stance annotations under849
+the key ‘‘stance_annotations’’. Each entry should be a dictionary850
+containing the segment’s ‘‘id’’, your ‘‘label’’, and the ‘‘reason’’ for851
+your choice. Include the dogmatism label and its justification under852
+‘‘dogmatism_label’’ and ‘‘dogmatism_reason’’ keys, respectively.853
+854
+21
+
+The output should follow this structure:855
+‘‘‘json856
+{857
+"author1": {858
+"name": "[author_name]",859
+"stance_annotations": [860
+{861
+"id": "[segment_id]",862
+"label": "[chosen_label]",863
+"reason": "[Justification in <50 words]"864
+},865
+...866
+],867
+"dogmatism_label": "[chosen_dogmatism_label]",868
+"dogmatism_reason": "[Justification in <50 words]"869
+},870
+"author2": {871
+"name": "[author_name]",872
+"stance_annotations": [873
+{874
+"id": "[segment_id]",875
+"label": "[chosen_label]",876
+"reason": "[Justification in <50 words]"877
+},878
+...879
+],880
+"dogmatism_label": "[chosen_dogmatism_label]",881
+"dogmatism_reason": "[Justification in <50 words]"882
+}883
+}884
+’’’885
+### Instructions for Effective Annotation886
+887
+1. **Labeling Stance**: For each segment (including the original Reddit888
+submission, comments, or replies) where "author1" or "author2" is889
+mentioned, assign a stance label that best represents the stance890
+expressed towards the discussed topic in the submission. This891
+comprehensive approach ensures no relevant contribution by "author1" or892
+"author2" is overlooked. Evaluate the stance based on the content’s tone,893
+argumentation, and engagement level with the topic.894
+2. **Providing Justification**: For each label assigned, include a concise895
+reason, aiming for less than 50 words. Focus on the stance and896
+argumentative indicators present in the text.897
+3. **Dogmatism Assessment**: After reviewing all segments from "author1" and898
+"author2", assign a single dogmatism label reflecting the overall tone899
+and approach in their contributions.900
+"""901
+C Prompts for Finetuning SLMs902
+Fig. 8 and 9 shows the prompts used for finetuning SLMs for the stance and dogmatism classification903
+tasks respectively.904
+22
+
+Stance Classification
+Analyze the stance of the post enclosed in square brackets.
+Categorize each post into one of the following categories based on its stance:
+• Somewhat In Favor
+• Somewhat Against
+• Stance Not inferrable
+• Strongly In Favor
+• Strongly Against
+and return the answer as one of the corresponding stance labels.
+[{data_point["stance_id_comment"]}]
+Figure 8: Prompt for stance classification, for finetuning SLMs.
+User Dogmatism Identification
+Analyze the comments of a user in conversation enclosed in square brackets.
+Categorize the opinion fluctuation of the user into one of the following categories based on
+its change:
+• Open to Dialogue
+• Firm but Open
+• Deeply Rooted
+• Flexible
+Return the answer as one of the corresponding dogmatism labels.
+[{data_point["comments_string_for_dogmatism"]}]
+Figure 9: Prompt for dogmatism classification, for finetuning SLMs.
+D Sample of User Input Prompt905
+906
+"""907
+### User Prompt908
+Now complete the given task for the respective authors i.e., author1909
+name is " rookerin0 " and respective ids are [ 'dhoxyz ', 'f3pghji ', '910
+f3tywb4 ', 'f3uomn2 ']. author2 name is " MikeWillTerminate " and911
+respective ids are [ ' f3rt0bf ', 'f3rqu2u '] for the data in json912
+format913
+{914
+"id ":" dhoxyz ",915
+" author1 ":" rookerin0 ",916
+" title ":" This sub should encourage anti vs. pro - gun discussions917
+instead of shutting them down instantly ",918
+" content ":" Honesly , I followed this sub especifically to take part919
+in these discussions , but everytime I see a comment that even920
+remotely suggests anti gun ideals or a discussion on the921
+subject just gets ignored and downvoted to hell . Kind of922
+expecting this to go the same way (my karma anus is ready ,923
+downvotes ) , but I have to hope for healthy discussions on the924
+subject ." ,925
+" comments ":[926
+{927
+"id ":" f3p9n2c ",928
+" body ":" I think the problem now is the two sides are at an929
+impasse . Everytime there is a " compromise " pro gun loses930
+23
+
+something . Now days pro gun is interpreting the931
+Constitution more literal , which leaves even the most932
+mild policies of anti gun as infringements . To further933
+compound this anti gun is only considering the most934
+extreme measures . " Assault Weapons " bans , mandatory935
+buybacks , red flag laws , etc .. I think at this point936
+there is just nothing left to talk about . The middle937
+ground is gone ." ,938
+" replies ":[939
+{940
+"id ":" f3pati9 ",941
+" replies ":[942
+{943
+"id ":" f3pdu44 ",944
+" body ":" You are exactly right . I 'm done with the945
+idea that there can be real compromise . We946
+should have at least gotten national947
+reciprocity and shall - issue in every state in948
+exchange for what we 've given up. Now you949
+have to be a goddamn lawyer to exercise your950
+rights without violating the law ."951
+},952
+{953
+" author2 ":" MikeWillTerminate ",954
+"id ":" f3rt0bf ",955
+" body ":" I am prepared for UBCs , if they do this :956
+1. Lower the age to buy handguns to 18 ,957
+nationwide .958
+2. Repeal the Hughes Amendment :959
+3. A FOPA - like ban on assault weapon bans ( what960
+the FOPA did with a registry )961
+4. The punishment for violation is a monetary962
+fine only963
+5. A repeal of the GCA ban on foreign NFA weapons964
+6. A repeal of the National Minimum Drinking Age965
+Act of 1984"966
+}967
+]968
+},969
+{970
+"id ":" f3pd55z ",971
+" body ":" Everytime there is a " compromise " pro gun loses972
+something . That and today 's compromise is tomorrow973
+'s loophole to be closed . All such compromises do974
+is push that policy off until the next round ."975
+}976
+]977
+},978
+{979
+"id ":" f3paf0j ",980
+" body ":" Yeah this sub it 's not conducive to conversion . Its981
+quickly devolving to little more than " Boogaloo " memes982
+and shouting " SHALL . NOT ." at each other . However , as983
+far as I know , the mods won 't delete your thread and ban984
+you from the sub for trying to have a good faith985
+discussion , like some of the gun control subs will ." ,986
+" replies ":[987
+{988
+"id ":" f3pusbm ",989
+" body ":" Unfortunately this sub 's mod team takes a very990
+passive approach to moderation . With very little991
+effort they could make this sub into a quality992
+progun meeting ground * without having to resort to993
+censorship *. Instead they promote low - effort memes994
+and endless duplication of posts through their995
+24
+
+inaction . whubbard has the chops to resurrect this996
+sub . Let 's see if he 's up to the challenge ." ,997
+" replies ":[998
+{999
+"id ":" f3q8xj6 ",1000
+" body ":" We voted to ban memes last week . All1001
+about rolling it out now ." ,1002
+" replies ":[1003
+{1004
+"id ":" f3qn4p8 ",1005
+" body ":" Damn I might have to eat some crow1006
+here then ..."1007
+}1008
+]1009
+}1010
+]1011
+}1012
+]1013
+},1014
+{1015
+"id ":" f3pafqa ",1016
+" body ":" Found the gun grabber !!" ,1017
+" replies ":[1018
+{1019
+"id ":" f3pcw4h ",1020
+" body ":" Witch hunter ."1021
+}1022
+]1023
+},1024
+{1025
+"id ":" f3pal5l ",1026
+" body ":" I see people have discussions when it makes sense to.1027
+Not much reason to spend time responding to the same gun1028
+control measures over and over though ."1029
+},1030
+{1031
+"id ":" f3paw3h ",1032
+" body ":" I get where you 're coming from , but people 's ability1033
+to protect themselves and own their own property isn 't1034
+something that is compromisable . Anything less , and they1035
+cease to own their own property . It 's like breathing ,1036
+there can be nothing less than total ability to breath1037
+when and how someone wants . It 's just that simple ."1038
+},1039
+{1040
+"id ":" f3pax9m ",1041
+" body ":" My take on this , What kind of open discussion is1042
+possible for a right that is guaranteed and most1043
+importantly , not to be infringed upon ? They 're making all1044
+these unlawful laws to portray it as it 's somehow1045
+legitimate . They are not , We are at an apex , to which1046
+both political spectrums and even us to a degree are1047
+liable for .\ nI certainly believe both sides are waiting1048
+for this to boil over so each can finger point . I just1049
+speculate it 's going to be the hell humanity been1050
+whispering about but never thought it would ever occur ."1051
+},1052
+{1053
+"id ":" f3pb6ny ",1054
+" body ":" The time for discussion is over ."1055
+},1056
+{1057
+"id ":" f3pfqwq ",1058
+" body ":" I don't know what you 're talking about . Sure people1059
+downvote , but they also talk . We get " why do you need1060
+25
+
+guns " posts at least weekly , and several people will1061
+engage in actual conversation with them , citing facts ,1062
+clearing up statistics , and telling stories to illustrate1063
+why this is important to them , but they are usually met1064
+with " you stupid @#$%, you think you 're Rambo " or1065
+something equally clever . People who come here to discuss1066
+and learn will be treated well . People who are just1067
+trolling are treated like trolls ." ,1068
+" replies ":[1069
+{1070
+" author1 ":" rookerin0 ",1071
+"id ":" f3pghji ",1072
+" body ":" I made this post because I 'm always seeing1073
+rational , conversation seeking comments getting1074
+blown to downvote hell ." ,1075
+" replies ":[1076
+{1077
+"id ":" f3pi9xv ",1078
+" body ":"[ Like this one ?]( https :// www . reddit . com /r/1079
+progun / comments / dhcu92 / yup / f3p75tg /) > One smart1080
+man in a sub full of ... welp ... " strong opinions1081
+". You start off with arrogance , as the sole1082
+arbiter of what constitutes a " smart man ". Then1083
+you back it up with a dismissive swipe at what1084
+you term " strong opinions ". > Every other country1085
+can see that PROPER gun control reduces gun1086
+violence by a ton , More arrogance . False1087
+equivalence . Unsupported claims .> but the US1088
+refuses to let go of it 's antique laws In a1089
+shocking turn of events , more arrogance .> Fully1090
+aware that this is a fully pro gun sub , willing1091
+to take the downvotes in order to spark a1092
+discussion and crack some heads . You aren 't the1093
+first arrogant asshole to grace this sub with1094
+posts like this . Try bringing something other1095
+than your own self - importance to the discussion .1096
+Edit : And then there 's [ this gem ]( https :// www .1097
+reddit . com /r/ unpopularopinion / comments / d3w5z1 /1098
+people_living_in_the_us_are_living_in_one_of_the /1099
+f06r3sg /. > Wanna feel like you could be shot at1100
+every single moment ? Move to the US , it 'll prob1101
+happen to you either as a bystander , or you 'd be1102
+shot by a random citizen ( sometimes police )."1103
+},1104
+{1105
+"id ":" f3pj8k0 ",1106
+" body ":" As is tradition . We 're done with that1107
+condescending bullshit from antis , you dont1108
+come here for good faith discussion and1109
+whether you get a reasonable response or not ,1110
+nothing ever changes , easier to downvote you1111
+and move on because we get the same1112
+treatment anytime we attempt to speak out in1113
+anti subs ."1114
+},1115
+{1116
+"id ":" f3plgf4 ",1117
+" body ":" If downvotes hurt your feelings , you1118
+shouldn 't be on reddit . People tend to1119
+downvote anything they disagree with ( which1120
+is why some subs specifically ask you to only1121
+downvote things that contribute nothing to1122
+the discussion ). It 's a bad habit , but that 's1123
+the way it is. People downvote and * still *1124
+enage . You want to post a view contrary to1125
+26
+
+the prevailing view of the sub , take your1126
+lumps and participate in what conversation1127
+you are offered . But if you 're only here to1128
+preach about how stupid , misguided , unevolved1129
+, uneducated , irrational , and /or violent we1130
+are , don 't expect a polite response ."1131
+},1132
+{1133
+"id ":" f3tcgf1 ",1134
+" body ":" An arrogant Israeli trying to tell1135
+another nation how they should be run . You 're1136
+just a walking stereotype aren 't you ? And1137
+before you say anything , I popped into your1138
+comment history . That 's where the calling you1139
+Israeli comes from ." ,1140
+" replies ":[1141
+{1142
+" author1 ":" rookerin0 ",1143
+"id ":" f3tywb4 ",1144
+" body ":" I thought that trying to tell other1145
+nations how they should run was your1146
+guys 's stereotype ." ,1147
+" replies ":[1148
+{1149
+"id ":" f3u0vkq ",1150
+" body ":" No we go in and try to make1151
+them work our way ."1152
+}1153
+]1154
+}1155
+]1156
+}1157
+]1158
+}1159
+]1160
+},1161
+{1162
+"id ":" f3pzseh ",1163
+" body ":" It's a little unfortunate but the grabbers who come1164
+on here tend to be intellectually dishonest and /or1165
+uninformed . There was some Australian post a few days ago1166
+that pretty much asked why we like our guns more than1167
+children . No discussion to be had there . There 's also1168
+some posts that clearly demonstrate the poster should1169
+inform himself or herself a little ."1170
+},1171
+{1172
+" author2 ":" MikeWillTerminate ",1173
+"id ":" f3rqu2u ",1174
+" body ":" Actually , do that . It shows everyone that they tend1175
+to be crazy , unstable , ignorant , stereotyping , arrogant1176
+bastards who hate black people with a hair trigger ."1177
+},1178
+{1179
+"id ":" f3t7tgg ",1180
+" body ":" Welcome to reddit , home of every single safe place1181
+for anything that doesnt violate the TOS . At least its1182
+slightly better than r/ politics "1183
+},1184
+{1185
+"id ":" f3unt9z ",1186
+" body ":" This isn't r/ gundebate . This is a pro gun subreddit .1187
+That said , we do allow some debate provided it remains1188
+civil ." ,1189
+" replies ":[1190
+27
+
+{1191
+" author1 ":" rookerin0 ",1192
+"id ":" f3uomn2 ",1193
+" body ":" Sadly tho , r/ gundebate is pretty dead ..."1194
+}1195
+]1196
+},1197
+{1198
+"id ":" f4dip6o ",1199
+" body ":" Anything else you want to give away for free ?"1200
+}1201
+]1202
+}1203
+1204
+#### Response12051206
+E Samples of JSON Outputs from LLMs1207
+E.1 Sample JSON Output from LLM: GPT-4 Zero-shot1208
+1209
+1210
+{1211
+" author1 ": {1212
+" name ": " rookerin0 ",1213
+" stance_annotations ": [1214
+{1215
+"id ": " dhoxyz ",1216
+" label ": " somewhat_in_favor ",1217
+" reason ": " Advocates for open discussions , showing interest in1218
+dialogue ."1219
+},1220
+{1221
+"id ": " f3pghji ",1222
+" label ": " somewhat_in_favor ",1223
+" reason ": " Expresses desire for rational discussions , despite1224
+downvotes ."1225
+},1226
+{1227
+"id ": " f3tywb4 ",1228
+" label ": " somewhat_against ",1229
+" reason ": " Sarcastic retort , but lacks strong emotional1230
+language ."1231
+},1232
+{1233
+"id ": " f3uomn2 ",1234
+" label ": " stance_not_inferrable ",1235
+" reason ": " Comment is factual , no clear stance on the debate1236
+itself ."1237
+}1238
+],1239
+" dogmatism_label ": " Open to Dialogue ",1240
+" dogmatism_reason ": " Shows interest in discussion , acknowledges1241
+downvotes ."1242
+},1243
+" author2 ": {1244
+" name ": " MikeWillTerminate ",1245
+" stance_annotations ": [1246
+{1247
+"id ": " f3rt0bf ",1248
+" label ": " somewhat_in_favor ",1249
+" reason ": " Proposes conditions for UBCs , indicating some1250
+openness ."1251
+},1252
+28
+
+{1253
+"id ": " f3rqu2u ",1254
+" label ": " strongly_against ",1255
+" reason ": " Uses strong negative descriptors for opponents ,1256
+indicating firm stance ."1257
+}1258
+],1259
+" dogmatism_label ": " Firm but Open ",1260
+" dogmatism_reason ": " Mixed ; proposes solutions but also dismisses1261
+opposition ."1262
+}1263
+}12641265
+E.2 Sample JSON Output from LLM: GPT-4 One-shot1266
+1267
+{1268
+" author1 ": {1269
+" name ": " rookerin0 ",1270
+" stance_annotations ": [1271
+{1272
+"id ": " dhoxyz ",1273
+" label ": " somewhat_in_favor ",1274
+" reason ": " Advocates for open discussions , indicating a pro -1275
+discussion stance ."1276
+},1277
+{1278
+"id ": " f3pghji ",1279
+" label ": " somewhat_in_favor ",1280
+" reason ": " Expresses desire for rational conversation , showing1281
+a supportive stance for dialogue ."1282
+},1283
+{1284
+"id ": " f3tywb4 ",1285
+" label ": " somewhat_against ",1286
+" reason ": " Uses sarcasm to counter a stereotype , indicating a1287
+stance against the opposing view ."1288
+},1289
+{1290
+"id ": " f3uomn2 ",1291
+" label ": " somewhat_in_favor ",1292
+" reason ": " Expresses disappointment in lack of active debate ,1293
+supporting open discussion ."1294
+}1295
+],1296
+" dogmatism_label ": " Open to Dialogue ",1297
+" dogmatism_reason ": " Shows a consistent preference for discussion1298
+and engagement , without dogmatic assertions ."1299
+},1300
+" author2 ": {1301
+" name ": " MikeWillTerminate ",1302
+" stance_annotations ": [1303
+{1304
+"id ": " f3rt0bf ",1305
+" label ": " somewhat_in_favor ",1306
+" reason ": " Lists conditions for agreement , showing openness to1307
+compromise ."1308
+},1309
+{1310
+"id ": " f3rqu2u ",1311
+" label ": " strongly_against ",1312
+" reason ": " Uses strong language to describe opponents ,1313
+indicating a firm stance against them ."1314
+}1315
+29
+
+],1316
+" dogmatism_label ": " Firm but Open ",1317
+" dogmatism_reason ": " While showing strong opinions , also lists1318
+specific conditions for compromise ."1319
+}1320
+}13211322
+E.3 Sample JSON Output from LLM: GPT-4 large Few-shot1323
+1324
+{1325
+" author1 ": {1326
+" name ": " rookerin0 ",1327
+" stance_annotations ": [1328
+{1329
+"id ": " dhoxyz ",1330
+" label ": " somewhat_in_favor ",1331
+" reason ": " Expresses desire for open discussions , indicating a1332
+stance in favor of dialogue ."1333
+},1334
+{1335
+"id ": " f3pghji ",1336
+" label ": " somewhat_in_favor ",1337
+" reason ": " Advocates for rational conversation despite1338
+observing negative reactions ."1339
+},1340
+{1341
+"id ": " f3tywb4 ",1342
+" label ": " somewhat_against ",1343
+" reason ": " Uses sarcasm to counter a stereotype , showing a1344
+stance against it ."1345
+},1346
+{1347
+"id ": " f3uomn2 ",1348
+" label ": " stance_not_inferrable ",1349
+" reason ": " Comment on the state of another subreddit does not1350
+reveal a stance on the gun debate ."1351
+}1352
+],1353
+" dogmatism_label ": " Open to Dialogue ",1354
+" dogmatism_reason ": " Shows a consistent1355
+preference for discussion over confrontation ."1356
+},1357
+" author2 ": {1358
+" name ": ' MikeWillTerminate ",1359
+" stance_annotations ": [1360
+{1361
+"id ": 'f3rt0bf ",1362
+" labe "': ' somewhat_in_favor ",1363
+" reason ": 'Lists conditions for accepting UBCs , indicating1364
+some openness to compromise ."1365
+},1366
+{1367
+"id ": 'f3rqu2u ",1368
+" label ": " strongly_against ",1369
+" reason ": " Uses derogatory language to describe opponents ,1370
+showing strong opposition ."1371
+}1372
+],1373
+" dogmatism_label ": " Firm but Open ",1374
+" dogmatism_reason ": " While showing strong opinions , also suggests1375
+conditions for policy acceptance ."1376
+}1377
+}13781379
+30
+
+E.4 Sample JSON Output from LLM: Mistral Large Zero-shot1380
+1381
+{1382
+" author1 ": {1383
+" name ": " rookerin0 ",1384
+" stance_annotations ": [1385
+{1386
+"id ": " dhoxyz ",1387
+" label ": " somewhat_in_favor ",1388
+" reason ": " Author expresses desire for open discussions on1389
+anti - gun ideals ."1390
+},1391
+{1392
+"id ": " f3pghji ",1393
+" label ": " stance_not_inferrable ",1394
+" reason ": " Author is commenting on downvotes , not expressing1395
+stance ."1396
+},1397
+{1398
+"id ": " f3tywb4 ",1399
+" label ": " stance_not_inferrable ",1400
+" reason ": " Author is making a stereotypical comment , not1401
+expressing stance ."1402
+},1403
+{1404
+"id ": " f3uomn2 ",1405
+" label ": " stance_not_inferrable ",1406
+" reason ": " Author is commenting on the state of another1407
+subreddit , not expressing stance ."1408
+}1409
+],1410
+" dogmatism_label ": " Open to Dialogue ",1411
+" dogmatism_reason ": " Author expresses desire for open discussions1412
+and does not dismiss opposing views ."1413
+},1414
+" author2 ": {1415
+" name ": " MikeWillTerminate ",1416
+" stance_annotations ": [1417
+{1418
+"id ": " f3rt0bf ",1419
+" label ": " strongly_in_favor ",1420
+" reason ": " Author lists conditions for accepting UBCs , showing1421
+strong pro - gun stance ."1422
+},1423
+{1424
+"id ": " f3rqu2u ",1425
+" label ": " strongly_in_favor ",1426
+" reason ": " Author "s comment is dismissive of anti - gun1427
+advocates , showing strong pro - gun stance ."1428
+}1429
+],1430
+" dogmatism_label ": " Deeply Rooted ",1431
+" dogmatism_reason ": " Author "s comments are dismissive of opposing1432
+views and show a strong , unchangeable belief in pro - gun ideals1433
+."1434
+}1435
+}14361437
+E.5 Sample JSON Output from LLM: Mistral Large One-shot1438
+1439
+{1440
+" author1 ": {1441
+" name ": " rookerin0 ",1442
+31
+
+" stance_annotations ": [1443
+{1444
+"id ": " dhoxyz ",1445
+" label ": " somewhat_in_favor ",1446
+" reason ": " Expresses desire for open discussions on gun1447
+control , but follows pro - gun subreddit ."1448
+},1449
+{1450
+"id ": " f3pghji ",1451
+" label ": " stance_not_inferrable ",1452
+" reason ": " Comments on downvotes , but no clear stance on gun1453
+control ."1454
+},1455
+{1456
+"id ": " f3tywb4 ",1457
+" label ": " stance_not_inferrable ",1458
+" reason ": " Comment about stereotypes , but no clear stance on1459
+gun control ."1460
+},1461
+{1462
+"id ": " f3uomn2 ",1463
+" label ": " stance_not_inferrable ",1464
+" reason ": " Mentions r/ gundebate being dead , but no clear1465
+stance on gun control ."1466
+}1467
+],1468
+" dogmatism_label ": " Open to Dialogue ",1469
+" dogmatism_reason ": " Seeks open discussions and does not express1470
+strong dogmatic views ."1471
+},1472
+" author2 ": {1473
+" name ": " MikeWillTerminate ",1474
+" stance_annotations ": [1475
+{1476
+"id ": " f3rt0bf ",1477
+" label ": " somewhat_in_favor ",1478
+" reason ": " Lists conditions for supporting UBCs , showing1479
+openness to compromise ."1480
+},1481
+{1482
+"id ": " f3rqu2u ",1483
+" label ": " strongly_in_favor ",1484
+" reason ": " Strong negative language against gun control1485
+advocates , suggesting strong pro - gun stance ."1486
+}1487
+],1488
+" dogmatism_label ": " Firm but Open ",1489
+" dogmatism_reason ": " Expresses strong pro - gun views but open to1490
+compromise under certain conditions ."1491
+}1492
+}14931494
+E.6 Sample JSON Output from LLM: Mistral Large Few-shot1495
+1496
+{1497
+" author1 ": {1498
+" name ": " rookerin0 ",1499
+" stance_annotations ": [1500
+{1501
+"id ': " dhoxyz ",1502
+" label ": " somewhat_in_favor ",1503
+" reason ": " Expresses desire for open discussions on anti vs.1504
+pro - gun debates ."1505
+32
+
+DR FBO FX OTD
+Predicted Labels
+DRFBOFXOTD
+True Labels
+1 32 0 9
+0 119 0 77
+0 3 1 17
+0 69 0 131
+LLaMa-3-8B finetuning: Majority Voting, Confusion Matrix Heatmap
+DR FBO FX OTD
+Predicted Labels
+DRFBOFXOTD
+True Labels
+0 28 0 12
+0 92 0 97
+0 0 0 23
+0 74 0 134
+LLaMa-3-8B instruction-tuning: Majority Voting, Confusion Matrix Heatmap
+Figure 10: Confusion matrix for LLaMa-3-8B Dogmatism detection models on USDC test set:
+finetuning (left) and instruction-tuning (right). Here, DR: Deeply Rooted, FX: Flexible, FBO: Firm
+but Open, OTD: Open to Dialogue
+},1506
+{1507
+"id ": " f3pghji ",1508
+" label ": " stance_not_inferrable ",1509
+" reason ": " Comments on downvotes , but no clear stance on the1510
+topic ."1511
+},1512
+{1513
+"id ": " f3tywb4 ",1514
+" label ": " stance_not_inferrable ",1515
+" reason ": " Makes a stereotypical comment , but no clear stance1516
+on the topic ."1517
+},1518
+{1519
+"id ": " f3uomn2 ",1520
+" label ": " stance_not_inferrable ",1521
+" reason ": " Mentions r/ gundebate being dead , but no clear1522
+stance on the topic ."1523
+}1524
+],1525
+" dogmatism_label ": " Open to Dialogue ",1526
+" dogmatism_reason ": " Seeks open discussions and engages in1527
+conversation without strong dogmatic language ."1528
+},1529
+" author2 ": {1530
+" name ": " MikeWillTerminate ",1531
+" stance_annotations ": [1532
+{1533
+"id ": " f3rt0bf ",1534
+" label ": " somewhat_in_favor ",1535
+" reason ": " Lists conditions for supporting UBCs , showing1536
+openness to discussion ."1537
+},1538
+{1539
+"id ": " f3rqu2u ",1540
+" label ": " strongly_against ",1541
+" reason ": " Uses derogatory language to express strong1542
+opposition to 'grabbers '."1543
+}1544
+],1545
+" dogmatism_label ": " Firm but Open ",1546
+" dogmatism_reason ": " Expresses strong opinions but also shows1547
+willingness to consider certain conditions for compromise ."1548
+}1549
+}15501551
+33
+
+F SLM finetuning: AUC (Area Under the Curve) analysis1552
+Fig. 10 illustrates the confusion matrix for dogmatism detection for LLaMa-3-8B finetuning and1553
+instruction-tuning. We make the following observations from Fig. 10: 1) For both finetuning and1554
+instruction-tuning, there is significant misclassifications, especially for the "Deeply Rooted" and1555
+"Flexible" labels, with both having zero accuracy and F1-scores. While "Firm but Open" and1556
+"Open to Dialogue" perform moderately better, with accuracies of 48.7% and 64.4% respectively.1557
+The confusion matrix indicates substantial confusion to distinguish between intermediate levels of1558
+dogmatism, such as "Firm but Open" and "Open to Dialogue. We further reports the ROC curve1559
+shows the trade-off between the true positive rate (TPR) and false positive rate (FPR) for each class1560
+for stance and dogmatism tasks, in Figs. 11 and. 12. The area under the ROC curve (AUC) is a1561
+measure of the model’s ability to distinguish between classes.1562
+0.0 0.2 0.4 0.6 0.8 1.0
+False Positive Rate
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0True Positive Rate
+LLaMa-3-8B finetuning: GPT-4 zero-shot, ROC for Multi-class
+micro-average ROC curve (area = 0.72)
+ROC curve of class Somewhat Against (area = 0.66)
+ROC curve of class Somewhat In Favor (area = 0.67)
+ROC curve of class Stance Not Inferrable (area = 0.77)
+ROC curve of class Strongly Against (area = 0.71)
+ROC curve of class Strongly In Favor (area = 0.56)
+0.0 0.2 0.4 0.6 0.8 1.0
+False Positive Rate
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0True Positive Rate
+LLaMa-3-8B finetuning: GPT-4 one-shot, ROC for Multi-class
+micro-average ROC curve (area = 0.72)
+ROC curve of class Somewhat Against (area = 0.64)
+ROC curve of class Somewhat In Favor (area = 0.69)
+ROC curve of class Stance Not Inferrable (area = 0.78)
+ROC curve of class Strongly Against (area = 0.71)
+ROC curve of class Strongly In Favor (area = 0.60)
+0.0 0.2 0.4 0.6 0.8 1.0
+False Positive Rate
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0True Positive Rate
+LLaMa-3-8B finetuning: GPT-4 few-shot, ROC for Multi-class
+micro-average ROC curve (area = 0.72)
+ROC curve of class Somewhat Against (area = 0.67)
+ROC curve of class Somewhat In Favor (area = 0.67)
+ROC curve of class Stance Not Inferrable (area = 0.78)
+ROC curve of class Strongly Against (area = 0.72)
+ROC curve of class Strongly In Favor (area = 0.61)
+0.0 0.2 0.4 0.6 0.8 1.0
+False Positive Rate
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0True Positive Rate
+LLaMa-3-8B finetuning: GPT-4 Majority, ROC for Multi-class
+micro-average ROC curve (area = 0.74)
+ROC curve of class Somewhat Against (area = 0.64)
+ROC curve of class Somewhat In Favor (area = 0.72)
+ROC curve of class Stance Not Inferrable (area = 0.79)
+ROC curve of class Strongly Against (area = 0.75)
+ROC curve of class Strongly In Favor (area = 0.60)
+Figure 11: LLaMa-3-8B finetuning for stance detection task: Visualize the ROC curves for each
+class along with their AUC values for GPT-4 Annotations across zero-shot, one-shot, few-shot and
+majority labels.
+G SLM instruction-tuning: AUC (Area Under the Curve) analysis1563
+34
+
+0.0 0.2 0.4 0.6 0.8 1.0
+False Positive Rate
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0True Positive Rate
+LLaMa-3-8B finetuning: Majority Voting, ROC curves for Multi-class
+micro-average ROC curve (area = 0.66)
+ROC curve of class Deeply Rooted (area = 0.50)
+ROC curve of class Firm but Open (area = 0.56)
+ROC curve of class Flexible (area = 0.50)
+ROC curve of class Open to Dialogue (area = 0.56)
+0.0 0.2 0.4 0.6 0.8 1.0
+False Positive Rate
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0True Positive Rate
+LLaMa-3-8B finetuning: GPT-4 One-shot, ROC curves for Multi-class
+micro-average ROC curve (area = 0.67)
+ROC curve of class Deeply Rooted (area = 0.50)
+ROC curve of class Firm but Open (area = 0.59)
+ROC curve of class Flexible (area = 0.60)
+ROC curve of class Open to Dialogue (area = 0.59)
+0.0 0.2 0.4 0.6 0.8 1.0
+False Positive Rate
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0True Positive Rate
+LLaMa-3-8B finetuning: GPT-4 Majority, ROC curves for Multi-class
+micro-average ROC curve (area = 0.65)
+ROC curve of class Deeply Rooted (area = 0.52)
+ROC curve of class Firm but Open (area = 0.53)
+ROC curve of class Flexible (area = 0.61)
+ROC curve of class Open to Dialogue (area = 0.58)
+0.0 0.2 0.4 0.6 0.8 1.0
+False Positive Rate
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0True Positive Rate
+LLaMa-3-8B finetuning: GPT-4 Majority, ROC for Multi-class
+micro-average ROC curve (area = 0.74)
+ROC curve of class Somewhat Against (area = 0.64)
+ROC curve of class Somewhat In Favor (area = 0.72)
+ROC curve of class Stance Not Inferrable (area = 0.79)
+ROC curve of class Strongly Against (area = 0.75)
+ROC curve of class Strongly In Favor (area = 0.60)
+Figure 12: LLaMa-3-8B finetuning for dogmatism task: Visualize the ROC curves for each class
+along with their AUC values for GPT-4 Annotations across zero-shot, one-shot, few-shot and majority
+labels.
+35
+
+0.0 0.2 0.4 0.6 0.8 1.0
+False Positive Rate
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0True Positive Rate
+LLaMa-3-8B instruction-tuning: GPT-4 Zero-shot, ROC for Multi-class
+micro-average ROC curve (area = 0.72)
+ROC curve of class Somewhat Against (area = 0.63)
+ROC curve of class Somewhat In Favor (area = 0.69)
+ROC curve of class Stance Not Inferrable (area = 0.80)
+ROC curve of class Strongly Against (area = 0.68)
+ROC curve of class Strongly In Favor (area = 0.58)
+0.0 0.2 0.4 0.6 0.8 1.0
+False Positive Rate
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0True Positive Rate
+LLaMa-3-8B instruction-tuning: GPT-4 One-shot, ROC for Multi-class
+micro-average ROC curve (area = 0.72)
+ROC curve of class Somewhat Against (area = 0.66)
+ROC curve of class Somewhat In Favor (area = 0.69)
+ROC curve of class Stance Not Inferrable (area = 0.76)
+ROC curve of class Strongly Against (area = 0.70)
+ROC curve of class Strongly In Favor (area = 0.58)
+0.0 0.2 0.4 0.6 0.8 1.0
+False Positive Rate
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0True Positive Rate
+LLaMa-3-8B instruction-tuning: GPT-4 Majority, ROC for Multi-class
+micro-average ROC curve (area = 0.74)
+ROC curve of class Somewhat Against (area = 0.65)
+ROC curve of class Somewhat In Favor (area = 0.71)
+ROC curve of class Stance Not Inferrable (area = 0.80)
+ROC curve of class Strongly Against (area = 0.72)
+ROC curve of class Strongly In Favor (area = 0.59)
+0.0 0.2 0.4 0.6 0.8 1.0
+False Positive Rate
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0True Positive Rate
+LLaMa-3-8B instruction-tuning: GPT-4 Majority, ROC for Multi-class
+micro-average ROC curve (area = 0.74)
+ROC curve of class Somewhat Against (area = 0.65)
+ROC curve of class Somewhat In Favor (area = 0.71)
+ROC curve of class Stance Not Inferrable (area = 0.80)
+ROC curve of class Strongly Against (area = 0.72)
+ROC curve of class Strongly In Favor (area = 0.59)
+Figure 13: LLaMa-3-8B instruction-tuning for stance detection task: Visualize the ROC curves for
+each class along with their AUC values for GPT-4 Annotations across zero-shot, one-shot, few-shot
+and majority labels.
+36

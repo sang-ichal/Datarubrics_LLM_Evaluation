@@ -1,0 +1,626 @@
+SMPLOlympics: Sports Environments for Physically
+Simulated Humanoids
+Anonymous Author(s)
+Affiliation
+https://SMPLOlympics.github.io/
+Figure 1: A collection of various sports environments for physically simulated humanoids.
+Abstract
+We present SMPLOlympics, a collection of physically simulated environments1
+that allow humanoids to compete in a variety of Olympic sports. Sports simulation2
+offers a rich and standardized testing ground for evaluating and improving the3
+capabilities of learning algorithms due to the diversity and physically demanding4
+nature of athletic activities. As humans have been competing in these sports for5
+many years, there is also a plethora of existing knowledge on the preferred strategy6
+to achieve better performance. To leverage these existing human demonstrations7
+from videos and motion capture, we design our humanoid to be compatible with8
+the widely-used SMPL and SMPL-X human models from the vision and graphics9
+community. We provide a suite of individual sports environments, including golf,10
+javelin throw, high jump, long jump, and hurdling, as well as competitive sports,11
+including both 1v1 and 2v2 games such as table tennis, tennis, fencing, boxing,12
+soccer, and basketball. Our analysis shows that combining strong motion priors13
+with simple rewards can result in human-like behavior in various sports. By14
+providing a unified sports benchmark and baseline implementation of state and15
+reward designs, we hope that SMPLOlympics can help the control and animation16
+communities achieve human-like and performant behaviors.17
+Submitted to the 38th Conference on Neural Information Processing Systems (NeurIPS 2024) Track on Datasets
+and Benchmarks. Do not distribute.
+
+1 Introduction18
+Competitive sports, much like their role in human society, offer a standardized way of measuring19
+the performance of learning algorithms and creating emergent human behavior. While there exist20
+isolated efforts to bring individual sport into physics simulation [8, 34, 7, 33, 27], each work uses21
+a different humanoid, simulator, and learning algorithm, which prevents unified evaluation. Their22
+specially built humanoids also make it difficult to acquire compatible motion data, as retargeting23
+might be required to translate motion to each humanoid. Building a collection of simulated sports24
+environments that uses a shared humanoid embodiment and training pipeline is challenging, as it25
+requires expert knowledge in humanoid design, reinforcement learning (RL), and physics simulation.26
+These challenges have led to previous benchmarks and simulated environments [ 3, 25] focusing27
+mainly on locomotion tasks for humanoids. While these tasks (e.g., moving forward, getting up from28
+the ground, traversing terrains) are as benchmarks, they lack the depth and diversity needed to induce29
+a wide range of behaviors and strategies. As a result, these environments do not fully exploit the30
+potential of humanoids to discover actions and skills found in real-world human activities.31
+Another important aspect of working with simulated humanoids is the ease of obtaining human32
+demonstrations. The resemblance to the human body makes humanoids capable of performing a33
+diverse set of skills; a human can also easily judge the strategies used by humanoids. Curated human34
+motion can be used either as motion prior [ 17, 18, 24] or in evaluation protocols. Thus, having35
+an easy way to obtain new human motion data compatible with the humanoid, either from motion36
+capture (MoCap) or videos, is critical for simulated humanoid environments.37
+In this work, we propose SMPLOlympics, a collection of physically simulated environments for38
+a variety of Olympic sports. SMPLOlympics offers a wide range of sports scenarios that require39
+not only locomotion skills, but also manipulation, coordination, and planning. Unified under one40
+humanoid embodiment, our environments provide a rich set of challenges for developing and testing41
+embodied agents. We use humanoids compatible with the SMPL family of models, which enables42
+the direct conversion of human motion in the SMPL format to our humanoid. For tasks that require43
+articulated fingers, we use SMPL-X [ 16] based humanoid which has a much higher degree of44
+freedom (DOF); for tasks that do not need hands, we use SMPL [2]. As popular human models, the45
+SMPL family of models is widely adopted in the vision and graphics community, which provides46
+us with access to human pose estimation methods [32] capable of extracting coherent motion from47
+videos. The existing large-scale human motion dataset [ 13] in the SMPL format also helps build48
+general-purpose motion representation for humanoids [10].49
+Our sports environments support both individual and competitive sports, providing a comprehensive50
+platform for testing and benchmarking. For individual sports, we include activities such as golf,51
+javelin throw, high jump, long jump, and hurdling. Competitive sports in our suite include 1v152
+games such as ping pong, tennis, fencing, and boxing, as well as team sports such as soccer and53
+basketball. To facilitate benchmarking, we also include tasks such as penalty kicks (for soccer) and54
+ball-target hitting (for ping-pong and tennis) that are easy to measure performance. To demonstrate55
+the importance of human demonstrations, we extract motion from videos using off-the-shelf pose56
+estimation methods, and show that using human motion data as motion prior can [18] significantly57
+improves human likeness in the resulting motion. We also test recent motion representations in58
+simulated humanoid control using hierarchical RL [10], and show that a learned motion representation59
+combined with simple rewards can lead to many versatile human-like behaviors to achieve impressive60
+sports results (i.e. discovering the Fosbury way for high jump).61
+In conclusion, our contributions are: (1) we propose SMPLOlympics, a collection of simulated62
+environments that allow humanoids to compete in a variety of Olympic sports; (2) we extract human63
+demonstration data from videos and show their effectiveness in helping build human-like strategies64
+in simulated sports; (3) we provide the starting state and reward designs for each sport, benchmark65
+state-of-the-art algorithms, and show that simple rewards combined with a strong motion prior can66
+lead to impressive sports feats.67
+2
+
+2 Related Works68
+Simulated Humanoid Sports. Simulated humanoid sports can help generate animations and explore69
+optimal sports strategies. Research has focused on various individual sports within simulated70
+environments, including tennis [34], boxing [27, 36], fencing [27], basketball dribbling [7] and soccer71
+[29, 8]. These studies leverage human motion to achieve human-like behaviors, using it to acquire72
+motor skills [8, 27] or establish motion prior [34]. However, the diversity in humanoid definitions73
+across studies makes it difficult to aggregate additional human demonstration data due to the need for74
+retargetting. Furthermore, the task-specific training pipelines in these studies are hard to generalize75
+to new sports. In contrast, SMPLOlympics provides a unified benchmark employing a consistent76
+humanoid model and training pipeline across all sports. This standardization not only facilitates the77
+extension to more sports, but also simplifies the process of benchmarking learning algorithms.78
+Simulated RL Benchmarks. Simulated full-body humanoids provide a valuable platform for79
+studying embodied intelligence due to their close resemblance to real-world human behavior and80
+physical interactions. Current RL benchmarks [ 3, 25, 14] often focus on locomotion tasks such81
+as moving forward and traversing terrain. dm_control [25] and OpenAI [ 3] Gym only include82
+locomotion tasks. ASE [ 19] includes results for five tasks based on mocap data, which involve83
+mainly simple locomotion and sword-swinging actions. These tasks lack the complexity required84
+to fully exploit the capabilities of simulated humanoids. Sports scenarios require agile motion and85
+strategic teamwork. They are also easily interpretable and provide measurable outcomes for success.86
+A concurrent work, HumanoidBench [ 23] employs a commercially available humanoid robot in87
+simulation to address 27 locomotion and manipulation tasks. Unlike HumanoidBench, ours targets88
+competitive sports and uses available human demonstration data to enhance the learning of human-89
+like behaviors. This emphasis is essential, as without human demonstrations, behaviors developed in90
+benchmarks can often appear erratic, nonhuman-like, and inefficient.91
+Humanoid Motion Representation. Adversarial learning has proven to be a powerful method for92
+using human reference motions to enhance the naturalness of humanoid animations [18, 30, 1]. Due93
+to the high DoF in humanoids and the inherent sample inefficiency of RL training, efforts have94
+focused on developing motion primitives [6, 15, 5, 20] and motion latent spaces [4, 19, 24]. These95
+techniques aim to accelerate training and provide human-like motion priors. Notably, approaches such96
+as ASE [19], CASE [4], and CALM [24] utilize adversarial learning objectives to encourage mapping97
+between random noise and realistic motor behavior. Furthermore, methods such as ControlV AE [31],98
+NPMP [15], PhysicsV AE [28], NCP [36], and PULSE [ 10] leverage the motion imitation task to99
+acquire and reuse motor skills for the learning of downstream tasks. In this work, we study AMP100
+[18] and PULSE [10] as exemplary methods to provide motion priors. Our findings demonstrate101
+that a robust motion prior, combined with straightforward reward designs, can effectively induce102
+human-like behaviors in solving complex sports tasks.103
+3 Preliminaries104
+We define the full-body human pose as qt ≜ (θt, pt), consisting of 3D joint rotations θt ∈ RJ×6105
+and positions pt ∈ RJ×3 of all J joints on the humanoid, using the 6 DoF rotation representation106
+[35]. To define velocities ˙q1:T , we have ˙qt ≜ (ωt, vt) as angular ωt ∈ RJ×3 and linear velocities107
+vt ∈ RJ×3. If an object is involved ( e.g. javelin, football, ping-pong ball), we define their 3D108
+trajectories qobj
+t using object position pobj
+t , orientation θobj
+t , linear velocity vobj
+t , and angular velocity109
+ωobj
+t . As a notation convention, we use b· to denote the ground truth kinematic quantities from Motion110
+Capture (MoCap) and normal symbols without accents for values from the physics simulation.111
+Goal-conditioned Reinforcement Learning for Humanoid Control. We define each sport using112
+the general framework of goal-conditioned RL. Namely, a goal-conditioned policy πtask is trained to113
+control a simulated humanoid competing in a sports environment. The learning task is formulated114
+as a Markov Decision Process (MDP) defined by the tuple M = ⟨S, A, T, R, γ⟩ of states, actions,115
+3
+
+Figure 2: An overview of SMPLOlympics: we design a collection of simulated sports environments and
+leverage RL and human demonstrations (from videos or MoCap) as prior to tackle them.
+transition dynamics, reward function, and discount factor. The simulation determines the state116
+st ∈ S and transition dynamics T, where a policy computes the action at. The state st contains the117
+proprioception sp
+t and the goal state sg
+t. Proprioception is defined as sp
+t ≜ (qt, ˙qt), which contains118
+the 3D body pose qt and velocity ˙qt. We use b to indicate the boundary of the arena to which a sport119
+is limited. All values are normalized with respect to the humanoid heading (yaw).120
+4 SMPLOlympics: sports environments For Simulated Humanoids121
+In this section, we describe the formulation of each of our sports environments, from single-person122
+sports (Sec. 4.1) to multi-person sports (Sec. 4.2). Then, we describe our pipeline for acquiring123
+human demonstration data from videos (Sec. 4.3). An overview can be found in Fig. 2. For each124
+sport, we provide a preliminary reward design that serves as a baseline for future research. Due to125
+space constraints, omitted details can be found in the supplement.126
+4.1 Single-person Sports127
+High Jump. In the high jump environment, the humanoid’s objective is to jump over a horizontal128
+bar placed at a certain height without touching it. The bar is positioned following the setup of the129
+official Olympic game. The high jump goal state sg-high_jump
+t = (pb
+t, pl
+t) contains the positions of the130
+bar pb
+t ∈ R3 and the landing area pl
+t ∈ R3. The reward is defined as Rhigh jump(sp
+t, sg-high_jump
+t ) =131
+wprp
+t + whrh
+t . The position reward rp
+t encourages the humanoid to go closer to the goal point, which132
+is behind the high jump bar. The height reward rh
+t encourages the humanoid to jump higher. Training133
+terminates when the humanoid is in contact with the bar, does not pass the bar, or falls to the ground134
+before jumping. We also set up four bar heights for curriculum learning: 0.5m, 1m, 1.5m, and 2m.135
+Long Jump. Long jump is also set similar to the Olympic games, with a 20m runway followed136
+by a jump area. Before the humanoid jumps, its feet should be behind the jump line. The goal137
+state sg-long_jump
+t ≜ (ps
+t , pl
+t, pg
+t ) includes the position of the starting point ps
+t ∈ R3, jump line138
+pl
+t ∈ R3, and the goal pg
+t ∈ R3. The training reward is defined as Rlong jump(sp
+t, sg-long_jump
+t ) ≜139
+wprp
+t + wvrv
+t + whrh
+t + wlrl
+t. The position reward rp
+t encourages the humanoid to get closer to the140
+goal, the velocity reward rv
+t encourages larger running speed, and the height reward rh
+t encourages141
+higher jump. Finally, rl
+t encourages jumping far.142
+Hurdling. In hurdling, the humanoid tries to reach a finishing line 110 meters ahead and needs to143
+jump over 10 hurdles (each 1.067m high, placed 13.72m from the start, with subsequent hurdles144
+spaced every 9.14m). The goal state is defined as sg-hurdling
+t ≜ (ph
+t , pf
+t ), where ph
+t ∈ R10×3 and145
+pf
+t ∈ R3 includes the positions of these hurdles as well as the finish line. We define a simple reward146
+function as Rhurdling(sp
+t, sg-hurdling
+t ) =rdistance
+t . Rhurdling encourages the agent to run towards the finish147
+line and clear each hurdle. Additionally, we employ a curriculum for hurdling, where the height of148
+each hurdle is randomly sampled between 0 and 1.167 meters for each episode.149
+Golf. For golf, the humanoid’s right hand is replaced with a golf club measuring 1.14 meters. The150
+driver of the golf club is simulated as a small box ( 0.05m × 0.025m × 0.02m). We incorporate a151
+4
+
+randomly generated terrain in the golf environment, designed to mimic real-world grasslands with152
+wave-like features and an amplitude of 0.5 meters. The objective for the humanoid is to hit the ball153
+towards a randomly sampled target position. The goal state sg-golf
+t ≜ (pb
+t, pc
+t, pg
+t , ot) includes the ball154
+position pb
+t ∈ R3, club cb
+t ∈ R3, goal position pg
+t ∈ R3, and terrain height map ot ∈ R32×32. The155
+reward is defined as Rgolf(sp
+t, sg-golf
+t ) =wprp
+t + wcrc
+t + wgrg
+t + wpredrpred
+t , where the rp
+t encourages156
+the ball to move forward, rc
+t encourages swinging the golf club to hit the ball, and rg
+t encourages the157
+ball to reach the goal. In addition, we predict the ball’s trajectory and provide a dense reward rpred
+t158
+based on the distance between the predicted landing point and the goal.159
+Javelin. For javelin throw, we use SMPL-X humanoid with articulated fingers. The goal state is160
+defined as sg-javelin
+t ≜ (qobj
+t , pr
+t , ph
+t ), where qobj
+t ∈ R13, includes the position, orientation, linear, and161
+angular velocity of the javelin. pr
+t and ph
+t are the positions of the root and right hand. The reward162
+is defined as Rjavelin(sp
+t, sg-javelin
+t ) ≜ wgrabrgrab
+t + wjsrjs
+t + wgoalrgoal
+t + wsrs
+t. The grab reward rgrab
+t163
+encourages the right hand to grab the javelin. The javelin stability reward rjs
+t minimizes the javelin’s164
+self-rotation. The goal reward rgoal
+t encourages the humanoid to throw the javelin further. The stability165
+reward rs
+t is to avoid large movements of the body.166
+4.2 Multi-person Sports167
+Tennis. For tennis, each humanoid’s right hand is replaced as an oval racket. We use the same168
+measurement as a real tennis court and ball. We design two tasks: a single-player task where the169
+humanoid trains to hit balls launched randomly, and a 1v1 mode where the humanoid plays against170
+another humanoid. For both tasks, the goal state is defined as sg-tennis
+t ≜ (pball
+t , vball
+t , pracket
+t , ptar
+t ,171
+where pball
+t ∈ R3, vball
+t ∈ R3, pracket
+t ∈ R3 and ptar
+t ∈ R3, which includes the position and velocity of172
+the ball, position of the racket and position of the target. The reward function for tennis is defined173
+as Rtennis(sp
+t, sg-tennis
+t ) =wprracket
+t + wbrball
+t . The racket reward rracket
+t encourages the racket to reach174
+the ball, and the ball reward rball
+t aims to successfully hit the ball into the opponent’s court, as close175
+to the target as possible. For the single-player task, we shoot a ball from the opposite side from a176
+random position and trajectory, simulating a ball hit by the opponent. The target ptar
+t is also randomly177
+sampled. For the 1v1 scenario, we can either train models from scratch or initialize two identical178
+single-player models as opponents, which can play back and forth.179
+Table Tennis. For table tennis, each humanoid is equipped with a circular paddle (replacing the right180
+hand) and play on a standard table. Similar to tennis, we have the single-player task and the 1v1 task.181
+Similarly, the goal state is defined as sg-tennis
+t ≜ (pball
+t , vball
+t , pracket
+t , ptar
+t ). The reward function for182
+table tennis is defined as Rtable tennis(sp
+t, sg-table_tennis
+t ) =wprracket
+t + wbrball
+t . The paddle reward rracket
+t183
+is the same as the tennis while we modify the rball
+t slightly to encourage more hits for table tennis.184
+Fencing. For 1v1 fencing, each humanoid is equipped with a sword (replacing the right hand)185
+and plays on a standard fencing field. The goal state is defined as sg-fencing
+t ≜ (popp
+t , vopp
+t , psword
+t −186
+popp-target
+t , ∥ct∥2
+2, ∥copp
+t ∥2
+2, b), which contains the opponent’s position body popp
+t ∈ R24×3, linear187
+velocity vopp
+t ∈ R24×3, the difference between target body positionpopp-target
+t ∈ R5×3 on the opponent188
+and agent’s sword tip position psword
+t , normalized contract forces on the agent itself ∥ct∥2
+2 ∈ R24×3189
+and its opponent∥copp
+t ∥2
+2 ∈ R24×3, as well as the bounding boxb ∈ R4. To train the fencing agent, we190
+define the fencing reward function asRfencing(sp
+t, sg-fencing
+t ) =wfrfacing
+t + wvrvel
+t + wsrstrike
+t + wprpoint
+t .191
+The facing rfacing
+t and velocity reward rvel
+t encourage the agent to face and move toward the opponent.192
+The strike reward rstrike
+t encourages the agent’s sword tip to get close to the target, while rpoint
+t is the193
+reward for getting in contact with the target. We use the pelvis, head, spine, chest, and torso as the194
+target bodies. The episode terminates if either of the humanoids falls or steps out of bounds.195
+Boxing. For boxing, we simulate two humanoids with sphere hands in a bounded arena. The goal196
+state is similar to fencing: sg-boxing
+t ≜ (popp
+t , vopp
+t , phand
+t − popp-target
+t , ∥ct∥2
+2, ∥copp
+t ∥2
+2) but without the197
+bounding box information. The reward function and target body parts are also the same as fencing,198
+though replacing the sword tip to the hands.199
+5
+
+Soccer. The soccer environment includes one or more humanoids, a ball, two goal posts, and the field200
+boundaries. The field measures 32m × 20m. We support three tasks: penalty kicks, 1v1, and 2v2.201
+For penalty kicks, the humanoid is positioned 13 meters from the goal line, with the ball placed202
+at a fixed spot 12 meters directly in front of the goal center. The objective is to kick the ball203
+toward a randomly sampled target within the goal post. To achieve this, the controller is provided204
+sg-kick
+t ≜ (pball
+t , ˙qball
+t , pgoal-post
+t , pgoal-target
+t ), where pball
+t ∈ R3 is the ball position, ˙qball
+t ∈ R3 is the205
+velocity and angular velocity, pgoal-post
+t ∈ R4 is the bounding box of the goal, and pgoal-target
+t ∈ R3 is206
+the target location within the goal post. The reward isRsoccer-kick(sp
+t, sg-kick
+t ) ≜ wp2brp2b + wb2grb2g +207
+wbv2grbv2g + wb2trb2t − cno-dribble
+t . Various rewards are designed to guide the character towards a208
+run-and-kick motion. The player-to-ball (rp2b) reward motivates the character to move towards the209
+ball. The ball-to-goal reward (rb2g) reduces the distance between the ball and the target. The ball-210
+velocity-to-goal (rbv2g) encourages a higher velocity of the ball toward the target. The ball-to-target211
+(rb2t) reward encourages a smaller distance between the target and the predicted landing spot of the212
+ball based on its current position and velocity. Finally, a negative reward (cno-dribble
+t ) is applied if the213
+character passes the spawn position of the ball, which discourages dribbling and encourages kicking.214
+Beyond penalty kicks, we explore team-play dynamics, including 1v1 and 2v2. The controller is215
+provided with a state defined as sg-soccer
+t ≜ (pball
+t , ˙qball
+t , pgoal-post
+t , pally-root
+t , popp-root
+t ), where pally-root
+t ∈216
+R3 and popp-root
+t ∈ R3 are the root positions of the ally and opponents (1 or 2). The controller is then217
+trained using the following reward Rsoccer-match(sp
+t, sg-soccer
+t ) ≜ wp2brp2b + wb2grb2g + wbv2grbv2g +218
+wpointrpoint, where rp2b, rb2g and rbv2g are the same as in penalty kick. rb2g and rbv2g are zeroed out219
+when the distance to the ball is greater than 0.5m. rpoint, the scoring a goal, provides a one-time bonus220
+and or penalty for goals. Notice that this is a rudimentary reward design compared to prior art [8] and221
+serves as a starting point for further development.222
+Basketball. Our basketball environment is set up similarly to the soccer environment except for using223
+the SMPL-X humanoid. The court measures 29m × 15m, with a 3m high hoop. We also introduce224
+the task of free-throw, where the humanoid begins at a distance of 4.5 meters from the hoop with the225
+ball initially positioned close to its hands. The objective is to successfully throw the basketball into226
+the hoop. The goal state for this task is defined similarly to that of the soccer penalty kicks, with the227
+distinction being the prohibition of foot-to-ball contact to maintain basketball rules.228
+Competitive Self-play. In competitive sports environments, we implement a basic adversarial self-229
+play mechanism where two policies, initialized randomly, compete against each other to optimize230
+their rewards. We adopt an alternating optimization strategy from [27], where one policy is frozen231
+while the other is trained. This encourages each policy to develop offensive and defensive strategies,232
+contributing to more competitive behavior, as observed in boxing and fencing (supplement site).233
+4.3 Acquiring Human Demonstration From Videos234
+We utilize TRAM [26] for 3D motion reconstruction from Internet videos, providing robust global235
+trajectory and pose estimation under dynamic camera movements, commonly found in sports broad-236
+casting. Specifically, TRAM estimates SMPL parameters [9] which include global root translation,237
+orientation, body poses, and shape parameters. We further apply PHC [11], a physics-based motion238
+tracker, to imitate these estimated motions, ensuring physical plausibility. We find these corrected239
+motions are significantly more effective as positive samples for adversarial learning compared to raw240
+estimated results. More details and ablation are provided in the supplementary materials.241
+5 Experiments242
+Implementation Details. Simulation is conducted in Isaac Gym [14], where the policy runs at 30243
+Hz and the simulation at 60 Hz. All task policies utilize three-layer MLPs with units [2048, 1024,244
+512]. The SMPL humanoid models adhere to the SMPL kinematic structure, featuring 24 joints,245
+23 of which are actuated, yielding an action space of R69. The SMPL-X humanoid has 52 joints,246
+6
+
+Figure 3: Qualitative results for high jump, javelin, golf, and hurdling. PPO and AMP try to solve the task
+using inhuman behavior, while PULSE can discover human-like behavior.
+51 actuated, including 21 body joints and hands, resulting in an action space of R153. Body parts247
+on our humanoid consist of primitives such as capsules and blocks. All models can be trained on a248
+single Nvidia RTX 3090 GPU in 1-3 days. We limit all joint actuation forces to 500 Nm. For more249
+implementation details, please refer to the supplement.250
+Baselines. We benchmark our simulated sports using some of the state-of-the-art simulated humanoid251
+control methods. While not a comprehensive list, it provides a baseline for the challenging environ-252
+ments. Each task is trained using PPO [22], AMP [18], PULSE [10], and a combination of PULSE253
+and AMP. AMP use a discriminator with the policy to provide an adversarial reward, using human254
+demonstration data to deliver a “style" reward that reflects the human-likeness of humanoid motion.255
+Both task and discriminator rewards are equally weighted at 0.5. PULSE extracts a 32-dimensional256
+universal motion representation from AMASS data, surpassing previous methods [24, 19] in coverage257
+of motor skills and applicability to downstream tasks. Compared to AMP, PULSE uses hierarchical258
+RL and offers a learned action space that accelerates training and provides human-like motion prior259
+(instead of a discriminative reward). PULSE and AMP can be combined effectively, where PULSE260
+provides the action space and AMP provides task-specific style reward.261
+Metrics. We provide quantitative evaluations for tasks with easily measurable metrics such as high262
+jump, long jump, hurdling, javelin, golf, single-player tennis, table tennis, penalty kicks, and free263
+throws. These metrics are detailed in the supplementary materials, where we also present qualitative264
+assessments for tasks that are more challenging to quantify, such as boxing, fencing, and team soccer.265
+Specifically, success rate (Suc Rate) determines whether an agent completes a sport according to set266
+rules. Average distance (Avg Dis) indicates the extent an agent or object travels. For sports involving267
+ball hits, such as tennis and table tennis, we record the average number of successful ball strikes (Avg268
+Hits). Error distance (Error Dis) measures the distance between the intended target and the actual269
+landing spot, applicable in sports like golf, tennis, and penalty kicks. Additionally, the hit rate in golf270
+quantifies the success of striking the ball with the club. Evaluations are performed on 1000 trials.271
+5.1 Benchmarking Popular Simulated Humanoid Algorithms272
+In this section, we evaluate the performance of various control methods across our sports environments.273
+We provide qualitative results in Fig. 3 and Fig. 4, and training curves in Fig. 5. To view extensive274
+qualitative results, including human-like soccer kick, boxing, high jump, etc., please see supplement.275
+Track & Field Sports (Without Video Data). We first evaluate track and field sports, including276
+long jump, high jump, hurdling, and javelin throwing. For these sports, SOTA pose estimation277
+methods fail to estimate coherent motion and global root trajectory as players and cameras are both278
+fast-moving. Thus, we utilize a subset of the AMASS dataset containing locomotion data [ 21] as279
+7
+
+Table 1: Evaluation on Long Jump, High Jump, Hurdling and Javelin. World records are in parentheses.
+Long Jump (8.95m) High Jump (2.45m) Hurdling (12.8s) Javelin (104.8m)
+Method Suc Rate↑ Avg Dis↑ Suc Rate (1m)↑ Height (1m)↑ Suc Rate (1.5m)↑ Height (1.5m)↑ Suc Rate↑ Avg Dis↑ Time↓ Suc Rate↑ Avg Dis↑
+PPO [22] 53.6% 19.42 100% 4.08 100% 4.11 57.6% 108.9 11.22 100% 44.5AMP [18] 0% - 0% - 0% - 0% 13.24 - 0.31% 2.03PULSE [10]100% 5.105 100% 2.01 100% 1.98 100% 122.117.76 100% 9.63
+Table 2: Evaluation on Golf, Tennis, Table Tennis, Penalty Kick and Free Throw
+Golf Tennis Table Tennis Penalty Kick Free Throw
+Method Hit Rate↑ Error Dis↓ Avg Hits↑ Error Dis↓ Avg Hits↑ Error Dis↓ Suc Rate↑ Error Dis↓ Suc Rate↑
+PPO [22] 0% - 2.76 1.92 1.01 0.06 0.0% - 0.0%AMP [18] 100% 1.43 3.95 5.30 1.10 0.13 0.0% - 0.0%PULSE [10] 99.9% 1.29 2.48 3.50 0.74 0.19 76.6% 0.25 87.5%PULSE [10] + AMP [18]99.9% 2.18 2.62 3.64 1.83 0.23 27.5% 0.27 30.6%
+reference motions. Since PULSE is pretrained on AMASS, we exclude PULSE + AMP from these280
+tests. Table 1 summarizes the quantitative results of different methods. In long jump, AMP fails281
+entirely, often walking slowly to the jump line without a forward leap. This failure occurs because282
+the policy prioritizes discriminator rewards over task completion. If the task is too hard, the policy283
+will use simple motion (such as standing still) to maximize the discriminator reward instead of trying284
+to complete the task. In contrast, PPO, while capable of jumping great distances, exhibits unnatural285
+motions. PULSE successfully executes jumps with human-like motion, but lacks the specialized286
+skills for top-tier records due to the absence of corresponding motion data in AMASS. The high287
+jump displays similar patterns: PPO achieves impressive heights but with unnatural movements while288
+AMP struggles to reconcile adversarial and task rewards. Surprisingly, as shown in Figure 3, PULSE289
+successfully adopts a Fosbury flop approach without specific rewards to encourage this technique,290
+likely leveraging breakdance skills. For hurdling, AMP completely fails, stopping before the first291
+hurdle. PPO bounces energetically over each obstacle as shown in Figure 3, but sometimes falls and292
+fails to complete the race, with an average success rate of just over 50% and an average distance293
+of less than 110m. PULSE facilitates natural clearance of hurdles, and completes races in 17.76294
+seconds, a competitive time compared to human standards. Javelin throwing poses similar challenges:295
+PPO uses inhuman strategies, AMP struggles with balancing rewards, and PULSE adopts human-like296
+strategies but lacks specific skills for record-setting performance.297
+Sports With Video Data. For sports including golf, tennis, table tennis, and soccer penalty kick, we298
+utilize processed motion from videos as demonstrations for AMP and PULSE+AMP. The results are299
+reported in Table 2 and Fig. 4. In tennis, AMP demonstrates superior performance in terms of average300
+hits; however, returned balls often land far from the intended targets. This is because prolonged301
+rallies increase discriminator rewards, leading AMP to ignore task rewards. Notably, AMP exhibits302
+inhuman motions at the moment of ball contact and reverts to natural movements when preparing for303
+the next hit as shown in Fig. 4. This behavior underscores a reward conflict between balancing task304
+and discriminator rewards. PPO plays tennis in an unnatural way, while PULSE and PULSE + AMP305
+show similar performance. In table tennis, PPO achieves impressive error distances, but struggles306
+with consistency and often fails to return second shots. We observe video data provesparticularly307
+beneficial for table tennis. PULSE+AMP records significantly higher hit averages with reasonable308
+error distances. Table tennis requires quick reactions within a short time, which the pre-trained309
+PULSE model supports by providing necessary motor skills, enhanced by video data that guide310
+the learning of proper stroke techniques. For golf, penalty kicks, and free throws, the “initiating311
+contact with an object" part makes them challenging. Here, only PULSE and PULSE+AMP manage312
+to solve the three tasks effectively, leveraging PULSE’s latent space for effective exploration. The313
+design of these tasks often results in a sparse exploration phase where triggering penalty rewards,314
+such as cno-dribble
+t for moving past the ball’s initial position. The AMP reward also negatively affects315
+training penalty kick, as the human demonstration contains other soccer motions such as running and316
+dribbling, and the policy finds them easier to learn and exploit.317
+Curriculum learning. We find curriculum learning is an essential component in achieving better318
+results for some tasks. In Table 3, we study variants of high jump and hurdling task with and without319
+8
+
+Figure 4: Qualitative results for table tennis and tennis. PPO and AMP result in inhuman behavior; PULSE can
+use human-like movement but PULSE + AMP result in behavior specific to the sport.
+0 25 50 75 100 125
+Environment Steps (×107)
+0
+100
+200
+300
+400
+500
+600Episode Return
+Long Jump
+0 10 20 30 40 50
+Environment Steps (×107)
+0
+20
+40
+60
+80
+100
+120Episode Return
+High Jump
+0 50 100 150 200 250
+Environment Steps (×107)
+0
+20
+40
+60
+80
+100
+120Episode Return
+Hurdling
+0 10 20 30 40 50
+Environment Steps (×107)
+0
+5
+10
+15
+20
+25Episode Return
+Javelin
+0 10 20 30 40
+Environment Steps (×107)
+0
+25
+50
+75
+100
+125
+150Episode Return
+Golf
+0 50 100 150 200
+Environment Steps (×107)
+0
+20
+40
+60
+80
+100
+120Episode Return
+T ennis
+0 100 200 300 400
+Environment Steps (×107)
+0
+25
+50
+75
+100
+125
+150Episode Return
+T able T ennis
+0 5 10 15 20 25
+Environment Steps (×107)
+0
+2
+4
+6
+8Episode Return
+Penalty Kick
+PPO AMP PULSE PULSE+AMP
+Figure 5: Learning curves on various tasks.
+Table 3: Evaluation on curriculum learning.
+High Jump Hurdling
+Method Suc Rate (1m) Suc Rate (1.5m)Suc Rate Avg Dis Time
+w/o curriculum100% 0% 0% 13.65 -w/ curriculum 100% 100% 100% 122.1 17.76
+the curriculum using PULSE. We can see that320
+without curriculum, high jump and hurdling321
+both fail to solve the task. This is due to the322
+policy not being able to obtain any reward fac-323
+ing challenging heights of bars and hurdles and the policy gets stuck in the local minima.324
+6 Limitations, Conclusion and Future Work325
+Limitations . While SMPLOlympics provides a large collection of simulated sports environments, it326
+is far from being comprehensive. Certain sports are omitted due to simulation constraints (e.g., swim-327
+ming, shooting, ice hockey, cycling) or their inherent complexity (e.g., 11-a-side soccer, equestrian328
+events). Nevertheless, our framework is highly adaptable, allowing easy incorporation of additional329
+sports like climbing, rugby, wrestling etc. Our initial design of rewards, though able to achieve330
+sensible results, is also far from optimal. For competitive sports such as 2v2 soccer and basketball,331
+our results also fall short of SOTA [8] which employs much more complex systems.332
+Conclusion and Future Work. We introduce SMPLOlympics, a collection of sports environments333
+for simulated humanoids. We provide carefully designed state and reward, and benchmark humanoid334
+control algorithms and motion priors. We find that by combining simple reward design and powerful335
+human motion prior, one can achieve human-like behavior for solving various challenging sports.336
+Our humanoid’s compatibility with the SMPL family of models also provides an easy way to obtain337
+additional data from video for training, which we demonstrate to be helpful in training some sports.338
+These well-defined simulation environments could also serve as valuable platforms for frontier models339
+[12] to gain physical understanding. We believe that SMPLOlympics provides a valuable starting340
+point for the community to further explore physically simulated humanoids.341
+9
+

@@ -1,0 +1,767 @@
+Benchmarking Vision Models Under Generative
+Continuous Nuisance Shifts
+Anonymous Author(s)
+Affiliation
+Address
+email
+Abstract
+One important challenge in evaluating the robustness of vision models is controlling1
+individual nuisance factors independently. While some simple synthetic corruptions2
+are commonly applied to existing models, they do not fully capture all realistic3
+and relevant distribution shifts of real-world images. To overcome this challenge,4
+we apply LoRA adapters to diffusion models to realize a wide range of individual5
+nuisance shifts in a continuous manner. While existing generative benchmarks6
+perform manipulations in one step, we argue for gradual and continuous nuisance7
+shifts, as they allow evaluating the sensitivity and failure points of vision models.8
+With this in mind, we perform a comprehensive large-scale study to evaluate the9
+robustness and generalization of various classifiers under various nuisance shifts.10
+Through carefully-designed comparisons and analysis, we reveal multiple valuable11
+observations: 1) More modern and larger architectures trained on larger datasets12
+tend to be more robust to various nuisance shifts and fail later for larger scales. 2)13
+Pre-training strategy influences the robustness and fine-tuning a CLIP classifier14
+improves the standard accuracy but deteriorates the robustness. 3) The accuracy15
+drops only account for one dimension of robustness and the failure point analysis16
+should be considered as an additional dimension for robustness evaluation. We17
+hope our continuous nuisance shift benchmark can provide a new perspective on18
+assessing the robustness of vision models.19
+1 Introduction20
+Machine learning models are typically validated and tested on fixed datasets under the assumption21
+of independent and identically distributed samples. However, this may not fully reflect the true22
+capabilities and potential vulnerabilities of models when deployed in dynamic real-world environ-23
+ments. The robustness in out-of-distribution (OOD) scenarios is important in the real world. In24
+safety-critical applications, decision-makers might be interested in how models perform under various25
+specific nuisance shifts and severity levels. The term “nuisance shifts” refers to any intervention on26
+a considered image distribution that alters the visual information while not changing the class of a27
+considered target object, which can include the weather, style, or background.28
+In the past, various benchmarks have been proposed to evaluate the robustness of computer vision29
+models. One line of benchmarks manually collects data with nuisance shifts [1, 12, 17, 18, 20, 34,30
+41, 45]. Yet, such approaches are not scalable and often include only a small variety of nuisance31
+shifts. While Hendrycks and Dietterich [16] reports accuracy drops for various synthetic corruption32
+Submitted to the 38th Conference on Neural Information Processing Systems (NeurIPS 2024) Track on Datasets
+and Benchmarks. Do not distribute.
+
+Figure 1: Benchmarking Continuous Nuisance Shifts. We find the failure point (highlighted in
+red) for different models under various nuisance shifts. This enables a fine-grained understanding of
+a model’s robustness in various conditions.
+types and levels of corruption, they are not always relevant in the real world and do not represent all33
+real-world nuisance shifts.34
+On the other hand, synthetic datasets offer opportunities for evaluating deep neural networks. They35
+allow the generation of various instances of a specific object class with specified context and nuisance36
+shifts. While rendering pipelines allow precise control of several variables and are applied for37
+benchmarking [3, 21, 23, 35], some nuisance shifts are hard to realize using traditional pipelines, such38
+as weather variations like snow. Recent development in diffusion models has enabled the application39
+of generative models for training [10, 15] and benchmarking vision models [29, 30, 40, 44].40
+However, all previous approaches define binary nuisance shifts by considering the existence or41
+absence of that shift, which may contradict their continuous realization in real-world scenarios. For42
+example, the snow level in an environment can range from light snowfall to objects fully covered43
+with snow. While one model might fail at both levels, a different model might only fail when the44
+object is heavily occluded. Thus, it is necessary to realize continuous shifts to evaluate the sensitivity45
+of vision models and their failure points.46
+To overcome this shortcoming, we apply LoRA [19] adapters to realize a continuous variation of47
+given nuisance shifts, and we use them for benchmarking a variety of classifiers along the following48
+axes: (i) architecture, (ii) number of parameters, and (iii) pre-training and classification paradigms.49
+Our new benchmark opens the path for robustness metrics beyond ImageNet accuracy: Evaluating50
+on continuous levels allows computing the accuracy drop at specified scales and the failure point51
+of models under a specific shift. In contrast to previous works that conduct analysis on two levels,52
+our study reveals the following findings considering multiple levels of scales: 1) More modern and53
+larger architectures are more robust to various nuisance shifts. 2) If a model is trained on more data54
+using a classification or a surrogate loss, it is more robust independent of the standard accuracy.55
+3) Fine-tuning typically improves the standard accuracy. However, its impact on robustness varies56
+depending on the considered models. 4) In addition to the accuracy drop as one measure of robustness,57
+the point of failure might be a similarly important quantity to consider when the robustness with58
+respect to a specific shift level is of relevance. Our results show that the two quantities are not always59
+aligned and should be considered as two separate dimensions of robustness.60
+One essential requirement for using synthetic images for benchmarking is to ensure that the considered61
+images correspond to the class distribution. Manually checking the quality of images is still common62
+practice [44]. However, this does not allow scaling the analysis. Some approaches have been63
+proposed for automated filtering, but there is no standard dataset for evaluating filtering strategies.64
+We manually annotate a dataset with filter labels and use it to propose a filtering mechanism for65
+removing out-of-class samples.66
+In summary, our work makes the following contributions: (i) We provide a framework for implement-67
+ing and benchmarking vision models with respect to nuisance shifts under continuous severity levels.68
+2
+
+(ii) We collect an annotated dataset for benchmarking out-of-class filtering strategies. We propose69
+a novel filtering mechanism and apply it to our generated images. (iii) We evaluate the robustness70
+of a variety of classifiers along different scales with respect to nuisance shifts with multiple scales.71
+(iv) We publish a dataset for benchmarking the robustness of classifiers with respect to 14 diverse72
+nuisance shifts at six severity levels. We additionally provide 1400 trained LoRA sliders that can be73
+used for computing shift levels in a continuous manner.74
+2 Related work75
+Robustness. When referring to natural robustness, we consider the relative accuracy drop of a76
+classifier with respect to interventions that alter images from a base distribution, building on the77
+formalism introduced by Drenkow et al. [9]. While the robustness to generic distribution shifts is of78
+interest, we consider the robustness with respect to specific nuisance shifts that can be modeled as79
+causal interventions on the environment, the appearance, the object, or the renderer. We define such80
+interventions in a continuous manner on a metric scale.81
+Benchmarking Robustness. Early approaches for benchmarking robustness and generalizability82
+of models used fixed datasets [6, 7, 24], but this lacks scalability and fails to capture the failure points83
+some models could face in real-world applications since they usually measure performances under84
+the assumption of independent and identically distributed samples. To address this, a first line of85
+research involves manually collecting data with nuisance shifts [1, 12, 17, 18, 20, 34, 41, 45].86
+However, these methods are often time-consuming and labor-intensive because they require data87
+crawling and human annotations. Moreover, they usually capture only a subset of nuisance shifts that88
+models may encounter in the real world and it is challenging to ensure the independence of these89
+annotated nuisances. Additionally, it is possible to manually apply additional nuisances to evaluate90
+their robustness in a more controlled manner, for example with image corruptions [16] or adversarial91
+attacks [5, 31, 37]. The second line of research uses synthetic data for benchmarking, which offers92
+the ability to generate a large and diverse range of nuisance shifts with precise control [ 3, 21, 35]93
+but are limited to nuisance that can be easily modelled ( e.g., lighting, fog, occlusions). Recent94
+developments in diffusion models have allowed some notable progress in the possibility of creating95
+synthetic benchmark dataset [ 29, 30, 40, 44] with realistic data and more possibilities to control96
+nuisances (e.g., text-guided corruptions, counterfactual). In our work, we propose a framework for97
+benchmarking vision models with respect to nuisance shifts under continuous severity levels, as well98
+as a novel filtering mechanism for removing out-of-class samples from synthetic data.99
+3 Framework for Benchmarking100
+In this section, we present our methodology to realize continuous shifts for evaluating model’s101
+sensitivity with respect to such nuisance factors.102
+3.1 Continuous Nuisance Shifts for Benchmarking103
+For evaluating the robustness of image recognition models with respect to continuous scale nuisance104
+shifts, two characteristics are desirable: (1) The severity of the considered shift can be controlled,105
+allowing the estimation of the shift scale where a considered model fails. (2) Realizing a nuisance106
+shift should not come along with factors of variations that might alter the class identity. The variations107
+should be subtle and calibrated according to a pre-defined scale, allowing a fine-grained analysis on a108
+distribution level when considering individual images.109
+Methods for Realizing Continuous Shifts. A natural way to realize nuisance factors are methods110
+based on text prompts [25, 29, 40]. They follow the prompt template “A picture of a {class}” and “A111
+picture of a {class} in {shift}”. This, however, does not allow the gradual increase of a nuisance for112
+a given image. In addition, the realized nuisance shift realized by the prompt addition “in {shift}”113
+largely varies for different seeds and classes. The right figure in Fig. 3 illustrates that the nuisance114
+3
+
+Figure 2: Qualitative Examples for Prompt-Based and LoRA-Based Shifts including OOC
+Samples. (1) We compare shifting using two text prompts (2P) and the LoRA strategy for one
+random seed. For 2P, the nuisance level is added in one step and the semantic structure clearly
+changes, while LoRA adapters allow a gradual variation. (2) One example sliding where the shifting
+strategy results in OOC samples for higher scales.
+shift as measured by the difference of the CLIP [ 33] alignments of the base image and its shifted115
+version to the prompt “A picture in snow” is dispersed. A qualitative example is given in Fig. 2116
+A naive approach for realizing continuous shifts involves computing the difference between two117
+corresponding CLIP embeddings. We explored the naive strategy following the implementation of118
+Baumann et al. [2], but we did not achieve robust nuisance shifts for a variety of classes. A different119
+approach that allows realizing subtle variations involves LoRA [19] adapters. LoRA are low-rank120
+matrices that can characterize the directions of nuisance shifts. Gandikota et al. [11] propose a121
+strategy to learn concept sliders based on LoRA adapters to learn continuous concept variations.122
+Similarly, we realize a nuisance shift by training a LoRA adapter that realizes a low-rank concept123
+shift s for a specific class c: PGM(X|c + s) =PθSD (X|c) · PθLoRA (X|c, s), where samples are drawn124
+from the generative model (GM) by combining the pre-trained SD model with the learned LoRA125
+adapter. We apply LoRA adapters that are learned based on concepts specified by language. As126
+shown in Fig. 2, applying the LoRA slider allows realizing gradual nuisance shifts. We illustrate127
+the average variation of the image and the realization of the shift for the LoRA approach and the128
+approach based on two prompts (2P) in Fig. 3. The variation of the images is measured using the129
+cosine similarity of the DINOv2-R class tokens of the base image and the shifted images, while the130
+severity of the shift is measured using the text alignment to the prompt “A picture in snow”. The131
+LoRA adapter application allows gradual shifts, but the text-prompt-based application only allows132
+one single scale for a given seed.133
+The variation of the number of noise steps [28] with active LoRA adapters controls to what extent the134
+identity and semantics are modified when increasing the LoRA scale. We do not activate the LoRA135
+adapter at earlier timesteps to realize variations that do not drastically change the semantic structure136
+of the image since they are constructed at earlier timestamps of the diffusion process [27].137
+3.2 Accounting for the ImageNet Distribution138
+We aim to evaluate a model’s robustness with respect to specific nuisance shiftss that alter the base139
+ImageNet distribution p(XIN|c), which is conditioned on the 1k ImageNet classes c. For a more140
+accurate estimate of the robustness with respect to a single considered shift, we desire a high model141
+accuracy for the unshifted distribution. As pointed out by Vendrow et al. [40], the distribution of142
+Stable Diffusion (SD) generated images p(XSD|c) differs from the ImageNet distribution, resulting143
+in lower classification accuracies.Therefore, we use the textual inversions provided by Vendrow et al.144
+[40] to account for the ImageNet distribution and call it IN*: p(XIN*|c) =p(X|c).145
+4
+
+0.0 0.5 1.0 1.5 2.0 2.5
+Scale
+0.80
+0.85
+0.90
+0.95
+1.00CosSim-DINO
+LoRA
+2P
+0.0 0.5 1.0 1.5 2.0 2.5
+Scale
+2.5
+0.0
+2.5
+5.0
+7.5
+ CLIP Shift
+LoRA class
+LoRA shift
+2P class
+2P shift
+5
+ 0 5 10 15
+ CLIP Shift
+0.00
+0.05
+0.10
+0.15
+0.20Ratio
+2P
+1.0
+1.5
+2.0
+2.5
+Figure 3: Evaluation of Snow Sliding: (1) Image variation is computed using the cosine similarity
+of DINOv2-R class tokens. (2) Computation of the shift measured by the CLIP difference of the base
+image and its shifted version. (3) Distribution of the applied shifts for various scales and 2P.
+4 The Benchmarking Dataset146
+To evaluate filtering strategies for removing OOC samples, we collect a dataset. This section presents147
+this dataset and the selected filtering strategy.148
+Filtering of OOC Samples. Current diffusion models allow the generation of diverse and realistic149
+images x ∼ p(X|z) that are consistent with a desired conditionz = [c, si] that involves the considered150
+ImageNet class c ∈ N | 1 ≤ c ≤ 1000 and the variablesi ∈ R corresponding the level of a considered151
+nuisance shift i. However, due to their probabilistic formulation, the generated sample might deviate152
+from the the condition z. While low-likely samples are in general not necessarily desired, long-tail153
+samples also occur in the real world. For benchmarking applications, we are particularly concerned154
+if the generated samples deviate from the original class c, i.e., the considered class cannot be155
+characterized anymore. We call such samples “out-of-class” (OOC) samples [29]. Applying a LoRA156
+adapter can leave the naturally learned manifold of the diffusion model and is, therefore, more prone157
+to OOC samples (see Fig. 2). Evaluating the sensitivity to specific nuisance shifts requires removing158
+the OOC samples generated by the shift’s application. Therefore, we collect a dataset of generated159
+images to evaluate the sliding process and strategies to automatically remove OOC samples.160
+Dataset for Evaluating OOC Filtering Strategies. To select a filter for detecting OOC samples, we161
+collected a dataset for manual labeling: We pursue the following strategy:(i) In the first stage, 24k162
+images are generated for 20 seeds, 5 LoRA scales, and 2 shifts per class for 100 random ImageNet163
+classes in total. We select two very different shifts: One shift corresponds to a natural variation164
+(snow), and the second shift corresponds to a style shift (cartoon style). (ii) Since we aim to find165
+OOC samples that arise due to the application of the LoRA adapters, we remove all start samples166
+without any shift that are low-likelihood samples, i.e. have a low text-alignment, and that are not167
+classified as the corresponding class by multiple classifiers. After removing hard starting samples, the168
+labeling dataset consists of around 18k images. (iii) To reduce the labeling effort, we filter out all easy169
+samples that are (1) correctly classified by DINOv2-R and (2) one out of three classifiers (ResNet-50,170
+DeiT-B/16, or ViT-B/16). (3) An additional requirement such that a sample is considered easy is171
+a sufficiently high text alignment. (iv) Each hard image is labeled by two human annotators. To172
+increase the dataset quality, we include soft labels if the image partially includes some characteristics173
+of the class. So, each annotator can choose from the labels ‘class’, ‘partial class properties’, and ‘not174
+class’. An image is defined as OOC sample if at least one annotator considers the image as an OOC.175
+For the remaining samples, an image is considered IC (in-class) if at least one annotator labeled the176
+image a clear sample of the corresponding class. All details on the labeling strategy and the dataset177
+statistics are found in Appendix A.178
+OOC Filtering Strategy. A filter serves its purpose if it removes all OOC samples, corresponding to179
+a high true positive rate (TPR), while not removing too many in-class samples, which corresponds180
+to a low false positive rate (FPR). Instead of simply applying a CLIP threshold as in Vendrow et al.181
+[40], we consider a combinatorial selection approach, which requires two out of four detectors to be182
+active. (i-ii) First, we consider text alignment to ‘a picture of a {class}’ and to ‘a picture of a {class}183
+in {shift}’ computed via CLIP. (iii-iv) Additionally, we consider the cosine similarity to the starting184
+images using the CLIP image encoder and the class tokens of DINOv2-R.For (i) and (ii), we select185
+5
+
+0.0 0.5 1.0 1.5 2.0 2.5
+snow scale
+0.80
+0.85
+0.90
+0.95
+1.00accuracy
+ResNet50-label
+ResNet50-filt
+DINOv2R-label
+DINOv2R-filt
+0.0 0.5 1.0 1.5 2.0 2.5
+cartoon scale
+0.4
+0.6
+0.8
+1.0accuracy
+ResNet50-label
+ResNet50-filt
+DINOv2R-label
+DINOv2R-filt
+Figure 4: Classification Accuracies on the Labeled and the Filtered Dataset. The accuracy curves
+of a ResNet-50 and DINOv2-based classifier are comparable, which validates automatic filtering. We
+provide more results for more classifiers in Fig. 6.
+the filtering thresholds such that 90% of the labeled OOC samples are removed. We do not require186
+the detection of all OOC samples since ImageNet includes some class ambiguities. The threshold is187
+selected in accordance with the highest achieved accuracies of classifiers on ImageNet [36, 42, 43].188
+The selected filter reaches a TPR of 87.9% and a FPR of 12.0% with an accuracy of 88.0%, while the189
+simple CLIP-based thresholding reaches a TPR of 89.9% and a FPR of 35.7% with an accuracy of190
+65.1%. While being mostly effective, the filtering mechanism does not remove all OOC samples.191
+Therefore, we plot the classification accuracy of DINOv2-R and ResNet-50 for the labeled and the192
+filtered version in Fig. 4. These results show that the filtered dataset results in comparable accuracy193
+drop as the labeled dataset for both considered shifts.194
+5 Benchmark195
+In this section, we discuss our benchmark. We present the evaluations on the OOD-CV dataset and196
+the large scale analysis of ImageNet classifiers.197
+5.1 Evaluation on OOD-CV dataset198
+To measure the robustness, Zhao et al. [45, 46] introduce a benchmark dataset (OOD-CV) that199
+includes out-of-distribution examples of then object categories for five different individual nuisance200
+factors (e.g., weather) on real data. OOD-CV is the only real-world dataset that provides accurate201
+labels of various individual nuisance shifts. However, it only provides the coarse label weather for all202
+weather-related nuisances instead of fine-grained labels such as rain, snow, fog or other. Following203
+a similar approach in Sec. 4, we assign the fine-grained label using CLIP similarity. We detail the204
+strategy for annotating OOD-CV using CLIP similarity and provide visualizations in Appendix A. We205
+evaluate classifiers on both benchmarks. Specifically, we first train different classifiers (i.e., ResNet-206
+50, ViT, and DINO-v2-ViT) on the training set of the OOD-CV benchmark. We then evaluate their207
+performance on the data generated using our approach. Besides, we also evaluate their performance208
+on the OOD-CV benchmark for each annotated sub-nuisance independently. As shown in Fig. 5, the209
+accuracy remains more or less constant with an accuracy around 95% up to a nuisance scale of 1.5.210
+From 2.0, the accuracy starts dropping, with the nuisance of fog and sand having the biggest impact.211
+The resulting accuracy is consistently worse or similar to the accuracy of the highest nuisance scale212
+of our generated data for the corresponding nuisance. We hypothesize that the bigger drop is due to a213
+major limitation of the OOD-CV benchmark dataset: the nuisances are not completely disentangled,214
+and part of the accuracy drop originates from various other factors (e.g., image quality, image size,215
+and noise). Another hint confirming that hypothesis is the slight accuracy increase (up to +2.5%)216
+for the rain and snow nuisances when increasing the nuisance scale from 0.0 to 1.5. Given that the217
+models were trained on OOD-CV benchmark training set, and evaluated on our generated data. Thus,218
+when corrupting the data with snow or rain, which closely relates to noise or pixelation from zooming219
+in, the data becomes closer to the training data of the OOD-CV benchmark. Hence, the OOD-CV220
+benchmark does not fully disentangle the annotated nuisances. In contrast, our approach allows for221
+fine-grained control of nuisances, for a more complete understanding of a model’s capability.222
+6
+
+Figure 5: Accuracies and Failure Point Ratios for the OOD-CV Benchmark. The continuous
+scale nuisance shifts allow identifying the failure points of the models, while the OOD-CV dataset
+only provides the accuracy drop: horizontal lines show the average score for each sub-nuisance of the
+OOD-CV test dataset.
+0.0 0.5 1.0 1.5 2.0 2.5
+snow scale
+0.80
+0.85
+0.90
+0.95
+1.00accuracy
+ResNet50
+DeiT-B
+ViT-B
+DINOv2R
+0.0 0.5 1.0 1.5 2.0 2.5
+cartoon scale
+0.4
+0.6
+0.8
+1.0accuracy
+ResNet50
+DeiT-B
+ViT-B
+DINOv2R
+Figure 6: Accuracies on the Labeled Dataset for Snow and Cartoon Shifts. The accuracy drops
+on the labeled dataset showcase that various classifiers have varying sensitivities on different shifts.
+5.2 Evaluated Models and Experimental Setup223
+We use our benchmark to evaluate the models along the following axes:224
+(i) Architecture. To compare architectures with a comparable number of parameters, we consider225
+ResNet-50 [13], ViT-B/16 [8], DeiT-B/16 [38], DeiT-3-B/16 [39], and ConvNeXt-B [26]. All models226
+are trained in a supervised manner.227
+(ii) Model Size. For ViT, we consider the small, medium, base, large, and huge variants of DeiT-3.228
+For CNN, we consider the ResNet variants, e.g., 18, 34, 50, 101, and 152.229
+(iii) Paradigm and Training Data. The selection of the training paradigm and the amount of training230
+data are highly coupled. Therefore, we evaluate a set of models that differ with respect to the used231
+data as well as their pre-training and classification strategy. We compare two supervised models:232
+One model trained on IN1k, and the other model trained on IN21k and then fine-tuned on IN1k.233
+To evaluate the effect of learning strategies, we include two more models that are trained on IN1k:234
+A masked autoencoder (MAE) [14] and DINOv1 [4]. Additionally, we also include a VLM-based235
+classifier using a pre-trained CLIP-model [33] and DINOv2 [32]. We include the zero-shot variant of236
+CLIP and a version that is fine-tuned on IN1k. All models use ViT-B/16 as the backbone. Furthermore,237
+we evaluate a diffusion classifer [22] on a smaller subset.238
+Implementation Details. As pointed about in Sec. 3.2, we use textual inversions to account for239
+the ImageNet distribution. To evaluate the relance of this approach, we generate 200 images of 100240
+randomly selected ImageNet classes using standard SD2.0 and SD2.0 with the textual inversions of241
+IN*. To illustrate the distribution gap, we compute the accuracies for ResNet-50 and DeiT. They242
+achieve an accuracy of 68.2% and 71.6% for the SD distribution and 74.1% and 79.1% for the IN*243
+distribution, which equals an accuracy drop of 6% and 8%, respectively. We perform all the following244
+experiments using the IN* distribution. We use SD2.0 and we activate the LoRA adapters for the last245
+75% of noise steps. Due to the computational complexity, we perform sliding for 100 classes. To246
+get an estimate of the robustness on a scale of ImageNet, we classify 1k classes using off-the-shelf247
+classifiers without applying masking, as e.g., done by Hendrycks et al. [17]. We ablate in Appendix A248
+how the number of classes influences the robustness evaluations.249
+7
+
+0.0 0.5 1.0 1.5 2.0 2.5
+scale
+0.000
+0.025
+0.050
+0.075
+0.100
+0.125
+0.150
+0.175accuracy drop
+Architecture
+RN152
+ViT
+DeiT
+DeiT3
+ConvNext
+0.0 0.5 1.0 1.5 2.0 2.5
+scale
+0.00
+0.02
+0.04
+0.06
+0.08
+0.10
+0.12
+0.14
+0.16
+Model size
+DeiT-S
+DeiT-M
+DeiT-B
+DeiT-L
+DeiT-H
+0.0 0.5 1.0 1.5 2.0 2.5
+scale
+0.000
+0.025
+0.050
+0.075
+0.100
+0.125
+0.150
+0.175
+0.200
+Paradigm
+SUP-IN1k
+SUP-IN21k-1k
+MAE-IN1k
+DINOv1-IN1k
+DINOv2-LVD142M
+CLIP-LAION-FT
+CLIP-LAION-ZS
+(a) Accuracy drops averaged over all considered shifts. Architecture (left): Models with the same training data
+and similar size. Model size (middle): The same model (DeiT) with different numbers of parameters. Paradigm
+(right): Supervised, self-supervised (MAE, DINOv1, and DINOv2-R), VLM (CLIP), all using ViT-B/16.
+0.5 1.0 1.5 2.0 2.5
+0.2
+0.4
+0.6
+0.8
+1.0FP-ratios cumulated
+Architecture
+RN152
+ViT
+DeiT
+DeiT3
+ConvNext
+0.5 1.0 1.5 2.0 2.5
+0.2
+0.4
+0.6
+0.8
+1.0
+Model size
+DeiT-S
+DeiT-M
+DeiT-B
+DeiT-L
+DeiT-H
+0.5 1.0 1.5 2.0 2.5
+0.2
+0.4
+0.6
+0.8
+1.0
+Paradigm
+SUP-IN1k
+SUP-IN21k-1k
+MAE-IN1k
+DINOv1-IN1k
+DINOv2-LVD142M
+CLIP-LAION-FT
+CLIP-LAION-ZS
+(b) Cumulative failure point rates: For each sliding trajectory that contains a failure sample, we sum the number
+of samples that were wrongly classified at a specific scale and apply a cumulative sum.
+0.5 1.0 1.5 2.0 2.5
+scale
+0.02
+0.04
+0.06
+0.08
+0.10FP-ratios
+Snow
+ViT-SUP
+ViT-FT-CLIP
+CLIP-ZS
+DINOv2
+DINOv1
+0.5 1.0 1.5 2.0 2.5
+scale
+0.025
+0.050
+0.075
+0.100
+0.125
+Cartoon
+ViT-SUP
+ViT-FT-CLIP
+CLIP-ZS
+DINOv2
+DINOv1
+0.5 1.0 1.5 2.0 2.5
+scale
+0.02
+0.04
+0.06
+0.08
+0.10
+Sketch
+ViT-SUP
+ViT-FT-CLIP
+CLIP-ZS
+DINOv2
+DINOv1
+(c) Ratio of failure points per scale for various models and shifts: The distribution allows inferring at which
+scales various models fail most often.
+Figure 7: Benchmarking Classifiers and Shifts. The visualization of accuracy drop and the
+distribution of failure points is provided for all shifts and the three considered axes.
+Our filtering mechanism removes some samples along the sliding trajectory, i.e., some seeds only250
+include images from lower scales. To account for balanced dataset, we only evaluate the models for251
+seeds that still contain all scales.252
+5.3 Analysis & Findings253
+Following Hendrycks et al. [17], we report the accuracy drop for 5 scales and 14 diverse shifts254
+as a measure of robustness in Fig. 7a and the distribution of failure points in Fig. 7b and Fig. 7c.255
+We list the shifts and more evaluations in Appendix A and discuss the findings in the following.256
+8
+
+More modern architectures improve the robustness even when using the same training data: In257
+our benchmark, DeiT3 achieves the highest robustness, while ConvNeXt and DeiT reach a similar258
+performance. Interestingly, ResNet-152 is more robust than the standard ViT variant (Fig. 7a, Arch.).259
+ConvNeXt fails later than ViT and ResNet-152: The cumulated number of failure points in Fig. 7b260
+is mostly consistent with the observations of the accuracy drops. However, we identify the following261
+learnings when performing the failure point evaluation: While the accuracy drop did not allow to262
+clearly differentiate the performance between ViT and DeiT, the failure mode-based evaluation shows263
+a significantly better performance of the ConvNeXt model (Fig. 7b, Arch.). Similarly, ConvNeXt264
+fails later than ResNet-152.265
+Larger models are more robust: This follows the results in Hendrycks et al. [17]. Our analysis266
+shows that this behavior can be consistently reported for varying shift severities and for all considered267
+nuisance factors (Fig. 7a, Model size). For this axis, the evaluation of the failure point is in line with268
+the accuracy drop (Fig. 7b, Arch.).269
+Using more data improves robustness: The most robust classifiers were trained on large datasets,270
+such as the CLIP models on LION or DINOv2 on LVD-142M. We report a better robustness for the271
+model that was pre-trained on IN21k as well (Fig. 7a, Paradigm).272
+MAE is the most robust pre-training strategy: When comparing the models trained on the273
+same dataset size, we observe that the fine-tuned MAE achieves the best robustness. (Fig. 7a,274
+Paradigm) We use the DINOv1 model with a linear head for classification. Interestingly, it has a275
+lower robustness than the ViT that was trained using a supervised loss. This might be attributed to the276
+lower performance when only using linear probing. E.g., while the supervised approach (SUP-IN1k)277
+showed better performance (Fig. 7a, Paradigm) than the MAE-based approach, MAE fails in average278
+later than SUP-IN1k in case it fails (Fig. 7b, Paradigm).279
+Some models have a larger accuracy drop but fail later. Failure points are therefore a reasonable280
+additional metric to evaluate the robustness of models with respect to continuous shifts.281
+Fine-tuning improves the accuracy but deteriorates the robustness for CLIP:The CLIP classifier282
+applied in a zero-shot manner is more robust (Fig. 7a, Paradigm) while having a lower average283
+accuracy: 89.5% vs. 84.2%. We report all accuracies in Appendix A.284
+Diffusion classifiers seem not to be more robust than discriminative models. We evaluate285
+the accuracy drop of the DiT-based diffusion classifier for 1k images on a subset of our dataset286
+(around 400 images) for the snow and the cartoon style shift due to computational constraints. When287
+comparing the performance on the same reduced dataset, the accuracy drops for the LoRA scale 2 of288
+snow (cartoon) shift by around 0.12 (0.37) percent points for the diffusion classifier using the L1 loss289
+computations strategy [22] and by around 0.12 (0.30) percent points for a ViT-B model trained on290
+IN1k. The accuracy drops reported for the evaluated discriminative models on the subset are almost291
+in line with the experiments on the labeled dataset Fig. 6. We provide more results in Appendix A.292
+Failure points differ across different types of shifts: Comparing the failure point of various models293
+largely differs when considering individual shifts as shown in Fig. 7c. Snow can be considered as an294
+example shift that slightly changes the appearance and mainly adds a disturbance factor in the image.295
+While there are some differences, the qualitative distribution is comparable for all models. On the296
+contrary, the cartoon and sketch variation correspond to a style shift. Here, the failure points of less297
+robust models are more concentrated.298
+6 Conclusion299
+This work fills the gap in generative robustness benchmarks that did not allow the application of a300
+continuous shift level. In addition, we introduced the concept of failure points for benchmarking,301
+providing an additional dimension to measure robustness. We applied LoRA adapters to realize fine-302
+grained alterations of the image and benchmarked various classifiers along three axes. Furthermore,303
+we discussed the importance of detecting out-of-class class samples when benchmarking using304
+diffusion-generated images. We hope our proposed benchmark can motivate further research in the305
+domain of using generated images for evaluating the natural robustness of vision models. Future306
+work can improve the calibration and composition of various nuisance shifts.307
+9
+
+References308
+[1] Andrei Barbu, David Mayo, Julian Alverio, William Luo, Christopher Wang, Dan Gutfreund, Josh309
+Tenenbaum, and Boris Katz. ObjectNet: A large-scale bias-controlled dataset for pushing the limits of310
+object recognition models. In Advances in Neural Information Processing Systems. Curran Associates,311
+Inc., 2019. 1, 3312
+[2] Stefan Andreas Baumann, Felix Krause, Michael Neumayr, Nick Stracke, Vincent Tao Hu, and Björn313
+Ommer. Continuous, subject-specific attribute control in t2i models by identifying semantic directions,314
+2024. 4315
+[3] Florian Bordes, Shashank Shekhar, Mark Ibrahim, Diane Bouchacourt, Pascal Vincent, and Ari S. Morcos.316
+PUG: Photorealistic and semantically controllable synthetic data for representation learning, 2023. 2, 3317
+[4] Mathilde Caron, Hugo Touvron, Ishan Misra, Hervé Jégou, Julien Mairal, Piotr Bojanowski, and Armand318
+Joulin. Emerging properties in self-supervised vision transformers. In Proceedings of the IEEE/CVF319
+international conference on computer vision, pages 9650–9660, 2021. 7320
+[5] Ali Dabouei, Sobhan Soleymani, Fariborz Taherkhani, Jeremy Dawson, and Nasser M. Nasrabadi. Smooth-321
+fool: An efficient framework for computing smooth adversarial perturbations. In 2020 IEEE Winter322
+Conference on Applications of Computer Vision (WACV), pages 2654–2663, 2020. 3323
+[6] Jia Deng, Wei Dong, Richard Socher, Li-Jia Li, Kai Li, and Li Fei-Fei. Imagenet: A large-scale hierarchical324
+image database. In 2009 IEEE conference on computer vision and pattern recognition, pages 248–255.325
+Ieee, 2009. 3326
+[7] Li Deng. The mnist database of handwritten digit images for machine learning research. IEEE Signal327
+Processing Magazine, 29(6):141–142, 2012. 3328
+[8] Alexey Dosovitskiy, Lucas Beyer, Alexander Kolesnikov, Dirk Weissenborn, Xiaohua Zhai, Thomas329
+Unterthiner, Mostafa Dehghani, Matthias Minderer, Georg Heigold, Sylvain Gelly, et al. An image is330
+worth 16x16 words: Transformers for image recognition at scale. In International Conference on Learning331
+Representations, 2020. 7332
+[9] Nathan Drenkow, Numair Sani, Ilya Shpitser, and Mathias Unberath. Robustness in deep learning for333
+computer vision: Mind the gap? CoRR, abs/2112.00639, 2021. 3334
+[10] Lijie Fan, Kaifeng Chen, Dilip Krishnan, Dina Katabi, Phillip Isola, and Yonglong Tian. The scaling law335
+of synthetic images for model training, for now. In Proceedings of the IEEE conference on computer vision336
+and pattern recognition, 2024. 2337
+[11] Rohit Gandikota, Joanna Materzynska, Tingrui Zhou, Antonio Torralba, and David Bau. Concept sliders:338
+LoRA adaptors for precise control in diffusion models, 2023. 4339
+[12] Robert Geirhos, Patricia Rubisch, Claudio Michaelis, Matthias Bethge, Felix A. Wichmann, and Wieland340
+Brendel. ImageNet-trained CNNs are biased towards texture; increasing shape bias improves accuracy and341
+robustness, 2022. 1, 3342
+[13] Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recognition.343
+In Proceedings of the IEEE conference on computer vision and pattern recognition, pages 770–778, 2016.344
+7345
+[14] Kaiming He, Xinlei Chen, Saining Xie, Yanghao Li, Piotr Dollár, and Ross Girshick. Masked autoencoders346
+are scalable vision learners. In Proceedings of the IEEE/CVF conference on computer vision and pattern347
+recognition, pages 16000–16009, 2022. 7348
+[15] Ruifei He, Shuyang Sun, Xin Yu, Chuhui Xue, Wenqing Zhang, Philip Torr, Song Bai, and Xiaojuan Qi. Is349
+synthetic data from generative models ready for image recognition? arXiv preprint arXiv:2210.07574,350
+2022. 2351
+[16] Dan Hendrycks and Thomas Dietterich. Benchmarking neural network robustness to common corruptions352
+and perturbations. arXiv preprint arXiv:1903.12261, 2019. 1, 3353
+[17] Dan Hendrycks, Steven Basart, Norman Mu, Saurav Kadavath, Frank Wang, Evan Dorundo, Rahul Desai,354
+Tyler Zhu, Samyak Parajuli, Mike Guo, et al. The many faces of robustness: A critical analysis of355
+out-of-distribution generalization. In Proceedings of the IEEE/CVF international conference on computer356
+vision, pages 8340–8349, 2021. 1, 3, 7, 8, 9357
+10
+
+[18] Dan Hendrycks, Kevin Zhao, Steven Basart, Jacob Steinhardt, and Dawn Song. Natural adversarial358
+examples. CVPR, 2021. 1, 3359
+[19] Edward J Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, and360
+Weizhu Chen. Lora: Low-rank adaptation of large language models. arXiv preprint arXiv:2106.09685,361
+2021. 2, 4362
+[20] Badr Youbi Idrissi, Diane Bouchacourt, Randall Balestriero, Ivan Evtimov, Caner Hazirbas, Nicolas Ballas,363
+Pascal Vincent, Michal Drozdzal, David Lopez-Paz, and Mark Ibrahim. Imagenet-x: Understanding model364
+mistakes with factor of variation annotations. arXiv preprint arXiv:2211.01866, 2022. 1, 3365
+[21] O˘guzhan Fatih Kar, Teresa Yeo, Andrei Atanov, and Amir Zamir. 3d common corruptions and data366
+augmentation. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition,367
+pages 18963–18974, 2022. 2, 3368
+[22] Alexander C Li, Mihir Prabhudesai, Shivam Duggal, Ellis Brown, and Deepak Pathak. Your diffusion369
+model is secretly a zero-shot classifier. In Proceedings of the IEEE/CVF International Conference on370
+Computer Vision, pages 2206–2217, 2023. 7, 9371
+[23] Xiaodan Li, Yuefeng Chen, Yao Zhu, Shuhui Wang, Rong Zhang, and Hui Xue. Imagenet-e: Benchmarking372
+neural network robustness via attribute editing. In Proceedings of the IEEE/CVF Conference on Computer373
+Vision and Pattern Recognition, pages 20371–20381, 2023. 2374
+[24] Tsung-Yi Lin, Michael Maire, Serge J. Belongie, Lubomir D. Bourdev, Ross B. Girshick, James Hays,375
+Pietro Perona, Deva Ramanan, Piotr Doll’a r, and C. Lawrence Zitnick. Microsoft COCO: common objects376
+in context. CoRR, abs/1405.0312, 2014. 3377
+[25] Jiang Liu, Chen Wei, Yuxiang Guo, Heng Yu, Alan Yuille, Soheil Feizi, Chun Pong Lau, and Rama Chel-378
+lappa. Instruct2attack: Language-guided semantic adversarial attacks. arXiv preprint arXiv:2311.15551,379
+2023. 3380
+[26] Zhuang Liu, Hanzi Mao, Chao-Yuan Wu, Christoph Feichtenhofer, Trevor Darrell, and Saining Xie. A381
+convnet for the 2020s. In Proceedings of the IEEE/CVF conference on computer vision and pattern382
+recognition, pages 11976–11986, 2022. 7383
+[27] Chenlin Meng, Yutong He, Yang Song, Jiaming Song, Jiajun Wu, Jun-Yan Zhu, and Stefano Ermon. Sdedit:384
+Guided image synthesis and editing with stochastic differential equations. In International Conference on385
+Learning Representations, 2021. 4386
+[28] Chenlin Meng, Yang Song, Jiaming Song, Jiajun Wu, Jun-Yan Zhu, and Stefano Ermon. Sdedit: Image387
+synthesis and editing with stochastic differential equations. CoRR, abs/2108.01073, 2021. 4388
+[29] Jan Hendrik Metzen, Robin Hutmacher, N. Grace Hua, Valentyn Boreiko, and Dan Zhang. Identification389
+of systematic errors of image classifiers on rare subgroups, 2023. 2, 3, 5390
+[30] Mohammadreza Mofayezi and Yasamin Medghalchi. Benchmarking robustness to text-guided corruptions.391
+In 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops (CVPRW), pages392
+779–786, 2023. 2, 3393
+[31] Seyed-Mohsen Moosavi-Dezfooli, Alhussein Fawzi, and Pascal Frossard. Deepfool: A simple and394
+accurate method to fool deep neural networks. In 2016 IEEE Conference on Computer Vision and Pattern395
+Recognition (CVPR), pages 2574–2582, 2016. 3396
+[32] Maxime Oquab, Timothée Darcet, Théo Moutakanni, Huy V V o, Marc Szafraniec, Vasil Khalidov, Pierre397
+Fernandez, Daniel HAZIZA, Francisco Massa, Alaaeldin El-Nouby, et al. Dinov2: Learning robust visual398
+features without supervision. Transactions on Machine Learning Research, 2023. 7399
+[33] Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish400
+Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, et al. Learning transferable visual models from401
+natural language supervision. In International conference on machine learning, pages 8748–8763. PMLR,402
+2021. 4, 7403
+[34] Benjamin Recht, Rebecca Roelofs, Ludwig Schmidt, and Vaishaal Shankar. Do imagenet classifiers404
+generalize to imagenet? In International conference on machine learning, pages 5389–5400. PMLR, 2019.405
+1, 3406
+[35] Michelle Shu, Chenxi Liu, Weichao Qiu, and Alan Yuille. Identifying model weakness with adversarial407
+examiner. In Proceedings of the AAAI conference on artificial intelligence, pages 11998–12006, 2020. 2, 3408
+11
+
+[36] Siddharth Srivastava and Gaurav Sharma. Omnivec: Learning robust representations with cross modal409
+sharing. In Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision, pages410
+1236–1248, 2024. 6411
+[37] Christian Szegedy, Wojciech Zaremba, Ilya Sutskever, Joan Bruna, Dumitru Erhan, Ian Goodfellow, and412
+Rob Fergus. Intriguing properties of neural networks, 2014. 3413
+[38] Hugo Touvron, Matthieu Cord, Matthijs Douze, Francisco Massa, Alexandre Sablayrolles, and Hervé Jégou.414
+Training data-efficient image transformers & distillation through attention. In International conference on415
+machine learning, pages 10347–10357. PMLR, 2021. 7416
+[39] Hugo Touvron, Matthieu Cord, and Hervé Jégou. Deit iii: Revenge of the vit. In European conference on417
+computer vision, pages 516–533. Springer, 2022. 7418
+[40] Joshua Vendrow, Saachi Jain, Logan Engstrom, and Aleksander Madry. Dataset interfaces: Diagnosing419
+model failures using controllable counterfactual generation. arXiv preprint arXiv:2302.07865, 2023. 2, 3,420
+4, 5421
+[41] Haohan Wang, Songwei Ge, Zachary Lipton, and Eric P Xing. Learning robust global representations by422
+penalizing local predictive power. Advances in Neural Information Processing Systems, 32, 2019. 1, 3423
+[42] Mitchell Wortsman, Gabriel Ilharco, Samir Ya Gadre, Rebecca Roelofs, Raphael Gontijo-Lopes, Ari S424
+Morcos, Hongseok Namkoong, Ali Farhadi, Yair Carmon, Simon Kornblith, et al. Model soups: aver-425
+aging weights of multiple fine-tuned models improves accuracy without increasing inference time. In426
+International conference on machine learning, pages 23965–23998. PMLR, 2022. 6427
+[43] Jiahui Yu, Zirui Wang, Vijay Vasudevan, Legg Yeung, Mojtaba Seyedhosseini, and Yonghui Wu. Coca:428
+Contrastive captioners are image-text foundation models. arXiv preprint arXiv:2205.01917, 2022. 6429
+[44] Chenshuang Zhang, Fei Pan, Junmo Kim, In So Kweon, and Chengzhi Mao. ImageNet-d: Benchmarking430
+neural network robustness on diffusion synthetic object. arXiv preprint arXiv:2403.18775, 2024. 2, 3431
+[45] Bingchen Zhao, Shaozuo Yu, Wufei Ma, Mingxin Yu, Shenxiao Mei, Angtian Wang, Ju He, Alan Yuille,432
+and Adam Kortylewski. Ood-cv: A benchmark for robustness to out-of-distribution shifts of individual433
+nuisances in natural images. In European conference on computer vision, pages 163–180. Springer, 2022.434
+1, 3, 6435
+[46] Bingchen Zhao, Jiahao Wang, Wufei Ma, Artur Jesslen, Siwei Yang, Shaozuo Yu, Oliver Zendel, Christian436
+Theobalt, Alan Yuille, and Adam Kortylewski. Ood-cv-v2: An extended benchmark for robustness to437
+out-of-distribution shifts of individual nuisances in natural images. arXiv preprint arXiv:2304.10266, 2023.438
+6439
+Checklist440
+1. For all authors...441
+(a) Do the main claims made in the abstract and introduction accurately reflect the paper’s442
+contributions and scope? [Yes] Our contributions are mentioned in the abstract, the443
+introduction (summarized in lines 70-79), and they are representative of our actual444
+contribution to the field.445
+(b) Did you describe the limitations of your work? [Yes] We do not have a dedicated446
+limitation section in our work. However, we made an utmost effort to describe in details447
+(see Sec. 4) our filtering procedure to ensure that the generated data was reaching our448
+quality standards. We also discuss the importance of this filtering process and provide449
+an estimate of its failure rates.450
+(c) Did you discuss any potential negative societal impacts of your work? [N/A] Our work451
+does not have any potential negative societal impacts. In this work, we use diffusion452
+models but their societal impacts have already been thoroughly discussed in papers453
+introducing them.454
+(d) Have you read the ethics review guidelines and ensured that your paper conforms to455
+them? [Yes] After a careful review of the ethics guidelines, we believe that our paper456
+conforms to them.457
+12
+
+2. If you are including theoretical results...458
+(a) Did you state the full set of assumptions of all theoretical results? [N/A] Our work459
+introduces a methodical approach and corresponding experimental results only and460
+does not include any theoretical results.461
+(b) Did you include complete proofs of all theoretical results? [N/A] Our work introduces a462
+methodical approach and corresponding experimental results only and does not include463
+any theoretical results.464
+3. If you ran experiments (e.g. for benchmarks)...465
+(a) Did you include the code, data, and instructions needed to reproduce the main ex-466
+perimental results (either in the supplemental material or as a URL)? [Yes] All the467
+code, data and instructions necessary to reproduce our findings will be available in the468
+supplemental material.469
+(b) Did you specify all the training details (e.g., data splits, hyperparameters, how they470
+were chosen)? [Yes] Yes, in the supplemental material.471
+(c) Did you report error bars (e.g., with respect to the random seed after running experi-472
+ments multiple times)? [No] For computational reasons, we could not run experiments473
+multiple times. Instead, we preferred focusing on performing experiments with a474
+variety of architectures, model sizes, and paradigm which all provide consistent results.475
+Hence, we believe that the inclusion of error bars would not alter the findings presented476
+in this work. Similarly, we used a large but fixed set of seeds to generate the images477
+used in the benchmark.478
+(d) Did you include the total amount of compute and the type of resources used (e.g.,479
+type of GPUs, internal cluster, or cloud provider)? [Yes] All required computational480
+resources are described in the supplemental material.481
+4. If you are using existing assets (e.g., code, data, models) or curating/releasing new assets...482
+(a) If your work uses existing assets, did you cite the creators? [Yes] All assets that have483
+been used in this work were correctly cited following the best practice.484
+(b) Did you mention the license of the assets? [Yes] When assets are licensed, we mention485
+it accordingly.486
+(c) Did you include any new assets either in the supplemental material or as a URL? [Yes]487
+We provided additional assets in the form of code and data. All information concerning488
+new assets are described in the supplemental material.489
+(d) Did you discuss whether and how consent was obtained from people whose data you’re490
+using/curating? [N/A] All the data used is public.491
+(e) Did you discuss whether the data you are using/curating contains personally identifiable492
+information or offensive content? [N/A] All the data used is public.493
+5. If you used crowdsourcing or conducted research with human subjects...494
+(a) Did you include the full text of instructions given to participants and screenshots, if495
+applicable? [N/A] Not applicable496
+(b) Did you describe any potential participant risks, with links to Institutional Review497
+Board (IRB) approvals, if applicable? [N/A] Not applicable498
+(c) Did you include the estimated hourly wage paid to participants and the total amount499
+spent on participant compensation? [N/A] Not applicable500
+13

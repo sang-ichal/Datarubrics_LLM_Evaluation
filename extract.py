@@ -37,9 +37,17 @@ def extract_text_from_pdf(
         text = page.extract_text(extraction_mode=extraction_mode)
         extracted_text.append(text)
 
-    # Write to output file
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write("\n\n".join(extracted_text))
+    try:
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write("\n\n".join(extracted_text))
+    except UnicodeEncodeError:
+        cleaned_text = []
+        for text in extracted_text:
+            text = text.encode('utf-16', 'surrogatepass').decode('utf-16', 'replace')
+            cleaned_text.append(text)
+        
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write("\n\n".join(cleaned_text))
 
 
 def main():

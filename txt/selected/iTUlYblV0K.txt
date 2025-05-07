@@ -1,0 +1,940 @@
+MQuAKE-Remastered:
+Multi-Hop Knowledge Editing Can Only Be
+Advanced With Reliable Evaluations
+Shaochen (Henry) Zhong*♣, Yifan Lu*♣, Lize Shao ♣, Bhargav Bhushanam ∞, Xiaocong Du ∞,
+Louis Feng ∞, Yixin Wan†, Yiwei Wang†, Daochen Zha ♣, Yucheng Shi♢, Ninghao Liu ♢,
+Kaixiong Zhou ♡, Shuai Xu ♠, Vipin Chaudhary ♠, and Xia Hu ♣
+♣ Department of Computer Science, Rice University
+♢ School of Computing, University of Georgia
+♡ Department of Electrical and Computer Engineering, North Carolina State University
+♠ Department of Computer and Data Sciences, Case Western Reserve University
+† Department of Computer Science, University of California, Los Angeles
+∞ Meta Platforms, Inc.
+Abstract
+Large language models (LLMs) can give out erroneous answers to factually rooted1
+questions either as a result of undesired training outcomes or simply because the2
+world has moved on after a certain knowledge cutoff date. Under such scenarios,3
+knowledge editing often comes to the rescue by delivering efficient patches for4
+such erroneous answers without significantly altering the rests, where many editing5
+methods have seen reasonable success when the editing targets are simple and direct6
+(e.g., “what club does Lionel Messi currently play for?”). However, knowledge7
+fragments like this are often deeply intertwined in the real world, making effectively8
+propagating the editing effect to non-directly related questions a practical challenge9
+(to entertain an extreme example: “What car did the wife of the owner of the club10
+that Messi currently plays for used to get to school in the 80s?”). Prior arts have11
+coined this task as multi-hop knowledge editing with the most popular dataset being12
+MQUAKE, serving as the sole evaluation benchmark for many later proposed edit-13
+ing methods due to the expensive nature of making knowledge editing datasets at14
+scale. In this work, we reveal that up to 33% or 76% ofMQUAKE’s questions15
+and ground truth labels are, in fact, corrupted in various fashions due to some16
+unintentional clerical or procedural oversights. Our work provides a detailed17
+audit of MQUAKE’s error pattern and a comprehensive fix without sacrificing its18
+dataset capacity. Additionally, we benchmarked almost all proposed MQUAKE -19
+evaluated editing methods on our post-fix dataset, MQUAKE-R EMASTERED . It20
+is our observation that many methods try to overfit the original MQUAKE by21
+exploiting some data-specific properties of MQUAKE. We provide a guideline on22
+how to faithfully approach such datasets and show that a simple, minimally invasive23
+approach can bring excellent editing performance without such exploitation. Please24
+refer to https://github.com/henryzhongsc/MQuAKE-Remastered and sup-25
+plemental material for assets.26
+* Equal contribution. Work corresponds to Shaochen (Henry) Zhong <shaochen.zhong@rice.edu>.
+Submitted to the 38th Conference on Neural Information Processing Systems (NeurIPS 2024) Track on Datasets
+and Benchmarks. Do not distribute.
+
+1 Introduction27
+Given the widespread public-facing popularity of various Large Language Model-powered (LLM)28
+products [Zhao et al., 2023, Yang et al., 2024], even an occasional user has likely experienced LLMs29
+giving out erroneous answers to factually rooted, knowledge-intensive questions. While the reasons30
+why LLMs would hallucinate such kind of misinformation is complex and still an open problem —31
+noisy training data, model bias, out-of-distribution questions, or even simply because the world has32
+moved on after a certain knowledge cutoff date, all likely contributed their fair share to this rather33
+undesired character of LLMs [Huang et al., 2023, Zhang et al., 2023]— under a practical context,34
+knowledge editingis often considered the go-to remedy by delivering efficient patches for such35
+erroneous answers without significantly altering the LLM’s output on unrelated queries [Sinitsin36
+et al., 2020, Mitchell et al., 2022].37
+With the growing need to have more credible and trustworthy LLMs, a vast amount of LLM-specific38
+knowledge editing methods have been proposed, and many of them have seen reasonable success in39
+addressing editing targets that are simple and direct. For example, most modern knowledge editing40
+methods can reliably edit the answer of “What club does Lionel Messi currently play for?” from41
+“Paris Saint-Germain” to “Inter Miami CF” and therefore correctly reflecting the occupation status of42
+Messi [Zhong et al., 2023].43
+1.1 Multi-hop knowledge editing poses practical significance and non-trial challenges.44
+However, due to the intertwined nature of different knowledge fragments, a small change in one45
+knowledge fragment can produce ripple-like effects on a vast amount of related questions [Zhong46
+et al., 2023, Cohen et al., 2023]. It is often a non-trivial challenge to efficiently propagate the editing47
+effect to non-directly related questions with proper precision and locality. E.g., for a — in this case48
+intensionally extreme — question like “What car did the wife of the owner of the club that Messi49
+currently plays for used to get to school in the 80s?” Many knowledge-edited LLMs can still struggle50
+while being fully aware of Messi’s abovementioned club transfer [Zhong et al., 2023].51
+Prior arts have realized the practical significance of being able to edit such complex/non-direct52
+questions upon a certain knowledge update, as different knowledge fragments are almost always53
+deeply entangled with each other in the real world [Zhong et al., 2023, Cohen et al., 2023, Wei et al.,54
+2024]. Meanwhile, exhausting all potential combinations of questions related to one or a few updated55
+knowledge fragments is impractical, if not totally impossible: imagining editing an LLM for every56
+possible question influenced by the abovementioned club transfer of Messi. Even if it is feasible, this57
+poses high operational costs and comes with the intrinsic risks of editing a mass amount of targets;58
+not to mention a repeated effort would be required should Messi ever opt to transfer again.59
+It is intuitive that a practical knowledge editing method should be able to produce correct answers to60
+relevant factual questions with only a few updated knowledge fragments available. This task has been61
+coined as multi-hop knowledge editing with the founding, largest, as well as the most popular62
+dataset to date being MQUAKE by Zhong et al. [2023]; serving as the sole evaluation backbone63
+for many proposed modern editing methods due to the expensive nature of making counterfactual64
+and temporal datasets at such a scale (> 10,000 cases provided, more about the dataset statistics in65
+Table 6). Note that such expansiveness is further multiplied given the abovementioned ripple effect66
+of multi-hop question answering, as one knowledge update of a subquestion can potentially lead to67
+multiple updated answers across a large number of cases.68
+1.2 Unfortunately, MQUAKE is flawed due to unintentional clerical and procedural errors —69
+we fixed/remade it and re-benchmarked almost all proposed multi-hop knowledge editing70
+methods.71
+While MQUAKE is the founding dataset of multi-hop knowledge editing tasks and very much72
+brings life to this vital subject, through a comprehensive audit, we reveal that up to 33% or 76% of73
+MQUAKE questions and ground truth labels are, in fact, corrupted in various fashions due to74
+some unintentional clerical or procedural errors; which inevitably cast doubts on the effectiveness75
+of developed methods (especially the ones that solely) evaluated on MQUAKE , and present as a76
+2
+
+hidden peril to the field’s progress as such flaws are largely unknown to the knowledge editing77
+community before our work. We highlight that the flaws of MQUAKE is an already massive yet78
+constantly growing issue, as MQUAKE is one of the fastest-growing datasets in terms of adaptation79
+in the editing community, yet, the task it is trying to tackle — building more reliable LLM — is80
+without a doubt crucial aspect of NLP development. To pave the way for future advancement of81
+multi-hop knowledge editing, we present our work with the following contributions:82
+• A comprehensive audit of MQUAKE : We are the first to present a comprehensive audit of the83
+existing errors within MQUAKE [Zhong et al., 2023], bringing awareness to the knowledge editing84
+community regarding this popular dataset with significant task importance attached.85
+• Fix/remake MQUAKE to MQUAKE -Remastered: We present the only available fix/remake86
+that not only patches all discovered errors, and done so without sacrificing the intended intensity87
+and capacity of the original MQUAKE whenever possible.88
+• Extensively re-benchmark of almost all existing multi-hop knowledge editing methods: Given89
+the currently existing reports based upon the original MQUAKE are flawed reflections of such pro-90
+posed methods’ capability, we additionally re-benchmark almost all existing multi-hop knowledge91
+editing methods that are available against our MQUAKE-R EMASTERED datasets.92
+• Guidance for future multi-hop knowledge editing development. Upon our extensive re-93
+benchmark results, we observe that many proposed multi-hop knowledge editing methods in-94
+tentionally or unintentionally overfit the original MQUAKE dataset by applying data-specific95
+operations that are largely unique to the MQUAKE dataset family. We provide guidance on how to96
+faithfully approach these datasets and additionally show that a simple, minimally invasive approach97
+with no such operations can also achieve excellent editing performance.98
+2 Preliminary99
+2.1 Background of MQ UAKE100
+MQUAKE (Multi-hop Question Answering for Knowledge Editing) is a knowledge editing dataset101
+focusing on the abovementioned multi-hop question answering tasks proposed in Zhong et al.102
+[2023], where every case of MQUAKE is a multi-hop question made by a chain of single-hop103
+subquestions. Specifically, MQUAKE is constructed based on the Wikidata:RDF dataset [Vrandeˇci´c104
+and Krötzsch, 2014], which, in its rawest format, is a knowledge graph consisting 15+ trillion105
+of Resource Description Framework (RDF) triples 1. MQUAKE essentially builds a much more106
+concise subgraph with only 37 manually elected common relations and top 20% of the most common107
+entities, where a walk of {2, 3, 4}-hop on this subgraph can form a case (which is a chain of {2, 3, 4}108
+single-hop subquestions connected together) in the MQUAKE dataset.109
+MQUAKE is presented as two (but in practice, it is essentially three) sub-datasets: MQUAKE -CF110
+and MQUAKE- T. The former focuses on counterfactual tasks, while the latter on temporal changes.111
+We highlight that there is also a MQUAKE- CF-3K dataset, which is a subset of MQUAKE-CF that112
+only contains 3,000 cases in total (with 1,000 cases for {2, 3, 4}-hop questions respectively). Authors113
+of MQUAKE evaluate their proposed method, MeLLo [Zhong et al., 2023], upon thisMQUAKE- CF-114
+3K dataset, citing limited compute resources; which then become an unspoken standard practice for115
+the majority of the later proposed multi-hop knowledge editing methods [Gu et al., 2024, Shi et al.,116
+2024, Wang et al., 2024, Anonymous, 2024, Cheng et al., 2024]. Due to the very popularity of this sub-117
+sampled dataset, we provide our error analysis mostly based on MQUAKE- CF-3K and MQUAKE- T118
+in the following §3. For interested readers, we additionally provide the same error analysis upon the119
+full MQUAKE- CF in the Appendix B.2, which is only more drastic than MQUAKE- CF-3K due to120
+MQUAKE- CF being a much larger superset of the already compromised MQUAKE- CF-3K. We121
+also collect the dataset statistics in Table 6 to provide a numerical overview of the composition of all122
+three MQUAKE datasets.123
+1https://www.wikidata.org/wiki/Property:P10209
+3
+
+2.2 Evaluating using MQ UAKE124
+Datasets like MQUAKE -CF or MQUAKE- CF-3K are often evaluated against different “editing125
+intensity,” which is controlled by how many cases among all tested cases are considered “edited,”126
+mimicking different levels of deviation between the learned knowledge stored in the LLM and the127
+desire edited knowledge. This is a sound practice because proper knowledge editing methods should128
+perform well when different numbers of knowledge fragments are edited, as it is equally important to129
+navigate when a significant amount of knowledge is updated, as well as to recognize the few edited130
+knowledge and limit their influence from unrelated unedited knowledge with proper editing locality.131
+In its original paper, MQUAKE- CF-3K is evaluated when {1, 100, 1000, 3000} of its 3,000 cases132
+are edited, similarly, MQUAKE- T is evaluated when {1, 100, 500, 1868} of its 1,868 cases being133
+edited, forming an experiment report like Table 5. This kind of report granularity (a gradual coverage134
+from a few edits to all cases being edited) is also adopted by the majority of later proposed multi-hop135
+knowledge editing methods, either in full [Anonymous, 2024] or in spirit with different subsample136
+settings [Gu et al., 2024, Wang et al., 2024, Shi et al., 2024, Cheng et al., 2024, Mengqi et al., 2024].137
+In this work, we report at an even finer level of granularity for maximum cross-reference potentials.138
+3 Auditing MQ UAKE139
+In this section, we present a comprehensive audit of the error pattern that existed inMQUAKE- CF-3K140
+and MQUAKE- T [Zhong et al., 2023]. We specifically note that our audit is there to provide a better141
+understanding to the knowledge editing community, especially when digesting methods evaluated142
+on these datasets. Our audit is not to discredit the contribution of MQUAKE , or any of the143
+proposed methods evaluated on MQUAKE . We recognize the fact that no dataset can be perfect,144
+especially when it is intrinsically hard to collect large-scale counterfactual and temporal datasets.145
+3.1 Intra Contamination between Edited Cases and Unedited Cases146
+As discussed in §2.2, having a gradual evaluation coverage from a few to all cases being edited147
+like Table 5 makes sense for as an evaluation granularity. However, one critical issue is that148
+k ∈ {1, 100, 1000, 3000}-edited cases (supposed MQUAKE- CF-3K) are randomly sub-sampled149
+from the 3,000 total cases. Thus, there is no guarantee that the k-edited cases and (3000 − k)150
+unedited cases would require two disjoint sets of knowledge and, therefore, risk contamination.151
+For a concrete example, consider the following two multi-hop questions from MQUAKE- CF-3K (we152
+also additionally provide the subquestion breakdown and intermediate answers of the two questions153
+for better presentation, we note that such auxiliary information is not part of the instruction visible to154
+the question-answering LLM):155
+• case_id:245 (unedited): What is the official language of the country where Karl Alvarez holds156
+citizenship?157
+⋄ What is the country of citizenship of Karl Alvarez? USA.158
+⋄ What is the official language of United States of America? American English.159
+• case_id:323 (unedited): What language is the official language of the country where Wendell160
+Pierce holds citizenship?161
+⋄ What is the country of citizenship of Wendell Pierce? USA.162
+⋄ What is the official language of United States of America? American English.163
+For both questions, the correct pre-edited answer should be “American English. ” As both Karl164
+Alvarez and Wendell Pierce are US citizens, and the official language of the US is American English.165
+However, supposecase_id:323 is sampled as an edited case while case_id:245 remains unedited,166
+we will be provided with the additional triple containing the knowledge of “The official language of167
+United States of America is Arabic. ”168
+Since the unedited case_id:245 and the edited case_id:323 share the same subquestion of “What169
+is the official language of United States of America?” The answer of case_id:323 will be rightfully170
+updated to “Arabic” per the new knowledge. However, the uneditedcase_id:245 still considers the171
+4
+
+original answer “American English” to be correct, and is therefore contaminated by the edited case172
+case_id:323 in an unintended fashion. This is problematic because a successful knowledge editing173
+method should be able to retrieve the edited knowledge — “The official language of United States of174
+America is Arabic” — upon the relevant questions (in this case the shared one), and thus answering175
+“Arabic” to case_id:245. This is technically correct, but in conflict with MQUAKE- CF-3K’s label,176
+causing inaccurate experiment readings.177
+We further note the above-illustrated contamination is not a cherry-picked fluke, but rather a178
+wild-spread error. Here, we sample {1, 100, 1000, 2000, 3000}-editing targets from MQUAKE- CF-179
+3K using random seed 100, and find the following error statistics in Table 1.180
+Table 1: Error statistics of MQUAKE- CF-3K and MQUAKE- T [Zhong et al., 2023] in terms edited
+cases contaminating unedited cases. k-edited means k cases out of the total dataset are edited.
+# of Contaminated MQUAKE-CF-3K MQUAKE-T
+1-edit 100-edit 1000-edit 2000-edit 3000-edit1-edit 100-edit 500-edit 1868-edit
+Cases 0 2,013 1,772 910 0 29 1421 1327 0
+Subquestions 0 2,706 3,075 1,664 0 29 1421 1327 0
+It is observable from Table 1 that even a small number of edited cases will cause a concerningly181
+large contamination to unedited cases and subquestions, where 67% and 76% of all cases182
+from MQUAKE- CF-3K and MQUAKE- T are contaminated with just 100 cases being edited,183
+introducing a significant distortion to the reported experiment results.2184
+We additionally note while this edited-to-unedited intra-contamination is reducing withk-edit growing,185
+this does not imply a diminishing of issue, but rather a simple by-product of a larger k implies a186
+lesser (3000 − k), leaving fewer unedited cases as potential contamination victims. In the extreme187
+case of 3000-edit, there is 0 edited-to-unedited contamination because there is no unedited case left in188
+MQUAKE- CF-3K to be the victim. But 3000-edit has the most edited-to-edited inner contamination,189
+more on this in the following §3.2.190
+3.2 Inner Contamination between Different Edited Cases191
+Other than edited cases contaminating unedited cases (§3.1), contamination might also happen among192
+multiple edited cases because a certain subquestion presented in different edited cases can be edited193
+in some but unedited in others3. For brevity, we leave the example walkthrough in Appendix B.1.194
+Table 2: Error statistics of MQUAKE- CF-3K [Zhong et al., 2023] in terms edited cases contaminating
+each others. k-edited means k cases out of the total 3,000 cases are edited.
+# of Contaminated 1-edit 100-edit 1000-edit 2000-edit 3000-edit
+Cases 0 14 265 619 998
+Subquestions 0 14 337 854 1,399
+This type of contamination is, once again, universally visible in MQUAKE , as shown in Table 2;195
+which is very much a flipped version of Table 1. Withk-edit growing, there are more edited cases, thus196
+more edited-to-edited contamination, as there are more potential victims. Notably, under the 3000-197
+edit tasks, almost one-third (998/3000, ≈33%) of the evaluated cases are contaminated, which198
+again introduces distortion to the reported experiment results. We omit the report on MQUAKE- T199
+here because there is only one edit-to-edit contamination when all 1,868 cases from MQUAKE- T are200
+edited (case_id:424).201
+2We note that in Zhong et al. [2023], “ k-edit” means only k of edited cases are evaluated, without any
+unedited cases. We evaluated both to better reflect the locality of different knowledge editing methods.
+3Note, an edited case does not require all of its subquestions being edited, but merely one or more of it
+(Table 6)
+5
+
+3.3 Conflicting Edits202
+The two types of contamination introduced in §3.1 and §3.2 are indeed subtle and hard to detect, as203
+they hide between the retrieval scope of different edited cases, which is further complicated when204
+only a subset of cases are edited. However, MQUAKE- CF-3K also includes some straightforward205
+conflicts, such as for the subquestion “Which company is Ford Mustang produced by?” we have the206
+following edits:207
+⋄ case_id:2566 (edited): Ford Moter Company Nintendo.208
+⋄ case_id:231/2707 (edited): Ford Moter Company Fiat S.p.A.209
+This is going to cause a direct conflict when case_id:2566 and any of the case_id:231/2707 are210
+both selected as edited cases, as they shall confuse any knowledge edited LLM for having two answers211
+to the same questions. Fortunately, such types of errors are rather minuscule in MQUAKE- CF-3K,212
+with the abovementioned Ford Mustang question and three cases being the only affected data samples.213
+3.4 Missing Information in Multi-hop Question Instructions214
+As mentioned in §2, the MQUAKE dataset is built upon a severely filtered Wikidata:RDF knowledge215
+graph [Vrandeˇci´c and Krötzsch, 2014]. Specifically, the triples of a certain {2, 3, 4}-hop walk on this216
+subgraph are then fed into a gpt-3.5-turbo model to generate the multi-hop question instruction in217
+a natural language format; such generation are repeated for three different times in case any of the218
+generated question instructions becomes incomprehensible. For every case evaluation, an LLM is219
+considered right should it correctly answer against any three of the multi-hop question instructions220
+[Zhong et al., 2023].221
+However, while repeating generation three times definitely reduces the chances of having incompre-222
+hensible question instructions, we noticed some of such instructions inMQUAKE are still incomplete.223
+We take the following triple set and its generated 3-questions as an example:224
+• case_id:546 (unedited): We have a 2-hop triple chain of (Albert Mohler, employer,225
+Southern Baptist Theological Seminary) and (Southern Baptist Theological226
+Seminary, religion or worldview, Southern Baptist Convention). MQUAKE- CF-227
+3K provides the following generated multi-hop questions:228
+⋄ Generation #1: What religion is Albert Mohler associated with?229
+⋄ Generation #2: Which religion does Albert Mohler follow?230
+⋄ Generation #3: With which religious faith does Albert Mohler identify?231
+It is clear that all three generated questions omit the part mentioning which company/institution232
+Albert Mohler is employed by and essentially reduce themselves to single-hop questions, where233
+a correct generation should read like “What religion is Albert Mohler’s employer associated with?”234
+Without the complete question, suppose there is an edit on Albert Mohler’s employer (which there235
+indeed is one), the final answer would likely change. However, with question instruction omitting236
+such information, even the best knowledge-edited LLM cannot answer the question correctly with a237
+faithful approach.238
+As a general analysis, we find the natural language question instructions of 672 cases in239
+MQUAKE- CF-3K are missing information in comparison to their raw triplet chain. This240
+number is counted in the sense that one or more pieces of information present in the triple chain are241
+missing from all three variants of the generated natural language instruction. Similarly, there are242
+2,830 and 233 cases of erroneous instructions in MQUAKE- CF and MQUAKE- T, respectively.243
+3.5 Duplicated Cases244
+The last kind of error we discovered in MQUAKE is simply unintended duplication — i.e., two245
+or more cases sharing the same start subjects, edited facts, chain of triples, and final answer. We246
+discovered 47, 4, and 4 cases of duplication, respectively, in MQUAKE- CF, MQUAKE- CF-3K, and247
+MQUAKE- T.248
+6
+
+4 Remastering MQ UAKE249
+In this section, we illustrate how we modified and improved the MQUAKE dataset to MQUAKE-250
+REMASTERED with various fixes on the data samples themselves, as well as providing utility modules251
+to facilitate how one interacts with such datasets.252
+4.1 Hard Corrections253
+Three types of error existing in MQUAKE can be fixed once and for all with some careful hard254
+corrections, they are namely Conflicting Edits (§3.3), Missing Information in Multi-hop Question255
+Instructions (§3.4), and Duplicated Cases (§3.5). For Conflicting Edits and Duplicated Cases, since256
+there are only a few such errors (<50 per type per dataset), we employ some manual corrections257
+to address these errors: in the former case, we flip the minority edits to align with the majority258
+edits (and adjust their answers to their subsequence subquestions, should there be any); in the latter259
+case, we simply remove such duplicated cases (except for MQUAKE- CF-3K, which we manually260
+select 4 more cases from MQUAKE- CF to keep the dataset having 3,000 cases in total and a 1,000261
+cases for {2, 3, 4}-hops). For the Missing Information in Multi-hop Question Instructions errors, we262
+rewrite such natural language question instructions and then replace the original information-missing263
+instructions.264
+4.2 Dynamic Masking for Maximum Coverage: MQ UAKE-R EMASTERED -CF,265
+MQUAKE-R EMASTERED -CF-3K, and MQUAKE-R EMASTERED -T266
+Due to the contamination count of Intra Edited-to-Unedited Contamination (§3.1) and Inner Edited-267
+to-Edited Contamination (§3.2) tend to grow in the opposite direction as shown in Table 1 and 2,268
+it is impossible to find a fix within the current MQUAKE that can address both issues without269
+significantly decreasing the dataset size. As an alternative, we develop an API that will take a270
+case_id and an edited_flag as input, respectfully indicating the evaluating case-in-question and271
+whether this case is considered edited; our API shall then return a set of triples that are contamination272
+free by dynamically masking out the conflicting edits from other cases. After such, the user may build273
+up an editing knowledge bank upon such triplets and conduct evaluations for any memory-based274
+knowledge editing methods without losing any of the 9,218 cases from MQUAKE- CF or 1,868 cases275
+from MQUAKE- T.276
+Specifically, once case_id-of-interest is given, our API would loop through all of its subquestions277
+and identify if any of such subquestions is considered edited under another case. If there is a hit, the278
+triple with respect to such edited subquestions is then removed from the bank of edited triples. This279
+dynamic masking mechanism would ensure all cases within the original MQUAKE be usable against280
+memory-based knowledge editing methods. However, the drawback of masking is it won’t support281
+parameter-based knowledge editing methods, where weight update is required. We additionally282
+provide a MQUAKE-R EMASTERED -CF-6334 to address the need for such methods (Appendix C.1).283
+5 Benchmark and Discussion284
+Given almost all proposed multi-hop knowledge editing methods are evaluated on the original, error-285
+contained, MQUAKE datasets. Here, we provide a re-benchmark of those methods against post-fix286
+MQUAKE-R EMASTERED datasets for a more reliable reporting of each method’s performance.287
+5.1 Experiment Coverage288
+Compared Methods In this work, we aim to cover most, if not all, open-sourced knowledge289
+editing methods evaluated on the original MQUAKE. To the best of our knowledge, this screening290
+criteria include MeLLo [Zhong et al., 2023] and PokeMQA [Gu et al., 2024] as methods specifically291
+proposed to target this multi-hop knowledge editing problem and evaluated on MQUAKE . We292
+additionally include ICE [Cohen et al., 2023] and IKE [Zheng et al., 2023a] as these are also methods293
+purposed for the (single-edit) multi-hop knowledge editing task, though not specifically evaluated294
+7
+
+on MQUAKE in their original publications. We note that we are aware methods like GMeLLo295
+[Anonymous, 2024], GLAME [Mengqi et al., 2024], RAE [Shi et al., 2024], StableKE [Wei et al.,296
+2024], and Temple-MQA [Cheng et al., 2024] are also evaluated onMQUAKE, but they are purposely297
+omitted from our re-benchmark coverage due to lack of open-sourced implementation, likely because298
+most of these works are still in submission. Last, we note DeepEdit [Wang et al., 2024] is also an open-299
+sourced MQUAKE -evaluated method, but we excluded it due to its lack of inference optimization300
+(>200 A100 GPU hours needed for 1-edit on MQUAKE-R EMASTERED -CF-3K).301
+Covered Models We opt to use lmsys/vicuna-7b-v1.5 [Zheng et al., 2023b], mistralai/Mistral-7B-302
+Instruct-v0.2 [Jiang et al., 2023], and meta-llama/Meta-Llama-3-8B-Instruct [AI@Meta, 2024] as the303
+choice of question-answering models, both for alignment with existing works [Zhong et al., 2023,304
+Shi et al., 2024, Gu et al., 2024] as well as providing coverage the most recent language models. For305
+methods that require a text-embedding model as a retriever, we use facebook/contriever-msmarco306
+[Izacard et al., 2022] for alignment with MeLLo [Zhong et al., 2023].307
+Covered Datasets We will provide coverage on our post-fix dataset, namely MQUAKE-308
+REMASTERED -CF, MQUAKE-R EMASTERED -CF-3K, and MQUAKE-R EMASTERED -T in the309
+masking fashion illustrated in §4.2; as well asMQUAKE-R EMASTERED -CF-6334 in its vanilla form.310
+These datasets are respectively corresponding to the original MQUAKE- CF, MQUAKE- CF-3K,311
+and MQUAKE- T from Zhong et al. [2023] (with 6334 as an extra for parameter-based methods),312
+but with the types of error mentioned in §3 fixed in the via means illustrated in §4. We emphasize313
+that such modification is legitimate, and our MQUAKE-R EMASTERED is free for the scholarly314
+community to adopt, as the original MQUAKE dataset was published under the MIT license. Where315
+MQUAKE-R EMASTERED will be released under CC BY 4.0. All experiments are conducted with316
+an 80G NVIDIA A100 from a DGX A100 server.317
+5.2 Results and Discussion318
+Table 3: Performance Comparison of OriginalMQUAKE and our MQUAKE-R EMASTERED datasets
+Method MQuAKE-CF-3k MQuAKE-T
+Original RemasteredOriginal Remastered
+MeLLo [Zhong et al., 2023]6.7 6.77 30.84 44.37
+GWalk 36.23 66.33 46.41 54.88
+Table 4: Experiments on MQUAKE-R EMASTERED -CF with numbers of edited cases and methods.
+Results inside ( ) are edited cases accuracy and unedited cases accuracy, respectively.
+Method MQUAKE-REMASTERED-CF
+1-edit 1000-edit 3000-edit 6000-edit 9171-edit
+vicuna-7b-v1.5 [Zheng et al., 2023b]
+MeLLo [Zhong et al., 2023]22.55(100, 22.54) 21.54(8, 23.2) 17.79(7.43, 22.83) 12.62(7.28, 22.58) 6.95(6.95, N/A)ICE [Cohen et al., 2023] <1 OOM OOM OOM OOM
+IKE [Zheng et al., 2023a]<1 OOM OOM OOM OOM
+GWalk (Ours) 61.89(100, 61.89) 56.98(56.2, 57.07) 56.37(53.97, 57.54) 54.93(53.27, 58.06) 54.15(54.15, N/A)
+Mistral-7B-Instruct-v0.2 [Jiang et al., 2023]
+MeLLo [Zhong et al., 2023]19.83(<1, 19.84) 19.08(20.6, 18.9) 18.9(19.47, 18.62) 18.27(19.02, 16.87) 18.09(18.09, N/A)ICE [Cohen et al., 2023] <1 OOM OOM OOM OOM
+IKE [Zheng et al., 2023a]<1 OOM OOM OOM OOM
+GWalk (Ours) 61.42(100, 61.42) 57.79(51.8, 58.52) 56.35(52.3, 58.32) 53.73(50.93, 59.04) 51.53(51.53, N/A)
+Meta-Llama-3-8B-Instruct [AI@Meta, 2024]
+MeLLo [Zhong et al., 2023]<1 <1 <1 <1 <1
+ICE [Cohen et al., 2023] <1 OOM OOM OOM OOM
+IKE [Zheng et al., 2023a]<1 OOM OOM OOM OOM
+GWalk (Ours) 74.09(100, 74.09) 73.67(71.1, 73.98) 72.4(70.9, 73.13) 71.62(70.33, 74.05) 70.08(70.08, N/A)
+Given our MQUAKE-R EMASTERED are mostly provided as a fix to MQUAKE , we would like to319
+first highlight the drastic results difference when the same method is evaluated on these two datasets.320
+Table 3 shows our fixing can indeed result in drastically different experiment reports. Where such dif-321
+ference is especially significant for stronger methods, suggesting all previous reporting onMQUAKE322
+has room for reliability improvements, which we filled here with MQUAKE-R EMASTERED .323
+8
+
+Due to page limitation, we only present the benchmark results on MQUAKE-R EMASTERED -CF in324
+the main text and refer our readers to Appendix D.2 for benchmarks ofMQUAKE-R EMASTERED -CF-325
+3K, MQUAKE-R EMASTERED -T, and MQUAKE-R EMASTERED -CF-6334 . Given the dominance326
+of GWalk — a demo method we proposed as guidance to future scholars of this MHKE task — we327
+leave more discussion on this method below.328
+5.3 Making Faithful Approach to MQ UAKE and MQ UAKE-R EMASTERED329
+Additionally, it is also our observation that many multi-hop knowledge editing methods with decent330
+accuracy reports on MQUAKE or MQUAKE-R EMASTERED are utilizing designs that leverage331
+specific data properties unique to MQUAKE . For example, methods like GLAME [Mengqi et al.,332
+2024] utilize Wikidata [Vrandeˇci´c and Krötzsch, 2014] as the external knowledge graph to better333
+detect the edit-induced conflicts, which happen to be the source of MQUAKE as discussed in §2.1.334
+While these methods might have decent performance onMQUAKE, the cost of maintaining a positive335
+knowledge graph on the correct — but not just edited — knowledge facts is undoubtedly a non-trivial336
+operation cost. Yet, whether sourcing the same Wikidata knowledge graph as MQUAKE might337
+bring them data-specific advantages remains unanswered. Similarly, PokeMQA [Gu et al., 2024]338
+utilizes the 6,218 cases included in MQUAKE- CF but not in MQUAKE- CF-3K as the train set to339
+train its auxiliary components. Given MQUAKE is a dataset with relatively low diversity (e.g., it340
+only includes 37 types of relations), whether having a heavily overlapped train and test set will result341
+in data-specific advantages unique MQUAKE and its variants, again remains unanswered.342
+A Minimally Invasive but Performant Approach: GWalk Here, we provide a brief walkthrough343
+of a simple method we designed, namely GraphWalk. It does not leverage any data-specific property344
+unique to MQUAKE or MQUAKE-R EMASTERED , yet still presents pleasant performance surpassing345
+many established baselines. We illustrate this method as a simple guidance and potential inspiration to346
+our future multi-hop knowledge editing scholars.Due to page limitation, we introduce the technical347
+details and design intuition of GWalks in Appendix D.1 , and only present the performance of348
+GWalks in the main text.349
+We hope the performant nature of GWalk — in its most vanilla form, without employing any data-350
+specific property unique to MQUAKE or MQUAKE-R EMASTERED — can inspire more multi-hop351
+knowledge editing methods that leverage the graph topology of edited facts, without converting such352
+facts to natural language descriptions (at least for retrieval).353
+6 Related Works354
+Our work mainly conducts an audit and provides fixes to the MQUAKE dataset. To the best of355
+our knowledge, only two prior arts have touched on the errors existing in MQUAKE : GMeLLo356
+[Anonymous, 2024] (an anonymous submission to ACL ARR 2024 February) and DeepEdit [Wang357
+et al., 2024]. As an overview, GMeLLo briefly discussed the same type of error we discussed in §3.4358
+without providing any quantitative error analysis or any fix. DeepEdit discovered the same inner359
+contamination error as we discussed in §3.2, but specific to 3000-edit setup. DeepEdit’s proposed fix360
+is simply removing the 998 inner contaminated cases from the MQUAKE- CF-3K dataset, so this fix361
+is custom 3000-edit and done so by sacrificing 1/3 of the dataset capacity. We leave more details in362
+Appendix E due to page limitation.363
+Additionally, our work provides a re-benchmark of most, if not all, open-sourced knowledge editing364
+methods evaluated on MQUAKE, and sets guidance on how to faithfully approach such datasets. To365
+the best of our knowledge, no other work provides the same benchmark nor touches on the same366
+issue.367
+7 Conclusion368
+Our work provides a comprehensive audit and fix of the MQUAKE dataset. We further re-369
+benchmarked all open-sourced knowledge editing methods evaluated on MQUAKE with our370
+MQUAKE-R EMASTERED datasets and provided guidance and examples on how to faithfully ap-371
+proach these datasets with our GWalk.372
+9
+
+Limitations and Impact Statement373
+While our work comprehensively addressed many errors in MQUAKE , we caution our reader to374
+perform further analysis and evaluation on our MQUAKE-R EMASTERED to ensure our fixes are375
+indeed exhaustive. We also note that multi-hop knowledge editing only represents one aspect of a376
+language model’s ability, so any actual deployment of a language model should undergo more, and if377
+possible, deployment-specific evaluations.378
+References379
+AI@Meta. Llama 3 model card. 2024. URL https://github.com/meta-llama/llama3/blob/380
+main/MODEL_CARD.md.381
+Anonymous. Graph memory-based editing for large language models. Submission to ACL ARR 2024382
+February, 2024.383
+K. Cheng, G. Lin, H. Fei, Y . zhai, L. Yu, M. A. Ali, L. Hu, and D. Wang. Multi-hop question384
+answering under temporal knowledge editing. arXiv, 2024.385
+R. Cohen, E. Biran, O. Yoran, A. Globerson, and M. Geva. Evaluating the ripple effects of knowledge386
+editing in language models. Transactions of the Association for Computational Linguistics, 2023.387
+H. Gu, K. Zhou, X. Han, N. Liu, R. Wang, and X. Wang. Pokemqa: Programmable knowledge388
+editing for multi-hop question answering. arXiv, 2024.389
+L. Huang, W. Yu, W. Ma, W. Zhong, Z. Feng, H. Wang, Q. Chen, W. Peng, X. Feng, B. Qin, and390
+T. Liu. A survey on hallucination in large language models: Principles, taxonomy, challenges, and391
+open questions. arXiv, 2023.392
+G. Izacard, M. Caron, L. Hosseini, S. Riedel, P. Bojanowski, A. Joulin, and E. Grave. Unsupervised393
+dense information retrieval with contrastive learning. Transactions on Machine Learning Research,394
+2022.395
+A. Q. Jiang, A. Sablayrolles, A. Mensch, C. Bamford, D. S. Chaplot, D. de las Casas, F. Bressand,396
+G. Lengyel, G. Lample, L. Saulnier, L. R. Lavaud, M.-A. Lachaux, P. Stock, T. L. Scao, T. Lavril,397
+T. Wang, T. Lacroix, and W. E. Sayed. Mistral 7b.arXiv, 2023.398
+Z. Mengqi, Y . Xiaotian, L. Qiang, R. Pengjie, W. Shu, and C. Zhumin. Knowledge graph enhanced399
+large language model editing. arXiv, 2024.400
+E. Mitchell, C. Lin, A. Bosselut, C. Finn, and C. D. Manning. Fast model editing at scale. In401
+International Conference on Learning Representations, 2022.402
+Y . Shi, Q. Tan, X. Wu, S. Zhong, K. Zhou, and N. Liu. Retrieval-enhanced knowledge editing for403
+multi-hop question answering in language models. arXiv, 2024.404
+A. Sinitsin, V . Plokhotnyuk, D. Pyrkin, S. Popov, and A. Babenko. Editable neural networks. In405
+International Conference on Learning Representations, 2020.406
+D. Vrandeˇci´c and M. Krötzsch. Wikidata: a free collaborative knowledgebase. Communications of407
+the ACM, 2014.408
+Y . Wang, M. Chen, N. Peng, and K.-W. Chang. Deepedit: Knowledge editing as decoding with409
+constraints. arXiv, 2024.410
+Z. Wei, L. Pang, H. Ding, J. Deng, H. Shen, and X. Cheng. Stable knowledge editing in large411
+language models. arXiv, 2024.412
+10
+
+J. Yang, H. Jin, R. Tang, X. Han, Q. Feng, H. Jiang, S. Zhong, B. Yin, and X. Hu. Harnessing the413
+power of llms in practice: A survey on chatgpt and beyond. ACM Trans. Knowl. Discov. Data,414
+2024.415
+Y . Zhang, Y . Li, L. Cui, D. Cai, L. Liu, T. Fu, X. Huang, E. Zhao, Y . Zhang, Y . Chen, L. Wang, A. T.416
+Luu, W. Bi, F. Shi, and S. Shi. Siren’s song in the ai ocean: A survey on hallucination in large417
+language models. arXiv, 2023.418
+W. X. Zhao, K. Zhou, J. Li, T. Tang, X. Wang, Y . Hou, Y . Min, B. Zhang, J. Zhang, Z. Dong, Y . Du,419
+C. Yang, Y . Chen, Z. Chen, J. Jiang, R. Ren, Y . Li, X. Tang, Z. Liu, P. Liu, J.-Y . Nie, and J.-R. Wen.420
+A survey of large language models. arXiv, 2023.421
+C. Zheng, L. Li, Q. Dong, Y . Fan, Z. Wu, J. Xu, and B. Chang. Can we edit factual knowledge by422
+in-context learning? arXiv, 2023a.423
+L. Zheng, W.-L. Chiang, Y . Sheng, S. Zhuang, Z. Wu, Y . Zhuang, Z. Lin, Z. Li, D. Li, E. P. Xing,424
+H. Zhang, J. E. Gonzalez, and I. Stoica. Judging llm-as-a-judge with mt-bench and chatbot arena.425
+arXiv, 2023b.426
+Z. Zhong, Z. Wu, C. D. Manning, C. Potts, and D. Chen. MQuAKE: Assessing knowledge editing427
+in language models via multi-hop questions. In The 2023 Conference on Empirical Methods in428
+Natural Language Processing, 2023.429
+Checklist430
+The checklist follows the references. Please read the checklist guidelines carefully for information on431
+how to answer these questions. For each question, change the default [TODO] to [Yes] , [No] , or432
+[N/A] . You are strongly encouraged to include a justification to your answer, either by referencing433
+the appropriate section of your paper or providing a brief inline description. For example:434
+• Did you include the license to the code and datasets? [Yes] See Section ??.435
+• Did you include the license to the code and datasets? [No] The code and the data are436
+proprietary.437
+• Did you include the license to the code and datasets? [N/A]438
+Please do not modify the questions and only use the provided macros for your answers. Note that the439
+Checklist section does not count towards the page limit. In your paper, please delete this instructions440
+block and only keep the Checklist section heading above along with the questions/answers below.441
+1. For all authors...442
+(a) Do the main claims made in the abstract and introduction accurately reflect the paper’s443
+contributions and scope? [Yes] We provide an audit and remake of a dataset, as well as444
+a benchmark of all available methods.445
+(b) Did you describe the limitations of your work? [Yes] Before references446
+(c) Did you discuss any potential negative societal impacts of your work? [Yes] Before447
+references448
+(d) Have you read the ethics review guidelines and ensured that your paper conforms to449
+them? [Yes] We have read and ensured the paper conforms to the guidelines.450
+2. If you are including theoretical results...451
+(a) Did you state the full set of assumptions of all theoretical results? [N/A] No theoretical452
+result included in the paper.453
+(b) Did you include complete proofs of all theoretical results? [N/A]454
+3. If you ran experiments (e.g. for benchmarks)...455
+11
+
+(a) Did you include the code, data, and instructions needed to reproduce the main experi-456
+mental results (either in the supplemental material or as a URL)? [Yes] In supplemental457
+material.458
+(b) Did you specify all the training details (e.g., data splits, hyperparameters, how they459
+were chosen)? [Yes] In supplemental material.460
+(c) Did you report error bars (e.g., with respect to the random seed after running exper-461
+iments multiple times)? [No] Given the massive amount of experiments, we fix the462
+seeds and run each experiment entry by once.463
+(d) Did you include the total amount of compute and the type of resources used? [Yes] See464
+§5.1 for resource and supplementary materials for amount of compute.465
+4. If you are using existing assets (e.g., code, data, models) or curating/releasing new assets...466
+(a) If your work uses existing assets, did you cite the creators? [Yes] All works are properly467
+cited in-text and afterward.468
+(b) Did you mention the license of the assets? [Yes] At §5.1469
+(c) Did you include any new assets either in the supplemental material or as a URL? [Yes]470
+We include the dataset in supplemental materials471
+(d) Did you discuss whether and how consent was obtained from people whose data you’re472
+using/curating? [Yes] Data used are open-sourced in MIT license, as showed in §5.1.473
+(e) Did you discuss whether the data you are using/curating contains personally identifiable474
+information or offensive content? [Yes] In §2.1, we discussed the MQuAKE dataset is475
+constructed based on the Wikidata: RDF dataset476
+5. If you used crowdsourcing or conducted research with human subjects...477
+(a) Did you include the full text of instructions given to participants and screenshots, if478
+applicable? [N/A] No applicable479
+(b) Did you describe any potential participant risks, with links to Institutional Review480
+Board (IRB) approvals, if applicable? [N/A] No applicable481
+(c) Did you include the estimated hourly wage paid to participants and the total amount482
+spent on participant compensation? [N/A] No applicable483
+12
+
+A Extended Preliminary484
+A.1 Demo Report of MQ UAKE485
+Table 5: Standard reporting format of MQUAKE- CF-3K, and MQUAKE- T demoed with MeLLo on
+Vicuna-7B [Zheng et al., 2023b];k-edited means k cases out of the total cases are edited. Abbreviated
+table courtesy of Zhong et al. [2023] (Table 3).
+Model Method MQUAKE-CF-3K MQUAKE-T
+1-edit 100-edit 1000-edit 3000-edit1-edit 100-edit 500-edit 1868-edit
+Vicuna-7B MeLLo
+[Zhong et al., 2023]20.3 11.9 11.0 10.2 84.4 56.3 52.6 51.3
+A.2 Dataset Statistics486
+Table 6: Dataset Statistics of MQUAKE . Numbers are in terms of cases (a case in MQUAKE is a
+chain consisting of multiple subquestions).
+Dataset # of Edits 2-hop 3-hop 4-hop Total
+MQUAKE-CF-3K
+1 513 356 224 1,093
+2 487 334 246 1,067
+3 - 310 262 572
+4 - - 268 268
+All 1,000 1,000 1,000 3,000
+MQUAKE-CF
+1 2,454 855 446 3,755
+2 2,425 853 467 3,745
+3 - 827 455 1,282
+4 - - 436 436
+All 4,879 2,535 1,804 9,218
+MQUAKE-T 1 (All) 1,421 445 2 1,868
+Table 7: Dataset Statistics of MQUAKE-R EMASTERED . Numbers are in terms of cases (a case in
+MQUAKE is a chain consisting of multiple subquestions).
+Dataset # of Edits 2-hop 3-hop 4-hop Total
+MQUAKE-REMASTERED-CF-3K
+1 513 356 224 1,093
+2 487 334 246 1,067
+3 - 310 262 572
+4 - - 268 268
+All 1,000 1,000 1,000 3,000
+MQUAKE-REMASTERED-CF
+1 2,446 850 441 3,737
+2 2,415 852 463 3,730
+3 - 823 451 1,274
+4 - - 430 430
+All 4,861 2,525 1,785 9,171
+MQUAKE-REMASTERED-T 1 (All) 1,421 441 2 1,868
+MQUAKE-REMASTERED-CF-6334
+1 1,971 77 0 2,048
+2 2,415 476 14 2,905
+3 - 823 128 951
+4 - - 430 430
+All 4,386 1,376 572 6,334
+13
+
+B Extended Auditing487
+B.1 Example of Inner Contamination between Different Edited Cases (§3.2)488
+Again, we walk through two cases from MQUAKE- CF-3K as a concrete example. First, we show489
+them in their unedited format (again, subquestion breakdowns and intermediate answers are here for490
+demonstration purposes and are not visible to the question-answering LLM during evaluation):491
+• case_id:1570 (unedited): Who was the creator of the official language used in the work location492
+of Matti Vanhanen?493
+⋄ Which city did Matti Vanhanen work in? Helsinki.494
+⋄ What is the official language of Helsinki? Finnish.495
+⋄ Who was Finnish created by? Mikael Agricola.496
+• case_id:1968 (unedited): Who created the official language of Housemarque’s headquarters497
+location?498
+⋄ Which city is the headquarter of Housemarque located in? Helsinki.499
+⋄ What is the official language of Helsinki? Finnish.500
+⋄ Who was Finnish created by? Mikael Agricola.501
+Suppose case_id:1570 and case_id:1968 are both selected as editing cases, two triples containing502
+the following knowledge will be available: “The official language of Helsinki is Black Speech”503
+(intended for case_id:1570), and “Finnish was created by William Shakespeare” (intended for504
+case_id:case_id:1968), leading to the following edited breakdown.505
+• case_id:1570 (edited): Who was the creator of the official language used in the work location of506
+Matti Vanhanen?507
+⋄ Which city did Matti Vanhanen work in? Helsinki.508
+⋄ What is the official language of Helsinki? Finnish Black Speech.509
+⋄ Who was Finnish Black Speech created by? J. R. R. Tolkien.510
+• case_id:1968 (edited): Who created the official language of Housemarque’s headquarters511
+location?512
+⋄ Which city is the headquarter of Housemarque located in? Helsinki.513
+⋄ What is the official language of Helsinki? Finnish.514
+⋄ Who was Finnish created by? Mikael Agricola William Shakespeare.515
+Much like the previous conflict between unedited and edited cases, these two edited cases share a516
+common subquestion: “What is the official language of Helsinki?” However, such subquestion is517
+edited in case_id:1570 while unedited in case_id:1968, causing unintended contamination.518
+14
+
+B.2 Error Analysis of MQ UAKE- CF519
+Table 8: Error statistics of MQUAKE- CF [Zhong et al., 2023] in terms of edited cases contaminating
+unedited cases §3.1. k-edited means k cases are edited out of the total 9218 cases.
+# of Contaminated MQUAKE-CF-3K
+1-edit 100-edit 1000-edit 2000-edit 3000-edit 5000-edit 9218-edit
+Cases 62 3307 5275 5110 4578 3346 0
+Subquestions 62 4525 8751 8989 8326 6364 0
+Table 9: Error statistics of MQUAKE- CF [Zhong et al., 2023] in terms edited cases contaminating
+each others §3.2. k-edited means k cases are edited out of the total 9218 cases.
+# of Contaminated1-edit 100-edit 1000-edit 2000-edit 3000-edit 5000-edit 9218-edit
+Cases 0 8 192 441 732 1397 2873
+Subquestions 0 12 270 606 1027 1986 4250
+C Extended Remastering520
+C.1 Contamination Free Subset: MQ UAKE-R EMASTERED -CF-6334521
+While MQUAKE-R EMASTERED -MASKED with masking operation can well support memory-based522
+knowledge editing methods, it will not be compatible with parameter-based methods. This is because,523
+for parameter-based methods, the set of edited facts used for training and evaluation needs to be524
+constant yet consistent with each other at all times; whereas dynamic masking cannot suffice as it is525
+essentially adjusting the dataset on the fly during inference time.526
+To effectively evaluate parameter-based knowledge editing methods, we present MQUAKE-527
+REMASTERED -CF-6334 . MQUAKE-R EMASTERED -CF-6334 is a dataset extracted from528
+MQUAKE- CF, where all 6,334 cases are edited cases; and they are completely contamination-529
+free from each other. This dataset is suitable for LLM editing with parameter-based approaches, as530
+one can make careful splits among the 6,334 cases of MQUAKE-R EMASTERED -CF-6334 to serve531
+as train, validation, and evaluation sets.532
+15
+
+D Extended Benchmark and Discussion533
+D.1 GWalks534
+The design of GWalk hinges on the fundamental pipeline of memory-based knowledge editing535
+methods: where the pool of source only contains edited facts. This school of editing methods has536
+proven to be successful, mainly because it can leverage the power of retrieval-argument generation537
+(RAG) combined with the in-context learning (ICL) capability of LLMs. Further, it is common sense538
+that edited knowledge facts will be much less than unedited knowledge facts, making maintaining a539
+knowledge pool exclusively containing edited facts a viable option — like done so in MeLLo [Zhong540
+et al., 2023].541
+Different from MeLLo, where all edited facts are converted from triples to natural language (NL)542
+descriptions in its edited bank, GWalk preserves the edited facts in their original triples fashion and543
+leverages the graph topology they come with. This makes maintaining this edited bank much easier544
+— as one can easily adjust the entity or relation on a knowledge graph without rewriting every natural545
+language description of every related edited fact. It also brings more precise retrieval mapping when a546
+question pertaining to a certain edited fact is asked. This is because methods like MeLLo would need547
+to RAG from a pool of edited facts in NL format, and there might always be something — though548
+not actually related to the question asked — having a close enough embedding distance to the query549
+question (i.e., unintended retrieval), and thus result in hallucination. However, if we simply query the550
+entity and relations implied in a question against a knowledge graph, there is less chance of retrieving551
+unintended materials. Specifically, GWalk works like the following Algorithm 1.552
+Algorithm 1: General Procedure GWalk on a Multi-hop Question
+Input:
+M, the Question Answering Language Model;
+T, a Text-embedding model;
+Q, a Multi-hop Question;
+E, a bank of edited facts as a knowledge graph.
+Output:
+op, the answer to Q.
+Initialize:
+i = 1, the subquestion counter;
+op = None, the answer from the previous subquestion.
+1 s ← Extracted subject from Q;
+2 rels ← Prompt M to breakdown Q into a sequence of relations.
+/* If Q is ‘What is the official language of the country where Karl
+Alvarez holds citizenship?’, then s would be ‘Karl Alvarez’ and a
+possible rels is [‘citizenship’, ‘official language’] */
+3 for r ∈ rels do
+4 Query < s, r,? > against E using T, namely we do T(s) first to determine if there is a
+retrievable s ∈ E, then inspect if the s ∈ E has an relation edge retrievable by T(r).
+/* We set a threshold on embedding similarity for T to determine
+whether an item is retrievable or not. */
+5 Prompt M to generate subquestion qi with s and r.
+6 op ← the M-generated answer to qi.
+7 if T(s, r) has a valid retrieval < s, r, o∗ > then
+8 op ← o∗;
+/* The answer to this subquestion will be the start subject of the
+next subquestion. */
+9 s ← op ;
+10 i ← i + 1;
+11 Return op;
+553
+16
+
+D.2 Additional Experiment Results554
+Table 10: MQUAKE-R EMASTERED -CF-3K
+Method MQUAKE-REMASTERED -CF-3K
+1-edit 100-edit 1000-edit 3000-edit
+vicuna-7b-v1.5 [Zheng et al., 2023b]
+MeLLo [Zhong et al., 2023] 16.54
+(100, 16.51)
+18
+(9.0, 18.31)
+14.63
+(8.0, 17.95)
+6.77
+(6.77, N/A)
+ICE [Cohen et al., 2023] <1 <1 OOM OOM
+OOM
+IKE [Zheng et al., 2023a] <1 OOM OOM OOM
+OOM
+GWalk (Ours) 54.89
+(100, 54.87)
+60.9
+(54, 61.14)
+57.37
+(54.4, 58.85)
+66.33
+(66.33, N/A)
+Mistral-7B-Instruct-v0.2 [Jiang et al., 2023]
+MeLLo [Zhong et al., 2023] 19.73
+(100, 19.71)
+18.6
+(21, 18.52)
+16.33
+(17.8, 15.6)
+15.93
+(15.93, N/A)
+ICE [Cohen et al., 2023] <1 <1 OOM OOM
+OOM
+IKE [Zheng et al., 2023a] <1 4.43
+(4,4.49) OOM OOM
+OOM
+GWalk (Ours) 56.57
+(100, 56.55)
+61.93
+(47, 62.45)
+57.17
+(51.5, 60.0)
+51.0
+(51.0, N/A)
+Meta-Llama-3-8B-Instruct [AI@Meta, 2024]
+MeLLo [Zhong et al., 2023] <1 <1
+(2.0, <1)
+1.03
+(3.0, <1)
+2.3
+(2.3, N/A)
+ICE [Cohen et al., 2023] <1 <1 OOM OOM
+OOM
+IKE [Zheng et al., 2023a] <1 <1 OOM OOM
+OOM
+GWalk(Ours) 69.0
+(100, 68.99)
+76.73
+(67, 77.07)
+75.47
+(74.2, 76.1)
+70.6
+(70.6, N/A)
+*Results inside the parenthesis are edited cases accuracy and unedited cases accuracy, respectively.
+17
+
+Table 11: MQUAKE-R EMASTERED -T
+Method MQ UAKE-R EMASTERED -T
+1-edit 100-edit 500-edit 1864-edit
+vicuna-7b-v1.5 [Zheng et al., 2023b]
+MeLLo [Zhong et al., 2023] 19.31
+(100, 19.27)
+18.88
+(45.0, 17.4)
+22.16
+(40.4, 15.47)
+44.37
+(44.37, N/A)
+ICE [Cohen et al., 2023] <1 <1 <1 OOM
+IKE [Zheng et al., 2023a] <1 <1 <1 OOM
+GWalk (Ours) 35.52
+(100, 35.48)
+46.51
+(49.0, 46.37)
+48.93
+(56.0, 46.33)
+54.88
+(54.88, N/A)
+Mistral-7B-Instruct-v0.2 [Jiang et al., 2023]
+MeLLo [Zhong et al., 2023] 10.3
+(0, 10.31)
+10.25
+(59.0, 7.48)
+18.78
+(48.4, 7.92)
+47.75
+(47.75, N/A)
+ICE [Cohen et al., 2023] <1 <1 <1 OOM
+IKE [Zheng et al., 2023a] <1 <1 <1 OOM
+GWalk (Ours) 34.07
+(0, 34.08)
+45.76
+(47, 45.69)
+46.78
+(51.2, 45.16)
+50.7
+(50.7, N/A)
+Meta-Llama-3-8B-Instruct [AI@Meta, 2024]
+MeLLo [Zhong et al., 2023] <1 1.13
+(17, 0.23)
+4.72
+(17.4, <1)
+16.58
+(16.58, N/A)
+ICE [Cohen et al., 2023] <1 <1 <1 OOM
+IKE [Zheng et al., 2023a] <1 <1 <1 OOM
+GWalk (Ours) 70.12
+(100, 70.1)
+73.28
+(84.0, 72.68)
+76.61
+(87, 72.8)
+84.01
+(84.01, N/A)
+*Results inside the parenthesis are edited cases accuracy and unedited cases accuracy, respectively.
+18
+
+Table 12: MQUAKE-R EMASTERED -CF-6334
+Method MQUAKE-REMASTERED-CF-6334
+100-edit 1000-edit 3000-edit 6344-edit
+vicuna-7b-v1.5 [Zheng et al., 2023b]
+MeLLo [Zhong et al., 2023] 19.16
+(0, 10.99, 19.37)
+19.27
+(5.1, 9.58, 24.53)
+11.17
+(4.31, 8.55, 23.3)
+6.83
+(4.58, 7.72, 19.05)
+ICE [Cohen et al., 2023] OOM OOM OOM OOM
+IKE [Zheng et al., 2023a] OOM OOM OOM OOM
+PokeMQA [Gu et al., 2024] - - - 21.77
+(3.25, 30.82, 1.59)
+GWalk (Ours) KGWalk 57.55
+(22.22, 64.84, 57.48)
+61.79
+(29.08, 66.17, 63.23)
+59.1
+(39.3, 63.74, 64.33)
+56.62
+(44.64, 62.11, 68.25)
+Mistral-7B-Instruct-v0.2 [Jiang et al., 2023]
+MeLLo [Zhong et al., 2023] 27.5
+(<1, 23.08, 27.65)
+27.54
+(12.76, 24, 30.4)
+24.37
+(11.88, 25.51, 32.06)
+21.26
+(13.29, 24.9, 30.16)
+ICE [Cohen et al., 2023] OOM OOM OOM OOM
+IKE [Zheng et al., 2023a] 8.82
+(11.11,6.59,8.86) OOM OOM OOM
+PokeMQA [Gu et al., 2024] - - - 20.38
+(3.99, 27.41, 69.84)
+GWalk (Ours) 56.25
+(33.33, 57.14, 56.28)
+58.9
+(34.69, 60.57, 60.6)
+56.03
+(42.69, 59.04, 59.85)
+54.43
+(47.49, 57.74, 52.38)
+Meta-Llama-3-8B-Instruct [AI@Meta, 2024]
+MeLLo [Zhong et al., 2023] <1 <1 1.12
+(1.17, 1.48, 0.22)
+1.27
+(<1, 1.4, 1.59)
+ICE [Cohen et al., 2023] OOM OOM OOM OOM
+IKE [Zheng et al., 2023a] <1 OOM OOM OOM
+PokeMQA [Gu et al., 2024] - - - 20.38
+(1.08, 28.41, 76.19)
+GWalk (Ours) 67.01
+(33.33, 74.73, 66.92)
+71.89
+(47.45, 80.94, 70.65)
+73.76
+(54.05, 81.6, 71.12)
+74.22
+(61.02, 80.47, 73.02)
+*Results inside the parenthesis are edited cases (unique in the test set) accuracy, edited cases (overlap
+of the test and train set) accuracy, and unedited cases accuracy, respectively.
+19
+
+E Extended Related Works555
+Specifically, GMeLLo [Anonymous, 2024] briefly discusses the inconsistency between the triple chain556
+and the generated multi-hop questions in its §4.5.1, which is the same type of error we discussed557
+in §3.4. We note that GMeLLo merely highlights such errors but does not provide a quantified558
+measurement of its scale nor any fix. We did both in §3.4 and §4.1.559
+DeepEdit [Wang et al., 2024] discovered the same inner contamination error as we discussed in560
+§3.2. DeepEdit does provide a quantified measurement of the scale of such error but only pertains to561
+the MQUAKE- CF-3K dataset, and such quantifiable results are only valid when all 3,000 cases of562
+MQUAKE- CF-3K are considered edited; which, as shown in Table 5, only constitute one column563
+of MQUAKE- CF-3K’s reporting. Further, DeepEdit provides a rather hardcore fix to this problem564
+by removing the 998 inner contaminated cases from the MQUAKE- CF-3K dataset — which is565
+(supposedly) the same 998 cases we detect in Table 2 under the 3000-edit column — with the566
+post-fix dataset denoted as MQUAKE-2002 for having 2,002 out of 3,000 cases left. While this567
+fix is, of course, helpful, we argue our post-fix MQUAKE-R EMASTERED -CF-3K, MQUAKE-568
+REMASTERED -CF, and MQUAKE-R EMASTERED -T are much more comprehensive and effective569
+since they patched many more errors revealed in §3 (which still exists in MQUAKE-2002 ), works570
+outside the MQUAKE- CF-3K dataset, do not require the number of edits to be 2,002 cases, and most571
+importantly, done so without scarifying almost 1/3 of the capacity of the original dataset.572
+20

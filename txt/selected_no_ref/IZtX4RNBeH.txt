@@ -1,0 +1,745 @@
+How Good is my Video LMM? Complex Video
+Reasoning and Robustness Evaluation Suite for
+Video-LMMs
+Muhammad Uzair Khattak1 Muhammad Ferjad Naeem2 Jameel Hassan1
+Muzammal Naseer1 Federico Tombari3,4 Fahad Shahbaz Khan1,5 Salman Khan1,6
+1Mohamed Bin Zayed University of AI 2ETH Zurich 3Google
+4TU Munich 5Linköping University 6Australian National University
+Abstract
+Recent advancements in Large Language Models (LLMs) have led to the develop-1
+ment of Video Large Multi-modal Models (Video-LMMs) that can handle a wide2
+range of video understanding tasks. These models have the potential to be deployed3
+in real-world applications such as robotics, AI assistants, medical surgery, and4
+autonomous vehicles. The widespread adoption of Video-LMMs in our daily lives5
+underscores the importance of ensuring and evaluating their robust performance6
+in mirroring human-like reasoning and interaction capabilities in complex, real-7
+world contexts. However, existing benchmarks for Video-LMMs primarily focus8
+on general video comprehension abilities and neglect assessing their reasoning9
+capabilities over complex videos in the real-world context, and robustness of these10
+models through the lens of user prompts as text queries. In this paper, we present11
+the Complex Video Reasoning and Robustness Evaluation Suite (CVRR-ES), a12
+novel benchmark that comprehensively assesses the performance of Video-LMMs13
+across 11 diverse real-world video dimensions. We evaluate 11 recent models,14
+including both open-source and closed-source variants, and find that most of the15
+Video-LMMs, especially open-source ones, struggle with robustness and reasoning16
+when dealing with complex videos. Based on our analysis, we develop a training-17
+free Dual-Step Contextual Prompting (DSCP) technique to effectively enhance18
+the performance of existing Video-LMMs on CVRR-ES benchmark. Our findings19
+provide valuable insights for building the next generation of human-centric AI20
+systems with advanced robustness and reasoning capabilities. Our dataset and code21
+are publicly available at: mbzuai-oryx.github.io/CVRR-Evaluation-Suite/.22
+1 Introduction23
+Recently, Large Language Models (LLMs) [30, 38, 12] have demonstrated impressive reasoning and24
+planning capabilities while simultaneously handling a wide range of NLP tasks [33, 2]. Consequently,25
+their integration with the vision modality, specifically for video understanding tasks, has given rise26
+to Video Large Multi-modal Models (Video-LMMs) [15]. These models act as visual chatbots that27
+accept both text and video as input and handle a diverse set of tasks, including video comprehension28
+[21], detailed video understanding [18], and action grounding [37]. As these models directly capture29
+video data, they hold substantial potential for deployment in real-world applications such as robotics,30
+surveillance, medical surgery, and autonomous vehicles.31
+However, as these models assume an expanding role in our everyday lives, assessing their performance32
+in comprehending complex videos and demonstrating reliable reasoning and robustness capabilities33
+across diverse real-world contexts becomes essential. Video-LMMs with such capabilities will be34
+Submitted to the NeurIPS 2024 Track on Datasets and Benchmarks. Do not distribute.
+
+Benchmark Textual Complex In the wild Contextual Multiple Temporal OrderRobustness Reasoning (OOD) Dependency Actions & Fine-grainedMSVD-QA [35]MSRVTT-QA [35]TGIF-QA [11]Activity Net-QA [36]VideoChat-GPT [21]MVBench [16]SEED-Bench [14]
+CVRR-ES (ours)
+Table 1: Comparison of CVRR-ES with
+existing benchmarks for video question an-
+swering. The CVRR-ES benchmark rep-
+resents an initial effort to assess Video-
+LMMs in the context of their applicability
+and suitability in real-world contexts.
+Non-existent actions with
+non-existent scene depictions.
+6.0%Multiple actions in
+a single video. 13.25%
+Fine-grained
+action understanding. 9.58%
+Partial actions.
+8.58%
+Non-existent actions with
+existent scene depictions.
+5.75%
+Interpretation of
+visual context.
+11.38%
+Continuity and
+Object Instance Count.
+7.38%
+Unusual and Physically
+Anomalous activities.
+7.92%
+Interpretation of
+social context.11.67%
+Understanding of
+emotional context.
+12.17%
+Time order understanding.
+6.33%
+CVRR
+Evaluation Suite
+0 20 40 60 80 100
+Accuracy
+Video LLaVa
+MovieChat
+LLaMA-VID
+Video-LLaMA-2
+Video-ChatGPT
+VideoChat
+TimeChat
+Gemini-Pro
+Gemini-Flash
+GPT4V(ision)
+GPT-4o
+Human
+Video LMMs
+15.92%
+16.41%
+16.46%
+21.62%
+24.96%
+25.78%
+32.89%
+53.2%
+57.02%
+70.78%
+75.03%
+96.67%
+Figure 1: Left: CVRR-ES comprises of 11 diverse complex video evaluation dimensions encompassing
+a variety of complex, real-world contexts. Right: Overall performance of Video-LMMs on the CVRR-ES
+benchmark. Results for each Video-LMM are averaged across 11 video dimensions.
+more effective when integrated into our daily lives for solving perception tasks and will be a promising35
+step towards building trustworthy human-centric AI-assistive systems.36
+Several attempts in literature have been made to benchmark Video-LMMs. SEED-Bench [14] curated37
+a MCQ-based dataset including 3 evaluation dimensions for videos. Similarly, MV-Bench [ 16]38
+constructed the Video-LMM benchmark and assembled 20 video tasks for evaluating the spatial and39
+temporal understanding of these models. While these methods aim at benchmarking Video-LMMs,40
+they predominantly evaluate video and/or temporal comprehension abilities and overlook the complex41
+reasoning aspects of Video-LMMs for real-world context, and their robustness towards user input text42
+queries; both of which are crucial to ensure their responsible engagement with humans in various real-43
+world situations in the wild. While some studies have explored similar areas such as hallucinations in44
+image-based LLMs [19, 24], no such comprehensive study exists for the case of Video-LMMs.45
+Motivated by the wide-scale applications of Video-LMMs and the lack of world-centric complex46
+video benchmarking efforts, we present a new benchmark, Complex Video Reasoning and Robustness47
+Evaluation Suite (CVRR-ES), to comprehensively assess the performance of Video-LMMs. As48
+shown in Tab. 1, CVRR-ES evaluates Video-LMMs on key aspects of robustness and reasoning in49
+videos, encompassing video domains that more accurately test models in real-world scenarios such as50
+videos having contextual dependency and in-the-wild aspects. CVRR-ES is an open-ended video QA51
+benchmark comprising 11 real-world video category dimensions (Fig. 1, left) that encompass diverse52
+evaluation aspects. These dimensions span from context-dependent (e.g., social, emotional, etc.)53
+categories to ones that often take place in the wild such as videos containing physically anomalous54
+activities. We comprehensively evaluate a representative set of 11 recent Video-LMMs (Fig. 1,55
+right) including both open-source and closed-source models on the CVRR-ES benchmark using a56
+LLM-assisted automatic evaluation framework [21, 4].57
+The performance of Video-LMMs on the CVRR-ES benchmark reveals that these models struggle to58
+correctly comprehend complex videos indicating their weak reasoning and lack of robustness to the59
+textual user queries (Fig. 2). For instance, state-of-the-art Video-LLaV A [18] achieves only 15.92%60
+performance averaged across 11 video dimensions of CVRR-ES. In contrast, closed-source models61
+including GPT4V(vision) [23] and Gemini-Vision-Pro [9] exhibit relatively stronger performance but62
+still lag behind the performance of humans. Using CVRR-ES benchmark, we extensively perform63
+quantitative and qualitative analysis and formulate important insights about these Video-LMMs based64
+on their failure cases and individual performances across the diverse video dimensions.65
+Based on our analysis, we note that standard prompting struggles in steering Video-LMMs’ focus for66
+complex video understanding. Additionally, their limitations in reasoning and robust video understand-67
+ing of real-world scenarios are dominantly driven by the quality of textual inputs (i.e., user questions).68
+Based on these insights, we develop a training-free Dual-Step Contextual Prompting (DSCP) tech-69
+nique, which effectively steers the model’s behavior during inference to elicit video-specific reasoning70
+and improved robustness within Video-LMMs. With DSCP, Video-LMMs substantially improve on71
+our benchmark, suggesting the potential of prompting methods for Video-LMMs.72
+2
+
+ 
+     
+ 
+ 
+  
+  
+  
+  
+Based on the visual cues provided in the 
+sequence of images, it appears that four 
+individuals exit the vehicle. 
+Correct Response: Three people exit the 
+car to retrieve black bags from the trunk. 
+2.
+Two individuals exit the 
+vehicle to retrieve items 
+from the trunk.
+Two individuals exit the 
+vehicle to retrieve items 
+from the trunk.
+Two individuals exit the vehicle to retrieve items from the trunk.
+In the video, we can see a 
+young man and woman 
+exiting the car …
+ 
+How many individuals exit the vehicle to 
+retrieve items from the trunk? 
+ 
+   
+Based on  …, one person is performing a prank 
+on another individual. The prank seems to 
+involve pouring a yellow liquid from a bowl, 
+which is sneakily positioned behind the 
+unsuspecting person's back at waist level.
+Correct Response: one man uses his back 
+muscles to crack eggs placed by another 
+man into a bowl behind him. The process 
+is amusing and ends with a celebratory 
+turn by the man holding the eggs.
+… Another man is holding a bowl of food 
+behind the first man … the second man 
+appears to be pouring the contents of the 
+bowl down the first man's shorts.
+A man is seen standing in a 
+kitchen with his hands on his 
+hips. Another man is standing 
+behind him and pouring 
+something into a bowl.
+a guy is standing with his 
+back facing someone else. 
+The person standing behind 
+him pours water on his 
+back, causing him to shiver.
+In the video, a man is seen 
+standing in a kitchen and 
+washing dishes. He then 
+puts on a white robe and 
+continues washing dishes.
+In the video, we see a 
+young man pouring 
+water from a bucket to a 
+plastic bowl.
+What is happening in the video?
+Why is the golfer 
+celebrating in the 
+video?
+Based on … the golfer is celebrating because they 
+successfully hit the golf ball from a sand bunker 
+onto the green and possibly close to the hole…
+Correct Response: The golfer is not celebrating and 
+instead he is expressing his anger and frustration by 
+hitting the golf stick into the ground.
+The golfer is celebrating 
+because he made a hole-in-one. 
+A hole-in-one is …
+The golfer is celebrating 
+because he hit the ball into 
+hole on his first attempt.
+The golfer is celebrating because 
+he has just hit the ball into the 
+hole.
+The golfer is celebrating because 
+he has just made a hole in one, …
+The golfer is celebrating in the 
+video because he is 
+successfully teeing off and …
+ 
+   
+Before the mug was moved, a tennis ball 
+became visible underneath it.
+Correct Response: No other object 
+was visible before the mug was 
+moved in the video. 
+A yellow tennis ball was visible in 
+the scene before the mug was 
+moved.
+A tennis 
+ball.
+Before the mug was moved, a tennis 
+ball was visible in the scene.
+In the beginning of the video, the person was 
+holding a mug with a tennis ball on a table. 
+Before the mug was moved, a white vase was 
+visible in the scene.
+Before the mug was moved, what other object 
+was visible in the scene?
+A tennis ball was visible in 
+the scene before the mug 
+was moved.
+GPT4(Vision)
+ Gemini-Pro-V
+ Video-LLaVA
+ LLaMA-VID
+ MovieChat
+ TimeChat
+Figure 2: We observe that most Video-LMMs struggle to reason over complex videos (rows 1-3) and exhibit
+weak robustness and rectification abilities when answering user questions that can sometimes be confusing (row
+4). The QA pairs in Comprehensive Video Reasoning and Robustness Evaluation Suite (CVRR-ES) benchmark
+assess the performance of Video-LMMs beyond general video comprehension. (best viewed zoomed in)
+Our main contributions are as follows: (1) We present Complex Video Robustness and Reason-73
+ing Evaluation suite (CVRR-ES), a Video Question Answering benchmark designed to assess the74
+reasoning and robustness capabilities of Video-LMMs on 11 diverse world-centric complex video75
+dimensions (§3). (2) We extensively evaluate both open-source and closed-source Video-LMMs on76
+the CVRR-ES benchmark and find that most models exhibit weak performance, highlighting their77
+limited reasoning in complex videos and lack of robustness towards user text queries (§5.1). (3) We78
+conduct comprehensive analysis and formulate important conclusions about Video-LMMs based on79
+their failure cases and performance on the CVRR-ES benchmark. Our findings provide key insights80
+for building the next generation of human-centric AI systems with improved robustness and reasoning81
+capabilities (§5.4). (4) To improve Video-LMMs’ reasoning and robustness abilities, we design a82
+model-agnostic and training-free prompting method that effectively enhances their performance (§4).83
+2 Related Works84
+Video Large Multi-modal models (Video-LMMs). Video-LMMs [18, 17, 37] are visual chatbots85
+capable of performing a wide range of video tasks, including video comprehension and captioning,86
+video question-answering, and action grounding. These models accept both video and textual inputs87
+and generate textual responses. From an architectural perspective, Video-LMMs combine pre-trained88
+vision backbones [25, 6, 32] with large language models [ 30, 38] using connector modules such89
+as MLP adapters, Q-former [5], and gated attention [1]. VideoChat [15] and VideoChat-GPT [17]90
+presented initial open-source efforts in this direction and were trained with two stages of alignment91
+and video-instruction following objectives. Recently, more advanced Video-LMMs have emerged in92
+the field, with some models focusing on improving model architectures [17], expanding to new tasks93
+3
+
+[22], and enabling support for long videos [28, 26]. In this work, we aim to develop a comprehensive94
+benchmarking framework to assess the reasoning and robustness capabilities of these Video-LMMs95
+and develop a training-free prompting technique to improve their performance on these fronts.96
+Benchmarking Video-LMMs. With the growing number of Video-LMMs emerging in the research97
+community, several works have presented evaluation frameworks to assess and quantify these models98
+for benchmarking and analysis purposes. SEED-Bench [ 14] evaluates the visual capabilities in99
+both image and Video-LMMs across 12 unique dimensions. MV-Bench [ 16] curates 20 video100
+tasks to evaluate the spatial and temporal understanding of Video-LMMs. Video-ChatGPT [ 21]101
+develops a quantitative evaluation framework to assess model understanding on five aspects of general102
+video comprehension, such as the correctness and consistency of model captions. While these103
+evaluation frameworks provide effective insights, their assessments do not extend beyond general104
+video-comprehension metrics to more advanced aspects of reasoning and robustness, particularly for105
+real-world context cases. In contrast, our work focuses on providing a complex video reasoning and106
+robustness benchmark and offers a thorough assessment of Video-LMMs in practical applications.107
+Training-free Prompting Techniques.Steering model behavior at inference time using prompting108
+has become a common paradigm in the NLP domain. Prompting [ 34, 31] refers to the set of109
+instructions given as a prefix to the language model to better align model responses with human intent110
+without the need for task-specific fine-tuning. Prompting techniques can be as simple as a single111
+sentence (e.g., "Let’s think step by step") such as zero-shot chain of thought [34] prompting, to more112
+detailed techniques such as combining chain-of-thought prompting with few-shot learning [2] and113
+self-consistency chain of thought prompting [31]. Surprisingly, training-free prompting techniques114
+for Video Large Multi-modal Models (Video-LMMs) have been minimally explored. In this work,115
+we develop a dual-step prompting technique based on principled prompt instructions specifically116
+designed to steer the model’s behavior for improved reasoning and robustness over complex videos.117
+3 Complex Video Reasoning and Robustness Evaluation Suite118
+As Video-LMMs are touching new real-world applications, it is essential to ensure that they robustly119
+handle the user inputs, comprehend the visual world, and exhibit human-like reasoning capabilities.120
+In this work, our goal is to establish a comprehensive benchmark, Complex Video Reasoning and121
+Robustness Evaluation Suite (CVRR-ES) to assess the robustness and reasoning capabilities of122
+Video-LMMs over complex and contextual videos. We first provide an overview of CVRR-ES and123
+then detail the video evaluation dimensions in Sec. 3.1. Subsequently, we discuss benchmark creation124
+process in Sec. 3.2. We provide details on the human performance on CVRR-ES in Appendix C.125
+Overview. CVRR-ES encompasses evaluation dimensions that cover diverse video categories related126
+to real-world scenarios, ranging from context-dependent (e.g., social, emotional) categories to video127
+types that often take place in the wild (e.g., anomalous activities). Specifically, we have compiled 11128
+video evaluation dimensions and curated 2,400 high-quality open-ended question-answer (QA) pairs,129
+spanning 214 high-quality videos. The average video duration is 22.3 seconds, with maximum and130
+minimum durations of 183 and 2 seconds, respectively. Fig. 2 shows some qualitative examples of131
+collected videos for the CVRR-ES benchmark. Refer to Appendix C for additional statistical details.132
+3.1 CVRR-ES Video Category definitions.133
+For curating the CVRR-ES benchmark, we carefully select 11 diverse benchmark evaluation cate-134
+gories. As shown in Fig. 1 (left), these categories encompass a wide range of real-world complex and135
+contextual video types. Below, we define each video evaluation dimension in detail.136
+1) Multiple actions in a single video. This category involves videos with 2-4 different human137
+activities. We curate questions in this category to assess the model’s ability to understand and reason138
+about multiple actions and their interrelations in a single video.139
+2) Fine-grained action understanding. We collect videos that encompass fine-grained activities140
+performed by humans, such as pushing, opening, closing, spreading, sitting, etc. This category tests141
+the model’s ability to interpret subtle and fine-grained actions through carefully crafted questions.142
+3) Partial actions. We observe that Video-LMMs produce content that is relevant to a video’s context143
+and likely to occur next. We collect videos with actions likely to be followed by other actions but not144
+shown in the video e.g., cracking an egg in a kitchen suggests the next action of cooking the egg.145
+4) Time order understanding. Accurately recognizing the temporal sequence of activities in videos146
+4
+
+is crucial for distinguishing between atomic actions, such as pushing and pulling. We collect videos147
+of fine-grained actions occurring in a particular temporal direction and curate challenging questions.148
+5) Non-existent actions with existent scene depictions. This category examines the model’s robust-149
+ness and reasoning behavior in scenarios where we introduce non-existent activities into the video150
+without altering the physical and spatial scenes or environmental details in it.151
+6) Non-existent actions with non-existent scene depictions. In this category, we increase the152
+difficulty of the QA task by including questions containing both non-existent activities and scenes.153
+We alter the details of objects, attributes, and background for non-existent scene comprehension. This154
+tests the model’s ability to correct misleading questions and avoid generating imaginary content.155
+7) Continuity and object instance count. This category contains videos (real-world and simulations)156
+designed to test the models’ ability to accurately recognize the number of instances of objects, people,157
+etc., and distinguish between existing objects and new ones introduced later in the same video scene.158
+8) Unusual and physically anomalous activities. We collect videos depicting unusual actions that159
+seemingly defy the laws of physics, such as a person floating in the air or driving a motorbike on160
+a running river. Assessing Video-LMMs in such scenarios is crucial, as it allows us to determine161
+whether they can generalize to understand actions in out-of-distribution videos in practical situations.162
+9) Interpretation of social context. We test Video-LMMs’ ability to understand actions influenced163
+by social contexts, such as helping an elderly person cross the road. Video-LMMs are assessed to164
+determine their ability to accurately infer the rationale behind actions using the social context.165
+10) Understanding of emotional context. Similar to social context, humans can accurately under-166
+stand and interpret each other’s actions by considering the emotional context. We test Video-LMMs’167
+ability to understand actions based on emotional context, e.g., a person crying due to joy.168
+11) Interpretation of visual context. This category tests the model’s ability to understand actions by169
+leveraging the overall visual contextual cues in the video. For example, to identify the number of170
+people present based on the presence of shadows, one must utilize the visual context of shadows.171
+3.2 Building CVRR-ES Benchmark172
+Stage 1: Data collection and Annotation. We first collect high-quality videos and annotate each173
+video via human assistance. To ensure that each evaluation dimension captures relevant attributes174
+and information, we meticulously select videos that are representative of specific characteristics175
+associated with that dimension. Overall, 214 unique videos are selected covering 11 dimensions176
+with around 20 videos per evaluation dimension. Around 60% of these videos are collected from177
+public academic datasets. To introduce diversity in the benchmark distribution, we select videos from178
+multiple datasets including Something-Something-v2 [10], CATER [8], Charades [27], ActivityNet179
+[3], HMDB51 [13], YFCC100M [29]. The remaining 40% of videos are collected from the internet.180
+Following the video collection process, two experienced human annotators are assigned to generate181
+captions for each video. For videos where initial captions or metadata are available from academic182
+datasets, the captions are generated by the annotators based on them. For videos collected from the183
+internet, captions are entirely generated by human annotators. To ensure consistency and high quality,184
+we provide annotation instructions to annotators, who generate captions accordingly. Personalized185
+annotation guidelines are used for each video category. Refer to additional details in Appendix C.186
+Stage 2: Question-Answer Generation. The first challenge is to select an evaluation setting to assess187
+Video-LMMs. Humans typically engage in free-form conversation to interact with each other in188
+day-to-day life. Inspired by this, we aim to simulate a similar style of interaction with Video-LMMs189
+by curating open-ended QA pairs to evaluate these models for robustness and reasoning. We feed190
+detailed ground-truth video captions to GPT-3.5 LLM, which is utilized to generate open-ended191
+questions. The QA pairs covers both the reasoning and robustness aspects as detailed below.192
+Reasoning QA pairs: With Video-LMMs beginning to interact more directly with humans in our193
+lives, it’s crucial to validate the reasoning abilities of Video-LMMs for more reliable Human-AI194
+interaction. When evaluating the reasoning capabilities of Video-LMMs, we aim to determine whether195
+these models can understand the input video not only by analyzing spatial content but also by grasping196
+the underlying rationale behind the occurring activities and their relationships with the surrounding197
+context. This involves creating questions that go beyond simple video comprehension and scene198
+description and require the model to engage in complex logical inference, contextual understanding,199
+and reasoning about counterfactual and hypothetical scenarios.200
+5
+
+Robustness QA pairs: In addition to evaluating the reasoning capabilities of LLMs, it is important201
+to assess Video-LMMs to ensure their robust and responsible performance in real-world scenarios.202
+In the context of Video-LMMs, robustness can be evaluated from both visual (video input) and203
+textual interfaces. Our focus in this work lies on textual interface robustness by particularly testing204
+the model’s comprehension abilities when posed with misleading or confusing questions. This205
+scenario mirrors realistic situations where users, based on their expertise levels, may pose irrelevant,206
+misleading, or confusing questions. It is crucial for models to demonstrate reliability and robustness207
+in handling such queries and avoid generating unreal or hallucinated content for input videos.208
+We curate specific prompts for each evaluation dimension to instruct LLM in generating QA pairs.209
+Example prompts used as an instruction to LLMs for curating QA pairs for robustness and reasoning210
+aspects are provided in Fig. 14 in the Appendix E.211
+Stage 3: QA Pairs Filtration. After generating the QA pairs, we employ a manual filtration step,212
+with human assistance to verify each generated QA pair. Approximately 30% of the QA pairs213
+generated by GPT-3.5 are found to be noisy, containing questions that are unrelated to the video214
+evaluation dimensions or unanswerable based on the provided ground-truth captions. Additionally,215
+many questions contain answers within the question itself. Therefore, an exhaustive filtering process216
+is conducted which involves QA rectification and removing those samples which are not relevant to217
+the video or evaluation type. This process results in a final set of 2400 high-quality QA pairs for the218
+CVRR-ES benchmark. Examples of the final QA pairs are shown in Tab. 4 in the Appendix.219
+Stage 4: Evaluation Procedure. Previous methods in the literature [21, 4, 19, 24] have explored220
+using LLM models as judges for quantifying results in open-ended QA benchmarks. We adopt a221
+similar approach and instruct LLMs to act as teachers to assess the correctness of predicted responses222
+from Video-LMMs compared to ground-truths. We generate open-ended predictions from Video-223
+LMMs by providing video-question pairs as inputs and then present the model predictions and their224
+ground-truth responses to the LLM Judge using the evaluation prompt. The Judge determines whether225
+the prediction is correct or incorrect with a binary judgment, assigns a score from 1 to 5 representing226
+the quality of the prediction, and provides a reasoning to explain its decision. Our ablative analysis in227
+the Appendix. E demonstrates that reasoning-constrained LLM-based evaluation aligns the most with228
+human-based judgment. Our evaluation prompt for LLM Judge is shown in Fig. 13 in Appendix E.229
+Quality of QA pairs. We show examples of QA pairs from CVRR-ES benchmark in Table 4 in230
+Appendix C. Our QA pairs are of high quality and aim to test the understanding of Video-LMMs231
+against reasoning and robustness criteria on multiple evaluation dimensions. To quantitatively assess232
+the quality of the benchmark, we establish a quality assessment procedure [7]. We randomly sample233
+1120 QA pairs, which encompass all videos of the CVRR-ES benchmark, and request human experts234
+to evaluate the quality of each QA pair by answering the following questions: (1) "Does the QA pair235
+correctly represent the evaluation dimension category under which it falls?" (possible answers: "Yes",236
+"No") (2) Can the question be correctly answered given only the video content? (possible answers:237
+"Agree", "Disagree") and (3) Is the corresponding paired ground-truth answer correct? (which will238
+be used during evaluation as ground truth) (possible answers: "Yes", "No"). On average, the answer239
+of experts for the first question was "Yes" for 98.84% of the times. For the second and third questions,240
+the averaged answer was "Agree" and "Yes" for 100% and 99.91% of the times, respectively.241
+4 Dual-Step Contextual Prompting for Video-LMMs.242
+Given their wide-scale potential in practical applications, new Video-LMMs are frequently introduced243
+by the research community. Despite the availability of numerous Video-LMMs, the majority of them244
+are trained using only positive examples and video-conversational templates that are primarily limited245
+to tasks such as video-captioning and video question answering [15, 21, 26, 28]. This leads to highly246
+over-affirmative behavior and a lack of self-rectification abilities in these models (Sec. 5.4).247
+Additionally, the templates have minimal focus on enhancing reasoning and robustness capabilities248
+through reasoning instruction-tuning pairs, resulting in their weak performance against robustness249
+and reasoning based evaluations in CVRR-ES. Consequently, enabling direct interaction of Video-250
+LMMs with users in real-world scenarios can result in undesired responses when the user question is251
+confusing and deceiving. Moreover, curating reasoning-based instruction fine-tuning datasets requires252
+meticulous data curation steps, and retraining these models are computationally expensive [17, 26].253
+6
+
+Alternatively, training-free prompting techniques in NLP literature have shown effectiveness in254
+eliciting reasoning abilities in LLMs such as chain of thought and self-consistency prompting [34, 31].255
+Inspired by these, we present a Dual Step Contextual Prompting (DSCP) technique, which steers256
+Video-LMM focus for enhanced reasoning while simultaneously encouraging the models to provide257
+robust and grounded answers. DSCP is a two-step prompting method that 1) ensures that the model258
+comprehends the video while reasoning over crucial aspects of complex video understanding such as259
+contextual information and decoding the complex relationships between objects and motions, etc., and260
+2) encourages robustness by generating the response against the question while conditioning both on261
+video and the unbiased context retrieved in the first step. Below we discuss each step of DSCP in detail.262
+Dual Step Contextual Prompting for Video-LMMs
+Retrieving Contextual reasoning information (Step 1)
+As an intelligent video comprehension model, focus on these guidelines:
+1. Differentiate recurring objects, count accurately, and identify 
+movements and poses. 
+2. Understand directional movements and temporal order. 
+3. Pay attention to fine-grained actions with precision. 
+4. Assess incomplete actions without assuming completion. 
+5. Detect emotional, social, and visual cues. 
+6. Capture and analyze all relevant actions. 
+7. Identify unusual actions accurately. 
+8. Disagree with incorrect information given in question. 
+9. If you do not find the evidence in the frames, you can give a definite 
+    answer by assuming that the asked action/attribute is not present. 
+10. Provide to the point and concise response. 
+Now, proceed with answering the following question faithfully while 
+keeping above guidelines in mind: 
+Question: What is happening in the video?
+Context conditioned question-answering (Step 2)
+Context for the given video is: {step 1 response}. Now answer a 
+question truthfully based on the video and the provided context. 
+Question: {User question}
+Figure 3: Principled prompt instructions in
+DSCP for Video-LMMs.
+Step 1: Video reasoning. We prompt Video-LMMs to263
+interpret video from a reasoning perspective using ten264
+principled instructions (Fig. 3, in blue) to direct the mod-265
+els to understand general video content, reason over the266
+rationale behind actions and their relationships with the267
+context, and consider factors like contextual priors, the268
+temporal order of actions, instance count, and attributes.269
+The prompting technique also includes instructions to270
+ensure conciseness and factuality to mitigate hallucina-271
+tions. Given a Video-LMM F and input video V, we272
+retrieve contextual reasoning informationIcontext by pro-273
+viding principled reasoning prompt Preason along with274
+the video to the LMM, Icontext = F(Preason|V). This275
+contextual information is then used in the second step of276
+DSCP to generate a grounded response to user question.277
+Step 2: Context conditioned question answering. To address the challenges of over-affirmative278
+behavior and hallucinations in Video-LMMs when prompted with confusing or misleading questions,279
+we propose an additional inference step. We note that Video-LMMs often possess factual knowledge280
+about the video content but become distracted and hallucinate when prompted with confusing or281
+misleading questions (Appendix D). Our DSCP technique conditions the model to first comprehend282
+the video without attending to the user question and, therefore eliminates its influence. This complex283
+video comprehension information, Icontext (formulated in step 1) is then used to condition the model284
+on both the video and Icontext. Finally, we pose the user question using prompt Puser which combines285
+the user question and the contextual reasoning information (Fig. 3, in green). The final response is286
+F(Puser|V), where Puser = [question; Icontext]. Here [ ; ]denotes the text prompt concatenation.287
+The factual content generated in step 1 guides the model towards a robust response in step 2, pro-288
+ducing factual and correct responses even with noisy or misleading user questions. We show the289
+qualitative results of DSCP technique in Fig. 11 in Appendix D. This approach leads to responses290
+that are better grounded in the actual video content and are robust against lower-quality user queries.291
+The DSCP technique effectively enhances the performance of Video-LMMs on CVRR-ES (Sec. 5.2).292
+5 Evaluation Experiments on CVRR-ES.293
+Video-LMMs. Among the open-source models, we evaluate 7 recent Video-LMMs, including294
+Video-LLaV A [18], TimeChat [ 26], MovieChat [ 28], LLaMA-ViD [ 17], VideoChat [ 15] Video-295
+ChatGPT [21], and Video-LLaMA-2 [37]. For evaluating closed-source models, we use Gemini-Pro,296
+Gemini-Flash, [9], GPT-4V and recent GPT-4o [23]. Refer to Appendix B for additional details.297
+5.1 Main Experiments on CVRR-ES.298
+Tab. 2 shows the evaluation results of Video-LMMs on CVRR-ES. Below, we discuss main results.299
+Open Source Video-LMMs struggles on CVRR-ES benchmark. All open-source LMMs show in-300
+ferior performance across the different evaluation dimensions of CVRR-ES. Interestingly, some of the301
+earlier developed open-source Video-LMMs, like Video-LLaMA, VideoChat, and Video-ChatGPT,302
+exhibit higher performance compared to more recent models such as Video-LLaV A, MovieChat, and303
+LLaMA-VID. Overall, TimeChat achieves the highest performance of 32.89% averaged across the 11304
+evaluation dimensions among open-source LMMs, followed by VideoChat with a score of 25.78%.305
+Humans rank highest in CVRR-ES benchmark. Human evaluation achieves the highest perfor-306
+7
+
+Table 2: Evaluation results of Video LLMs across various video-evaluation categories on the CVRR-ES
+benchmark. We present results for both open-source and closed-source models and human evaluation.
+Benchmark CategoryVideo-LLaMA-2VideoChatVideo-ChatGPTVideo-LLaV AMovieChatLLaMA-VIDTimeChatGemini-V ProGemini-V FlashGPT4VGPT4oHuman
+Multiple Actions in16.98 23.90 27.67 15.72 12.58 17.92 28.30 43.08 44.65 57.55 62.8993.40single video.
+Fine-grained action29.57 33.48 26.96 25.22 23.48 26.09 39.13 51.61 64.78 77.39 80.4395.65understanding.
+Partial 24.76 33.01 22.82 13.59 21.36 14.56 49.51 67.48 62.14 73.79 77.6798.54actions.
+Time order 16.45 31.58 27.63 21.05 16.45 19.74 34.21 45.39 55.26 57.89 71.0597.37understanding.
+Non-existent actions with10.14 15.22 23.19 5.07 5.07 2.90 23.19 57.25 60.14 71.01 83.3397.10existent scene.
+Non-existent actions with13.19 14.58 17.36 3.47 11.81 6.94 13.89 49.64 56.30 75.00 70.14100.00non-existent scene.
+Continuity and Object28.25 24.29 28.41 21.47 19.77 24.86 34.46 36.16 43.50 62.71 62.7196.49instance Count.
+Unusual and Physically18.95 18.42 18.95 15.79 17.89 16.32 27.37 60.00 60.53 74.74 78.4296.84Anomalous activities.
+Interpretation of 25.00 31.07 32.50 18.93 17.14 13.93 39.29 64.29 69.64 79.64 83.5797.51social context.
+Understanding of 21.92 23.63 21.23 15.07 13.70 14.73 27.40 47.26 52.74 66.44 70.8995.55emotional context.
+Interpretation of 32.60 34.43 27.84 19.78 21.25 23.08 45.05 63.00 57.51 82.42 84.2594.87visual context.
+Average 21.62 25.78 24.96 15.92 16.41 16.46 32.89 53.20 57.02 70.7875.0396.67
+Prompting Method VideoChat Video-LLaV A MovieChat LLaMA-VID TimeChat
+Standard prompting 25.78 15.92 16.41 16.46 32.89
+Chain of Thought (CoT) prompting 22.44 25.87 15.89 29.68 39.57
+DSCP (Stage 1) 38.07 32.12 28.05 25.13 33.04
+DSCP (Both stages) 47.92 37.93 35.87 46.85 39.45
+Table 3: Prompting methods.
+DSCP stage 1 uses only princi-
+pled instructions of step 1 and
+DSCP (Both stages) uses com-
+plete dual-step technique.
+mance on the CVRR-ES benchmark, with over 95% accuracy across all evaluation dimensions. These307
+results suggest that the CVRR-ES QA pairs are reasonable and suitable for benchmarking.308
+Closed source models perform competitively on CVRR-ES. As shown in Tab. 2, both Gemini and309
+GPT variants improve over open-source models and achieve high gains across all evaluation dimen-310
+sions. The competitive results of GPT4o and Gemini-Flash on complex video evaluation dimensions311
+such as partial actions, non-existent action/scene depiction, and context-dependent categories show312
+that these models have a more sophisticated understanding of the complex visual contents of videos313
+and have strong capabilities to rectify misleading and confusing user questions. Overall, GPT4o314
+improves over Gemini-Flash by 18.01% and provides the highest average accuracy of 75.03%.315
+5.2 Effectiveness of DSCP method for improving Video-LMMs performance316
+0 10 20 30 40 50 60
+Accuracy % (averaged over 11 video dimensions)
+Video LLaVa
+MovieChat
+LLaMA-VID
+Video-LLaMA-2
+Video-ChatGPT
+VideoChat
+TimeChat
+Gemini-Pro
+Video LMMs with DSCP
++22.01
++19.46
++30.39
++16.15
++8.93
++22.14
++6.56
++5.02
+Figure 4: Video-LMMs with DSCP technique
+effectively improves their performance (gains
+are shown in green) on CVRR-ES benchmark.
+We next integrate DSCP technique with Video-317
+LMMs and present results for CVRR-ES in Fig.318
+4. DSCP improves the model’s performance com-319
+pared with models that use standard prompting (i.e.,320
+using only the question itself). These results also321
+suggest that prompting techniques in Video-LMMs322
+can better guide models for improved reasoning and323
+robustness. With DSCP, initially low-performing324
+Video-LMMs like Video-LLaVa, MovieChat, and325
+LLaMA-Vid show much better relative gains and326
+become competitive with other models. The highest327
+relative gain of 184% is achieved by LLaMA-ViD,328
+which moves from 7th place in the leaderboard to329
+2nd among the open-source models after using the DSCP technique. We observe similar overall330
+positive trends of using DSCP with closed-source model Gemini, which improves on the benchmark331
+by an absolute overall gain of 5.02%. We provide more detailed results comparisons in Appendix D.332
+5.3 Different prompting techniques.333
+We now study the contribution of each step of DSCP and compare it with chain-of-thought (CoT)334
+prompting [34]. Results for the top 5 performing open Video-LMMs are shown in Tab. 3. CoT335
+prompting improves over standard prompting in 3 out of 5 Video-LMMs, suggesting that prompting336
+8
+
+techniques from NLP literature can also guide multi-modal Video-LMMs to enhance reasoning and337
+robustness. Next, we ablate on the first step of DSCP prompting, which uses principled instructions338
+of DSCP step 1 as a prefix alongside the actual user question. DSCP step 1 notably improves model339
+performance on all Video-LMMs, suggesting the effectiveness of the principled prompt instructions340
+designed specifically for Video models. DSCP with both steps, which additionally uses the initial341
+context in the second step, shows additional gains and achieves highest results on 4 out of 5 models.342
+5.4 Main findings and Qualitative Results343
+We now present key insights that can guide the development of the next generation of robust and344
+reliable Video-LMMs. We show qualitative results and additional analysis in the Appendix A.345
+Models excelling at standard VQA benchmarks struggle on CVRR-ES. Our analysis in Sec.346
+5.1 reveals that the latest open-source Video-LMMs, like Video-LLaV A, MovieChat, and LLaMA-347
+VID, perform less effectively on CVRR-ES compared to Video-LMMs that were introduced earlier348
+in the community, such as VideoChat and Video-ChatGPT. Interestingly, the same recent models349
+demonstrate superior performance on general video comprehension benchmarks. This suggests350
+that current VQA benchmarks, like ActivityNet-QA [ 36] and MSRVTT [ 35], do not adequately351
+correlate with the complex video reasoning and robustness scenarios highlighted in our benchmark.352
+Consequently, this also indicates that most newer Video-LMMs are heavily trained to excel on the353
+general video benchmarks while reducing their generalizability, reasoning, and robustness capabilities.354
+Over-affirmative behavior of open-source Video-LMMs. We observe that open-source models355
+exhibit positive and over-affirmative responses. Open-source Video-LMMs consistently respond with356
+"Yes" even when faced with confusing questions that describe non-existent actions and objects (Fig.357
+5 in Appendix. A). This highlights the vulnerability of these models when interacting with users in358
+real-world scenarios. In our CVRR-ES benchmark, open-source models are notably vulnerable to359
+evaluation dimensions of "Non-existent actions with the existent scene" and "Non-existent actions with360
+the non-existent scene" compared to closed models. These models lack negation and self-rectification361
+capabilities, especially when users provide misleading or confusing questions. We conjecture that362
+such behavior arises due to the absence of negative instruction tuning pairs during training.363
+Tendency towards activity completion. Most open-source Video-LMMs have shown lower results364
+on the evaluation dimension of partial actions, which focuses on incomplete or atomic actions. We365
+note that most open-source models tend to complete actions, even when only part of the action is366
+provided in the video (Fig. 6 in Appendix A). Upon examining the fine-tuning strategies [21, 20], we367
+find that almost all models are trained on end-to-end actions-based instruction-tuning data, causing368
+them to generate complete action descriptions at inference. This tendency highlights the vulnerability369
+of Video-LMMs after deployment, as real-world scenarios often involve atomic, sub-atomic, and370
+general actions alike. To improve the performance of Video-LMMs, it is crucial to incorporate diverse371
+action types during the training phase, including partial and incomplete actions.372
+Video-LMMs struggles in understanding the emotional and social context. For more reliable373
+interaction with humans in practical scenarios, Video-LMMs models should comprehend the video374
+scenes with social and contextual reasoning capabilities similar to humans. The lower performance of375
+Video-LMMs on social and emotional contextual dimensions in CVRR-ES highlights their limitations376
+and lack of understanding of scenes based on contextual cues (Fig. 9 in Appendix A).377
+378
+6 Conclusion379
+Given the expanding role of Video-LMMs in practical world-centric applications, it is crucial to ensure380
+that these models perform robustly and exhibit human-like reasoning and interaction capabilities381
+across various complex and real-world contexts. In this work, we present the CVRR-ES benchmark for382
+Video-LMMs, aiming to evaluate Video-LMMs on these very fronts. Through extensive evaluations,383
+we find that Video-LMMs, especially open-source ones, exhibit limited robustness and reasoning384
+capabilities over complex videos involving real-world contexts. Based on our analysis, we formulate385
+a training-free prompting technique that effectively improves the performance of Video-LMMs across386
+various evaluation dimensions of the CVRR-ES benchmark. Furthermore, we analyze and investigate387
+the failure cases of Video-LMMs on the CVRR-ES benchmark and deduce several important findings.388
+We hope that the CVRR-ES benchmark, accompanied by our extensive analysis, will contribute389
+towards building the next generation of advanced world-centric video understanding models.390
+9
+
+Appendix. F.509
+(c) Did you discuss any potential negative societal impacts of your work? [N/A]510
+Justification: This is a dataset paper aimed at studying and benchmarking the reasoning511
+of Video-LMMs in real-world context and robustness from the lens of user text queries.512
+Therefore, to the best of our knowledge, there are no potential negative societal impacts513
+of our work.514
+(d) Have you read the ethics review guidelines and ensured that your paper conforms to515
+them? [Yes]516
+Justification: Yes we have read the ethics review guidelines and ensured that our paper517
+conforms to them.518
+2. If you are including theoretical results...519
+(a) Did you state the full set of assumptions of all theoretical results [N/A]520
+Justification: There is no theoretical result in this paper that requires a full set of521
+assumptions and correct proof.522
+(b) Did you include complete proofs of all theoretical results? [N/A]523
+Justification: There is no theoretical result in this paper that requires a full set of524
+assumptions and correct proof.525
+3. If you ran experiments (e.g. for benchmarks)...526
+(a) Did you include the code, data, and instructions needed to reproduce the main experi-527
+mental results (either in the supplemental material or as a URL)? [Yes]528
+Justification: We have attached the code, link to data, and all instructions to reproduce529
+the main experimental results in the supplemental material.530
+(b) Did you specify all the training details (e.g., data splits, hyperparameters, how they531
+were chosen)? [Yes]532
+Justification: We have provided implementation details in the Appendix. B.533
+(c) Did you report error bars (e.g., with respect to the random seed after running experi-534
+ments multiple times)? [No] .535
+Justification: We did not have enough compute resources to completely re-run all the536
+experiments for different seeds and report error bars for different runs. We are currently537
+re-running the error bar experiments, and we plan to include all the experiments with538
+different seeds in the final version.539
+(d) Did you include the total amount of compute and the type of resources used (e.g., type540
+of GPUs, internal cluster, or cloud provider)? [Yes]541
+Justification: We have provided details on the compute resources in the Appendix. B.542
+4. If you are using existing assets (e.g., code, data, models) or curating/releasing new assets...543
+(a) If your work uses existing assets, did you cite the creators? [Yes]544
+Justification: We have cited the creators of datasets used in our benchmark in the main545
+paper in Sec. 3.2.546
+(b) Did you mention the license of the assets? [Yes]547
+Justification: Our dataset is released for educational and research purposes under548
+the CC-BY-4.0 license. We have mentioned the license of assets in the files in our549
+supplemental material as well as on our GitHub dataset hosting platform.550
+13
+
+(c) Did you include any new assets either in the supplemental material or as a URL? [Yes]551
+Justification: Yes we have included the assets in the supplemental material and also on552
+the public URL. Our assets can be publically accessed at mbzuai-oryx.github.io/CVRR-553
+Evaluation-Suite/.554
+(d) Did you discuss whether and how consent was obtained from people whose data you’re555
+using/curating? [Yes]556
+Justification: We collected most of the videos from academic datasets while respecting557
+their license information. The videos obtained from the web from YouTube are subject558
+to the copyright of the original owners and are used only for research and academic559
+purposes, consistant with previous works and benchmarks such as ActivityNet [36] etc.560
+(e) Did you discuss whether the data you are using/curating contains personally identifiable561
+information or offensive content? [Yes]562
+Justification: In our initial analysis using the subset (50%) of our CVRR-ES dataset, we563
+noted that no video contained specific personally identifiable information or offensive564
+content.565
+5. If you used crowdsourcing or conducted research with human subjects...566
+(a) Did you include the full text of instructions given to participants and screenshots, if567
+applicable? [Yes]568
+Justification: The instructions to humans for the benchmark quality assessment are569
+provided in Appendix C.570
+(b) Did you describe any potential participant risks, with links to Institutional Review571
+Board (IRB) approvals, if applicable? [N/A]572
+Justification: Not applicable.573
+(c) Did you include the estimated hourly wage paid to participants and the total amount574
+spent on participant compensation? [N/A]575
+Justification: The annotation process was carried out by the authors of this manuscript.576
+As a result, the aspect of compensation for human subjects does not apply in this case.577
+14

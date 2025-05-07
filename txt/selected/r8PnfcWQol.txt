@@ -1,0 +1,1528 @@
+EFO k-CQA: Towards Knowledge Graph
+Complex Query Answering beyond Set Operation
+Anonymous Author(s)
+Affiliation
+Address
+email
+Abstract
+To answer complex queries on knowledge graphs, logical reasoning over incomplete1
+knowledge needs learning-based methods because they are capable of generalizing2
+over unobserved knowledge. Therefore, an appropriate dataset is fundamental to3
+both obtaining and evaluating such methods under this paradigm. In this paper,4
+we propose a comprehensive framework for data generation, model training, and5
+method evaluation that covers the combinatorial space of Existential First-order6
+Queries with multiple variables ( EFOk). The combinatorial query space in our7
+framework significantly extends those defined by set operations in the existing8
+literature. Additionally, we construct a dataset, EFO k-CQA, with 741 query9
+types for empirical evaluation, and our benchmark results provide new insights10
+into how query hardness affects the results. Furthermore, we demonstrate that11
+the existing dataset construction process is systematically biased and hinders the12
+appropriate development of query-answering methods, highlighting the importance13
+of our work. Our code and data are provided in https://anonymous.4open.14
+science/r/EFOK-CQA/README.md15
+1 Introduction16
+The Knowledge Graph (KG) is a powerful database that encodes relational knowledge into a graph17
+representation [ 34, 31], supporting downstream tasks [ 41, 8] with essential factual knowledge.18
+However, KGs suffer from incompleteness during its construction [34, 7, 19]. The task of Complex19
+Query Answering (CQA) proposed recently has attracted much research interest [13, 28]. This task20
+ambitiously aims to answer database-level complex queries described by logical complex connectives21
+(conjunction ^, disjunction _, and negation ␣) and quantifiers1 (existential D) [37, 27, 18]. Currently,22
+learning-based methods dominate the CQA tasks because they can empirically generalize to unseen23
+knowledge as well as prevent the resource-demanding symbolic search.24
+The thriving of learning-based methods also puts an urgent request on high-quality benchmarks,25
+including datasets with comprehensive coverage of queries and sound answers, and fair evaluation26
+protocol for learning-based approaches. In the previous study, datasets are developed by progressively27
+expanding the syntactical expressiveness, where conjunction [13], union [26], negation [28], and28
+other operators [20] are taken into account sequentially. In particular, BetaE dataset [ 28] contains29
+all logical connectives and becomes the standard training set for model development. A larger30
+1The universal quantifier is usually not considered in query answering tasks, as a common practice from both
+CQA on KG [37, 27] and database query answering [25].
+Submitted to the 38th Conference on Neural Information Processing Systems (NeurIPS 2024) Track on Datasets
+and Benchmarks. Do not distribute.
+
+evaluation benchmark EFO-1-QA [36] was proposed to systematically evaluate the combinatorial31
+generalizability of CQA models on such queries. More related works are included in Appendix A.32
+However, the queries in previous datasets [28, 36] are recently justified as “Tree-Form” queries [39] as33
+they rely on the tree combinations of set operations. Compared to the well-established TPC-H decision34
+support benchmark [25] for database query processing, queries in existing CQA benchmarks [28, 36]35
+have two common shortcomings: (1) lack of combinatorial answers: only one variable is queried,36
+and (2) lack of structural hardness: all existing queries subject to the structure-based tractability [29,37
+39]. It is rather questionable whether existing CQA data under such limited scope can support the38
+future development of methodologies for general decision support with incomplete knowledge.39
+The goal of this paper is to establish a new framework that addresses the aforementioned shortcomings40
+to support further research in complex query answering on knowledge graphs. Our framework is41
+formally motivated by the well-established investigation of constraint satisfaction problems [29], in42
+which all queries can be formulated. In general, the contribution of our work is four folds.43
+Complete coverage We capture the complete Existential First Order (EFO) queries from their44
+rigorous definitions, underscoring both combinatorial hardness and structural hardness45
+and extending the existing coverage [36] which covers only a subset of EFO 1 query. The46
+captured query family is denoted as EFO k where k stands for multiple variables.47
+Curated datasets We derive EFO k-CQA dataset, a enormous extension of the previous EFO-1-QA48
+benchmark [36] and contains 741 types of query. We design several systematic rules to49
+guarantee that our dataset includes high-quality nontrivial queries, particularly those that50
+contain multiple query variables and are not structure-based tractable.51
+Convenient implementation We implement the entire pipeline for query generation, answer sam-52
+pling, model training and inference, and evaluation for the undiscussed scenarios of combi-53
+natorial answers. Our pipeline is backward compatible, which supports both set operation-54
+based methods and more recent ones.55
+Results and findings We evaluate six representative CQA methods on our benchmark. Our results56
+refresh the previous empirical findings and further reveal the structural bias of previous data.57
+2 Problem definition58
+2.1 Existential first order (EFO) queries on knowledge graphs59
+Given a set E of entities and a set R of relations, a knowledge graph KG encodes knowledge as a set60
+of factual triple KG “tph, r, tquĂ E ˆR ˆE. We always assume the KG that we have observed61
+KGo is only part of the real KG, meaning that KGo ĂKG.62
+The existing research only focuses on the logical formulas without universal quantifiers [27, 35]. We63
+then offer the definition of it based on strict first order logic.64
+Definition 1 (Term). A term is either a variable x or an entity a PE.65
+Definition 2 (Atomic formula). ϕ is an atomic formula if ϕ “rph, tq, where r PR is a relation, h66
+and t are two terms.67
+Definition 3 (Existential first order formula). The set of the existential formulas is the smallest set Φ68
+that satisfies the following2:69
+(i) For atomic formula rph, tq, itself and its negation rph, tq, ␣rph, tqP Φ70
+(ii) If ϕ, ψPΦ, then pϕ ^ψq, pϕ _ψqP Φ71
+(iii) If ϕ PΦ and xi is any variable, then Dxiϕ PΦ.72
+Definition 4 (Free variable). If a variable y is not associated with an existential quantifier, it is73
+called a free variable, otherwise, it is called a bounded variable. We write ϕpy1, ¨¨¨ , ykqto indicate74
+y1, ¨¨¨ , yk are the free variables of ϕ.75
+2We always assume all variables are named differently as common practice in logic.
+2
+
+∃𝑥𝑥1. Award(Fields,𝑦𝑦1)∧¬Award(Fields,𝑦𝑦2)∧
+Colleague(𝑦𝑦1, 𝑦𝑦2) ∧Born(𝑦𝑦1, 𝑥𝑥1) ∧Born(𝑦𝑦1, 𝑥𝑥2)
+∃𝑥𝑥1. Located(Europe,𝑥𝑥1) ∧
+¬Held(Olympics,𝑥𝑥1)∧Presdient(𝑥𝑥1, 𝑦𝑦1)
+Not Award
+Award
+ColleagueBorn
+Born
+Fields
+Fields
+𝒙𝒙𝟏𝟏
+𝒚𝒚𝟏𝟏
+𝒚𝒚𝟐𝟐
+Europe
+Olympics
+Located
+Held
+Existential VariableConstant Variable (Entity) Free VariableIntermediate Set Answer Set
+Figure 1: Operator Tree versus Query Graph. Left: An operator tree representing a given query “List
+the presidents of European countries that have never held the Olympics” [28]; Right: A query graph
+representing a given query “Find a pair of persons who are both colleagues and co-authors and were
+born in the same country, with one having awarded the fields medal while the another not”, which is
+both a multigraph and a cyclic graph, containing two free variables.
+Definition 5 (Sentence and query). A formula ϕ is a sentence if it contains no free variables, otherwise,76
+it is called a query. In this paper, we always consider formula with free variables, thus, we use77
+formula and query interchangeably.78
+Definition 6 (Substitution). For a1, ¨¨¨ , ak, where ai PE, we write ϕpa1{y1, ¨¨¨ , ak{ykqor simply79
+ϕpa1, ¨¨¨ , akqfor the result of simultaneously replacing all the occurrence of yi in ϕ by ai, i “80
+1, ¨¨¨ , k.81
+Definition 7 (Answer of an EFO query). For a given existential queryϕpy1, ¨¨¨ , ykqand a knowledge82
+graph KG, its answer is a set that defined by83
+Arϕpy1, ¨¨¨ , ykqs“tp a1, ¨¨¨ , akqq|ai PE, i“1, ¨¨¨ , k, ϕpa1, ¨¨¨ , akqis True in KGu.
+Definition 8 (Disjunctive Normal Form (DNF)). For any existential formulaϕpy1, ¨¨¨ , ykq, it can84
+be converted to the Disjunctive normal form as shown below:85
+ϕpy1, ¨¨¨ , ykq“ γ1py1, ¨¨¨ , ykq_¨¨¨_ γmpy1, ¨¨¨ , ykq, (1)
+γipy1, ¨¨¨ , ykq“D x1, ¨¨¨ , xn.ρi1 ^¨¨¨^ ρit, (2)
+where ρij is either an atomic formula or its negation, xi is called an existential variable.86
+DNF form has a strong property that Arϕpy1, ¨¨¨ , ykqs “ Ym
+i“1Arγipy1, ¨¨¨ , ykqs, which allows87
+us to only consider conjunctive formulas γi and then aggregate those answers to retrieve the final88
+answers. This practical technique has been used in many previous research [22, 27]. Therefore, we89
+only discuss conjunctive formulas in the rest of this paper.90
+2.2 Constraint satisfaction problem for EFO queries91
+Formally, a Constraint Satisfaction Problem (CSP) P can be represented by a triple P “pX, D, Cq92
+where X “pv1, ¨¨¨ , vnqis an n-tuple of variables, D “pD1, ¨¨¨ , Dnqis the corresponding n-tuple93
+of domains, C “pC1, ¨¨¨ , Ctqis t-tuple constraint, each constraint Ci is a pair of pSi, RSiqwhere94
+Si is a set of variables Si “tvij uand RSi is the constraint over those variables [29].95
+Historically, there are strong parallels between CSP and conjunctive queries in knowledge bases [10,96
+17]. The terms correspond to the variable set X. The domain Di of a constant entity contains only97
+itself, while it is the whole entity set E for other variables. Each constraint Ci is binary that is induced98
+by an atomic formula or its negation, for example, for an atomic formularph, tq, we have Si “th, tu,99
+RSi “tph, tq|h, tPE, ph, r, tqP KGu. Finally, by the definition of existential quantifier, we only100
+consider the answer of free variables, rather than tracking all terms within the existential formulas.101
+Definition 9 (CSP answer of conjunctive formula). For a conjunctive formula γ in Equation 2 with k102
+free variables and n existential variables, the answer set, A, of it formulated as CSP instance is:103
+Arγpy1, ¨¨¨ , ykqs“ Arγ‹py1, ¨¨¨ , yn`kqs, where γ‹ “ρi1 ^¨¨¨^ ρit.
+This shows that the inference of existential formulas is easier than solving CSP instances since the104
+existential variables do not need to be kept track of.105
+3
+
+Not Held
+IsCapital
+LocatedEurope
+Olympics
+𝒙𝟏
+𝒚𝟏 𝒙𝟏𝒄𝟏
+𝒚𝟏 𝒚𝟐𝒄𝟏
+𝒚𝟏
+Figure 2: Left: Example of trivial abstract query graph, in the upper left graph, the x1 is redundant
+violating Assumption 13, in the bottom left graph, answers for the whole query can be decomposed
+to answer two free variables y1 and y2 alone, violating Assumption 14. Right: Example of new
+query graph that is not included in previous benchmark [36] even though it can be represented by
+operator-tree. The representation of query graph follows Figure 1.
+2.3 The representation of query106
+To give an explicit representation of existential formula, operator tree [13] was proposed to represent107
+a formula, where each node represents the answer set for a sub-query, and the logic operators108
+in it naturally represent set operations. This method allows for the recursive computation from109
+constant entity to the final answer set in a bottom-up manner [ 28]. We also provide full details110
+of the operator tree and tree-form query in Appendix C. However, this representation method is111
+inherently directed, acyclic, and simple, therefore more recent research breaks these constraints by112
+being bidirectional [21, 37] or being cyclic or multi graph [39]. To meet these new requirements, they113
+propose to represent the formula by the query graph [39], which inherits the convention of constraint114
+network in representing CSP instance. We utilize this design and further extend it to represent EFOk115
+formula that contains multiple free variables. We provide the illustration and comparison of the116
+operator tree and the query graph in Figure 1, where we show the strong expressiveness of the query117
+graph. We also provide the formal definition of query graph as follows:118
+Definition 10 (Query graph). Let γ be a conjunctive formula in equation 2, its query graph is defined119
+by Gpγq“tp h, r, t,tT/Fuqu, where an atomic formula rph, tqin γ corresponds to ph, r, t,Tqand120
+␣rph, tqcorresponds to ph, r, t,Fq.121
+Therefore, any conjunctive formulas can be represented by a query graph, in the rest of the paper, we122
+use query graphs and conjunctive formulas interchangeably.123
+3 The combinatorial space of EFO k queries124
+Although previous research has given a systematic investigation in the combinatorial space of operator125
+trees [36], the combinatorial space of the query graph is much more challenging due to the extremely126
+large search space and the lack of explicit recursive formulation. To tackle this issue on a strong127
+theoretical background, we put forward additional assumptions to exclude trivial query graphs. Such128
+assumptions or restrictions also exist in the previous dataset and benchmark [28, 36]. Specifically,129
+we propose to split the task of generating data into two levels, the abstract level, and the grounded130
+level. At the abstract level, we create abstract query graph, at the grounded level, we provide the131
+abstract query graph with the relation and constant and instantiate it as a query graph. In this section,132
+we elaborate on how we investigate the scope of the nontrivial EFOk query of interest step by step.133
+3.1 Nontrivial abstract query graph of EFO k134
+The abstract query graph is the ungrounded query graph without information of certain knowledge135
+graphs, and we give an example in Figure 3.136
+Definition 11 (Abstract query graph) . The abstract query graph G “ pV, E, f, gqis a directed137
+graph with three node types,tConstant Entity, Existential Variable, Free Variableu, and two edge138
+types,tpositive, negativeu. The V is the set of nodes, E is the set of directed edges, f is the function139
+maps node to node type, g is the function maps edge to edge type.140
+Definition 12 (Grounding). For an abstract query graphG, a grounding is a function I that maps it141
+into a query graph G “IpGq.142
+4
+
+We propose two assumptions of the abstract query graph as follows:143
+Assumption 13 (No redundancy). For an abstract query graphG, there is not a subgraph Gs ĹG144
+such that for every grounding I, ArIpGqs“ ArIpGsqs.145
+Assumption 14 (No decomposition) . For an abstract query graph G, there are no such two146
+subgraphs G1, G2, satisfying that G1, G2 Ĺ G, such that for every instantiation I, ArIpGqs “147
+ArIpG1qsŚArIpG2qs, where the Śrepresents the cartesian product.148
+The assumption 14 inherits the idea of the structural decomposition technique in CSP [11], which149
+allows for solving a CSP instance by solving several sub-problems and combining the answer together150
+based on topology property. Additionally, meeting these two assumptions in the grounded query151
+graph is extremely computationally costly thus we avoid it in practice.152
+We provide some easy examples to be excluded for violating the assumptions above in Figure 2.153
+3.2 Nontrivial query graph of EFO k154
+Similarly, we propose two assumptions on the query graph.155
+Assumption 15 (Meaningful negation). For any negative edge e in query graph G, we require156
+removing it results in different CSP answers: ArG ´es‰ ArGs.3157
+Assumption 15 treats negation separately because of the fact that for any KG, any relation r PR,158
+there is |tph, tq|h, tPE, ph, r, tqP KGu|!| E|2, which means that the constraint induced by the159
+negation of an atomic formula is much less “strict” than the one induced by a positive atomic formula.160
+Assumption 16 (Appropriate answer size). There is a constant M !|E|to bound the candidate set161
+for each free variable yi in G, such that for any i, |tai PE|pa1, ¨¨¨ , ai, ¨¨¨ , akqP ArGsu|ď M.162
+We note the Assumption 16 extends the “bounded negation” assumption in the previous dataset [28,163
+36]. We give an example “Find a city that is located in Europe and is the capital of a country that has164
+not held the Olympics” in Figure 2, where the candidate set of x1 is in fact bounded by its relation165
+with the y1 variable but not from the bottom “Olympics” constant, hence, this query is excluded in166
+their dataset due to the directionality of operator tree.167
+Overall, the scope of the formula investigated in this paper surpasses the previous EFO-1-QA168
+benchmark because of: (1). We include the EFOk formula with multiple free variables for the first169
+time; (2). We include the whole family of EFO 1 query, many of them can not be represented by170
+operator tree; (3) Our assumption is more systematic than previous ones as shown by the example in171
+Figure 2. More details are offered in Appendix D.3.172
+4 Framework173
+We develop a versatile framework that supports five key functionalities fundamental to the whole174
+CQA task: (1) Enumeration of nontrivial abstract query graphs as discussed in Section 3; (2) Sample175
+grounding for the abstract query graph; (3) Compute answer for any query graph efficiently; (4)176
+Support implementation of existing CQA models; (5) Conduct evaluation including newly introduced177
+EFO k queries with multiple free variables. We explain each functionality in the following. An178
+illustration of the first three functionalities is given in Figure 3, where we show how each functionality179
+cooperates to help CQA tasks. We note that preprocessing allows us to extend our framework to more180
+avant-garde settings, like inductive settings or graphs with numerics, more discussions in Appendix G.181
+4.1 Enumerate abstract query graph182
+As discussed in Section 3, we are able to abide by those assumptions as well as enumerate all183
+possible query graphs within a given search space where certain parameters, including the number184
+3Ideally, we should expect them to have different answers as the existential formulas, however, this is
+computation costly and difficult to sample in practice, which is further discussed in Appendix D.
+5
+
+Train answers:
+{(Figalli,Camillio)}
+Real-world KG
+Won
+Not Won
+Colleague
+Fields
+Fields
+Answer lookup
+(Section 4.3)
+Test answers:
+{(Villani, Clément)}
+Evaluation Metrics
+(Section 4.5)
+• Marginal
+• Multiply
+• Joint
+Preprocessor
+• Transductive
+• Inductive
+• Numerical
+• …Train KG
+Test KG
+Abstract Query 
+Graph Sampler
+(Section 4.1)
+Query Grounding
+(Section 4.2)
+ Inference
+(Section 4.4)
+Score 
+tensor
+(2 vars)
+Loss 𝑙(𝑦, ො𝑦)
+𝒚𝟏
+𝒚𝟐
+Neural CQA Model
+Backprop
+Figure 3: Illustration of the all functionalities of our framework. Real-world KG is preprocessed and
+fed into our pipeline, which contains the whole process of data generation and supports end-to-end
+machine learning as well as evaluation. The origin of the KG picture is in Appendix I.
+of constants, free variables, existential variables, and the number of edges are all given, shown in185
+Figure 3. Additionally, we apply the graph isomorphism algorithm to avoid duplicated query graphs186
+being generated. More details for our generation method are provided in Appendix D.1.187
+4.2 Ground abstract query graph188
+To ground an abstract query graph G and comply with the assumption 15, we split the abstract query189
+graph into two parts, the positive part and the negative part, G “ Gp YGn. Then the grounding190
+process is also split into two steps: 1. Sample grounding for the positive subgraph Gp and compute191
+its answer, 2. Ground the Gn to decrease the answer got in the first step. Details in Appendix D.2.192
+Finally, to fulfill the assumption 16, we follow the previous practice of manually filtering out queries193
+that have more than 100 ˆk answers [28, 36], as we have introduced the EFOk queries.194
+4.3 Answer for existential formula195
+As illustrated in Section 2.2, the answer to an existential formula can be solved by a CSP solver,196
+however, we also show in Definition 9 that solve it as CSP leads to huge computation costs. Thus,197
+we develop our own algorithm following the standard solving technique of CSP, which ensures198
+consistency conditions in the first step, and do the backtracking to get the final answers in the199
+second step. Finally, we select part of our sampled queries and double-check it with the CSP200
+solver https://github.com/python-constraint/python-constraint.201
+4.4 Learning-based methods202
+As the query graph is an extension to the operator tree regarding the express ability to existential203
+formulas, we are able to reproduce CQA models that are initially implemented by the operator tree204
+in our new framework. Specifically, since the operator tree is directed and acyclic, we compute its205
+topology ordering that allows for step-by-step computation in the query graph. This algorithm is206
+illustrated in detail in the Appendix F. Therefore, our pipeline is backward compatible.207
+Conversely, for the newly proposed models that are based on query graphs, the original operator208
+tree framework is not able to implement them, while our framework is powerful enough. We have209
+therefore clearly shown that the query graph representation is more powerful than the previous210
+operator tree and is able to support arbitrary existential formulas as explained in Section 2.3.211
+4.5 Evaluation protocol212
+As we have mentioned in Section 2.1, there is an observed knowledge graphKGo and a full knowledge213
+graph KG. Thus, there is a set of observed answers Ao and a set of full answers A correspondingly.214
+Since the goal of CQA is to tackle the challenge of incompleteness, it has been a common practice to215
+6
+
+Table 1: HIT@10 scores(%) for inferring queries with one free variable on FB15k-237. We denote e,
+c as the number of existential variables, constant entities correspondingly. SDAG represents Simple
+Directed Acyclic Graph, Multi for multigraph, and Cyclic for cyclic graph. A VG.(c) and A VG.(e) is
+the average score of queries with the number of constant entities / existential variables fixed.
+Model c
+e 0 1 2 A VG.(c) A VG.
+SDAG SDAG Multi SDAG Multi Cyclic
+BetaE
+1 31.4 33.0 22.3 21.1 17.7 30.7 22.1
+36.42 57.2 36.2 35.5 29.3 29.4 45.3 32.5
+3 80.0 53.1 53.6 38.2 37.8 58.2 42.1
+A VG.(e) 59.3 43.8 40.6 33.8 32.7 49.3
+LogicE
+1 34.4 34.9 23.0 21.4 17.4 30.3 22.4
+36.72 60.0 38.4 36.8 29.8 29.3 45.3 33.0
+3 83.0 55.5 55.5 38.5 37.8 57.8 42.4
+A VG.(e) 62.2 46.0 42.0 34.2 32.6 49.1
+ConE
+1 34.9 35.4 23.6 21.8 18.4 34.2 23.5
+39.02 61.0 39.1 38.4 32.0 31.5 50.2 35.2
+3 84.8 56.7 57.1 41.1 40.0 63.4 44.9
+A VG.(e) 63.4 47.0 43.5 36.5 34.7 54.1
+CQD
+1 39.0 34.2 17.6 17.4 12.7 28.7 18.7
+35.92 50.7 33.8 33.6 28.4 28.4 45.7 31.4
+3 58.4 49.6 52.4 39.3 39.1 60.4 42.6
+A VG.(e) 50.7 41.4 38.4 33.8 32.4 50.2
+LMPNN
+1 38.6 37.8 21.8 22.9 17.8 31.7 23.2
+35.82 62.2 40.2 35.0 30.8 28.1 44.4 32.5
+3 86.6 56.9 51.9 38.3 35.3 55.8 40.8
+A VG.(e) 65.4 47.8 39.6 34.5 30.8 48.0
+FIT
+1 38.7 42.7 32.5 26.1 22.5 41.5 28.8
+47.02 65.5 47.7 48.2 39.7 40.1 56.5 43.4
+3 84.2 63.9 63.5 50.5 50.4 63.5 53.6
+A VG.(e) 65.8 54.7 51.5 44.9 43.7 57.5
+evaluate CQA models by the “hard” answers Ah “A ´Ao [26, 27]. However, to the best of our216
+knowledge, there has not been a systematic evaluation protocol for EFOk queries, thus we leverage217
+this idea and propose three types of different metrics to fill the research gap in the area of evaluation218
+of queries with multiple free variables, and thus have combinatorial answers.219
+Marginal. For any free variable yi, its full answer is Ayi “tai PE|pa1, ¨¨¨ , ai, ¨¨¨ , akqP Au, the220
+observed answer of itAyi
+o is defined similarly. This is termed “solution projection” in CSP theory [12]221
+to evaluate whether the locally retrieved answer can be extended to an answer for the whole problem.222
+Then, we rank the hard answer Ayi
+h “Ayi ´Ayi
+o
+4, against those non-answers E ´Ayi ´Ayi
+o and223
+use the ranking to compute standard metrics like MRR, HIT@K for every free variable. Finally, the224
+metric on the whole query graph is taken as the average of the metric on all free variables. We note225
+that this metric is an extension of the previous design [ 20]. However, this metric has the inherent226
+drawback that it fails to evaluate the combinatorial answer by the k-length tuple and thus fails to find227
+the correspondence among free variables.228
+Multiply. Because of the limitation of the marginal metric discussed above, we propose to evaluate229
+the combinatorial answer by each k-length tuple pa1, ¨¨¨ , akqin the hard answer set Ah. Specifically,230
+we rank each ai in the corresponding node yi the same as the marginal metric. Then, we propose the231
+HIT@nk metric, it is 1 if all ai is ranked in the top n in the corresponding node yi, and 0 otherwise.232
+Joint. Finally, we note these metrics above are not the standard way of evaluation, which is based on233
+a joint ranking for all the Ek combinations of the entire search space. We propose to estimate the234
+joint ranking in a closed form given certain assumptions, see Appendix E for the proof and details.235
+5 The EFO k-CQA dataset and benchmark results236
+5.1 The EFO k-CQA dataset237
+With the help of our framework developed in Section 4, we develop a new dataset calledEFO k-CQA,238
+whose combinatorial space is parameterized by the number of constants, existential and free variables,239
+and the number of edges. EFO k-CQA dataset includes 741 different abstract query graphs in total.240
+4We note Ayi
+h can be empty, making these marginal metrics not reliable, details in Appendix E.
+7
+
+0 50 100 150 200 250
+Ranking of query types
+0
+20
+40
+60
+80HIT@10(%)
+BetaE
+LogicE
+ConE
+CQD
+LMPNN
+FIT
+AVG.
+Figure 4: Relative performance of the six representative CQA models in queries with one free
+variable, where the ranking of query types is determined by the average HIT@10 score. A Gaussian
+filter with sigma=1 is added to smooth the curve.
+Then, we conduct experiments on our new EFO k-CQA dataset with six representative CQA models241
+including BetaE [28], LogicE [ 24], and ConE [40], which are built on the operator tree, CQD [2],242
+LMPNN [35], and FIT [39] which are built on query graph. The experiments are conducted in two243
+parts, (1). the queries with one free variable, specifically, including those that can not be represented244
+by an operator tree; (2). the queries that contain multiple free variables.245
+The parameters and the generation process, as well as its statistics, are detailed in Appendix D.4,246
+where we also provide a dataset constructed in inductive settings. However, we mainly focus on247
+transductive settings in the main paper since there are very few inductive models to benchmark.248
+We have made some adaptations to the implementation of CQA models, allowing them to inferEFOk249
+queries, full detail in Appendix F. The experiment is conducted on a standard KG FB15k-237 [32],250
+additional experiments on other standard KGs FB15k and NELL are presented in Appendix H.251
+5.2 Benchmark results for k “1252
+Because of the great number of abstract query graphs, we follow previous work [36] to group query253
+graphs by three factors: (1). the number of constant entities; (2). the number of existential variables,254
+and (3). the topology of the query graph5. The result is shown in Table 1 and Figure 4.255
+Structure analysis. Firstly, we find a clear monotonic trend that adding constant entities makes a256
+query easier while adding existing variables makes a query harder, which the previous research [36]257
+fails to uncover. Besides, we are the first to consider the topology of query graphs: when the number258
+of constants and existential variables is fixed, we have found the originally investigated queries that259
+correspond to Simple Directed Acyclic Graphs (SDAG) are generally easier than the multigraphs260
+ones but harder than the cyclic graph ones. This is an intriguing result that greatly deviates from261
+traditional CSP theory which finds that the cyclic graph is NP-complete, while the acyclic graph is262
+tractable [6]. We conjecture that the cyclic graph contains one more constraint than SDAG that serves263
+as a source of information for CQA models, while the multigraph tightens an existing constraint and264
+thus makes the query harder.265
+Model analysis. For models that are built on operator tree, including BetaE, LogicE, and ConE, their266
+relative performance is steady among all breakdowns and is consistent with their reported score in the267
+original dataset [28].However, for models that are built on query graphs, including CQD, LMPNN,268
+and FIT, we found that LMPNN performs generally better than CQD in SDAG, but falls behind CQD269
+in multigraphs and cyclic graphs. We assume the reason is that LMPNN requires training while CQD270
+does not, however, the original dataset are biased which only considers SDAG, leading to the result271
+5To facilitate our discussion, we make a further constraint in our EFOk-CQA dataset that the total edge is at
+most as many as the number of nodes, thus, a graph can not be both a multigraph and a cyclic graph.
+8
+
+Table 2: HIT@10 scores(%) of three different types for answering queries with two free variables on
+FB15k-237. The constant number is fixed to be two. e is the number of existential variables. The
+SDAG, Multi, and Cyclic are the same as Table 1.
+Model HIT@10
+Type
+e “ 0 e “ 1 e “ 2 A VG.
+SDAG Multi SDAG Multi Cyclic SDAG Multi Cyclic
+BetaE
+Marginal 54.5 50.2 49.5 46.0 58.8 37.2 35.5 58.3 43.8
+Multiply 27.3 22.4 22.3 16.9 26.2 16.9 13.9 25.7 18.3
+Joint 6.3 5.4 5.2 4.2 10.8 2.2 2.3 9.5 4.5
+LogicE
+Marginal 58.2 50.9 52.2 47.4 60.4 37.7 35.8 59.2 44.6
+Multiply 32.1 23.1 24.9 18.1 28.3 18.1 14.8 26.6 19.5
+Joint 6.8 6.0 6.1 4.5 12.3 2.5 2.7 10.3 5.1
+ConE
+Marginal 60.3 53.8 54.2 50.3 66.2 40.1 38.5 63.7 47.7
+Multiply 33.7 25.2 26.1 19.8 32.1 19.5 16.3 30.3 21.5
+Joint 6.7 6.4 6.2 4.8 12.6 2.6 2.7 10.9 5.3
+CQD
+Marginal 50.4 46.5 49.1 45.6 59.7 33.5 33.1 61.5 42.8
+Multiply 28.9 23.4 25.4 19.5 31.3 17.8 16.0 30.5 21.0
+Joint 8.0 8.0 7.4 6.0 13.9 3.6 3.9 12.0 6.4
+LMPNN
+Marginal 58.4 51.1 54.9 49.2 64.7 39.6 36.1 58.7 45.4
+Multiply 35.0 26.7 29.2 21.7 33.4 21.4 17.0 28.4 22.2
+Joint 7.6 7.5 7.1 5.3 12.9 2.8 2.9 9.5 5.2
+FIT
+Marginal 64.3 61.0 63.1 60.7 58.5 49.0 49.1 60.2 54.3
+Multiply 39.7 32.2 35.9 27.8 27.4 29.5 26.8 32.4 29.2
+Joint 7.4 9.0 7.8 6.5 10.1 3.7 4.6 10.6 6.4
+that LMPNN doesn’t generalize well to the unseen tasks with different topology property. We expect272
+future CQA models may use our framework to address this issue and gain better generalization.273
+Moreover, by the detailed observation in Figure 4, we plot two boxes. In the red box, we find that even274
+the worst model and the best model have pretty similar performance in these easiest queries despite275
+that they may differ greatly in other queries. In the black box, we note that CQD [2], though designed276
+in a rather general form, is pretty unstable when comes to empirical evaluation, as it has a clear277
+downward curve and deviates from other model’s performance enormously in most difficult query278
+types. Therefore, though its performance is better than LMPNN on average as reported in Table 1, its279
+unsteady performance suggests its inherent weakness, especially when the users are risk-sensitive280
+and desire a trustworthy machine-learning model that does not crash in extreme cases [33].281
+We note FIT is designed to infer all EFO 1 queries and is indeed able to outperform other models in282
+almost all breakdowns, however, its performance comes with the price of computational cost, and face283
+challenges in cyclic graph where it degenerates to enumeration: we further explain in Appendix F.284
+5.3 Benchmark results for k “2285
+As we have explained in Section 4.5, we propose three kinds of metrics, marginal ones, multiply286
+ones, and joint ones, from easy to hard, to evaluate the performance of a model in the scenario of287
+multiple variables. The evaluation result is shown in Table 2. As the effect of the number of constant288
+variables is quite clear, we remove it and add the metrics based on HIT@10 as the new factor.289
+For the impact regarding the number of existential variables and the topology property of the query290
+graph, we find the result is similar to Table 1, which may be explained by the fact that those models291
+are all initially designed to infer queries with one free variable. For the three metrics we have292
+proposed, we have identified a clear difficulty difference among them though they generally show293
+similar trends. The scores of joint HIT@10 are pretty low, indicating the great hardness of answering294
+queries with multiple variables. Moreover, we have found that FIT falls behind other models in some295
+breakdowns which are mostly cyclic graphs, corroborating our discussion in Section 5.2. We offer296
+more experiment results and further discussion in Appendix H.297
+6 Conclusion298
+In this paper, we make a thorough investigation of the family ofEFO k formulas based on a strong299
+theoretical background. We then present a new powerful framework that supports several function-300
+alities essential to CQA task, and build the EFO k-CQA dataset that greatly extends the previous301
+datasets. Our evaluation result brings new empirical findings and reflects the biased selection in the302
+previous dataset impairs the performance of CQA models, emphasizing the contribution of our work.303
+9
+
+References304
+[1] Dimitrios Alivanistos, Max Berrendorf, Michael Cochez, and Mikhail Galkin. Query Embedding305
+on Hyper-relational Knowledge Graphs, September 2022. arXiv:2106.08166 [cs].306
+[2] Erik Arakelyan, Daniel Daza, Pasquale Minervini, and Michael Cochez. Complex Query An-307
+swering with Neural Link Predictors. In International Conference on Learning Representations,308
+2020.309
+[3] Jiaxin Bai, Zihao Wang, Hongming Zhang, and Yangqiu Song. Query2Particles: Knowledge310
+Graph Reasoning with Particle Embeddings. In Findings of the Association for Computational311
+Linguistics: NAACL 2022, pages 2703–2714, 2022.312
+[4] Yushi Bai, Xin Lv, Juanzi Li, and Lei Hou. Answering Complex Logical Queries on Knowledge313
+Graphs via Query Computation Tree Optimization. In Proceedings of the 40th International314
+Conference on Machine Learning, pages 1472–1491. PMLR, July 2023. ISSN: 2640-3498.315
+[5] Antoine Bordes, Nicolas Usunier, Alberto Garcia-Duran, Jason Weston, and Oksana Yakhnenko.316
+Translating Embeddings for Modeling Multi-relational Data. In Advances in Neural Information317
+Processing Systems, volume 26. Curran Associates, Inc., 2013.318
+[6] Clément Carbonnel and Martin C Cooper. Tractability in constraint satisfaction problems: a319
+survey. Constraints, 21(2):115–144, 2016. Publisher: Springer.320
+[7] Andrew Carlson, Justin Betteridge, Bryan Kisiel, Burr Settles, Estevam Hruschka, and Tom321
+Mitchell. Toward an architecture for never-ending language learning. In Proceedings of the322
+AAAI conference on artificial intelligence, volume 24, pages 1306–1313, 2010. Issue: 1.323
+[8] Lisa Ehrlinger and Wolfram Wöß. Towards a definition of knowledge graphs. SEMANTiCS324
+(Posters, Demos, SuCCESS), 48(1-4):2, 2016.325
+[9] Michael Galkin, Zhaocheng Zhu, Hongyu Ren, and Jian Tang. Inductive logical query answering326
+in knowledge graphs. Advances in Neural Information Processing Systems, 35:15230–15243,327
+2022.328
+[10] Georg Gottlob, Nicola Leone, and Francesco Scarcello. Hypertree decompositions and tractable329
+queries. In Proceedings of the eighteenth ACM SIGMOD-SIGACT-SIGART symposium on330
+Principles of database systems, pages 21–32, 1999.331
+[11] Georg Gottlob, Nicola Leone, and Francesco Scarcello. A comparison of structural CSP332
+decomposition methods. Artificial Intelligence, 124(2):243–282, December 2000.333
+[12] Gianluigi Greco and Francesco Scarcello. On The Power of Tree Projections: Struc-334
+tural Tractability of Enumerating CSP Solutions. Constraints, 18(1):38–74, January 2013.335
+arXiv:1005.1567 [cs].336
+[13] Will Hamilton, Payal Bajaj, Marinka Zitnik, Dan Jurafsky, and Jure Leskovec. Embedding337
+logical queries on knowledge graphs. Advances in neural information processing systems, 31,338
+2018.339
+[14] Zhiwei Hu, Víctor Gutiérrez-Basulto, Zhiliang Xiang, Xiaoli Li, and Jeff Pan. Type-aware340
+Embeddings for Multi-Hop Reasoning over Knowledge Graphs. May 2022.341
+[15] Qian Huang, Hongyu Ren, and Jure Leskovec. Few-shot relational reasoning via connection342
+subgraph pretraining. Advances in Neural Information Processing Systems , 35:6397–6409,343
+2022.344
+[16] Zhen Jia, Soumajit Pramanik, Rishiraj Saha Roy, and Gerhard Weikum. Complex Temporal345
+Question Answering on Knowledge Graphs. In Proceedings of the 30th ACM International346
+Conference on Information & Knowledge Management, CIKM ’21, pages 792–802, New York,347
+NY , USA, 2021. Association for Computing Machinery.348
+10
+
+[17] Phokion G Kolaitis and Moshe Y Vardi. Conjunctive-query containment and constraint satis-349
+faction. In Proceedings of the seventeenth ACM SIGACT-SIGMOD-SIGART symposium on350
+Principles of database systems, pages 205–213, 1998.351
+[18] Jure Leskovec. Databases as Graphs: Predictive Queries for Declarative Machine Learning. In352
+Proceedings of the 42nd ACM SIGMOD-SIGACT-SIGAI Symposium on Principles of Database353
+Systems, PODS ’23, page 1, New York, NY , USA, 2023. Association for Computing Machinery.354
+event-place: Seattle, W A, USA.355
+[19] Leonid Libkin and Cristina Sirangelo. Open and Closed World Assumptions in Data Exchange.356
+Description Logics, 477, 2009.357
+[20] Lihui Liu, Boxin Du, Heng Ji, ChengXiang Zhai, and Hanghang Tong. Neural-Answering358
+Logical Queries on Knowledge Graphs. In Proceedings of the 27th ACM SIGKDD Conference359
+on Knowledge Discovery & Data Mining, pages 1087–1097, 2021.360
+[21] Xiao Liu, Shiyu Zhao, Kai Su, Yukuo Cen, Jiezhong Qiu, Mengdi Zhang, Wei Wu, Yuxiao361
+Dong, and Jie Tang. Mask and Reason: Pre-Training Knowledge Graph Transformers for362
+Complex Logical Queries. In Proceedings of the 28th ACM SIGKDD Conference on Knowledge363
+Discovery and Data Mining, pages 1120–1130, August 2022. arXiv:2208.07638 [cs].364
+[22] Xiao Long, Liansheng Zhuang, Li Aodi, Shafei Wang, and Houqiang Li. Neural-based Mixture365
+Probabilistic Query Embedding for Answering FOL queries on Knowledge Graphs. 2022.366
+[23] Haoran Luo, Yuhao Yang, Gengxian Zhou, Yikai Guo, Tianyu Yao, Zichen Tang, Xueyuan Lin,367
+Kaiyang Wan, and others. NQE: N-ary Query Embedding for Complex Query Answering over368
+Hyper-relational Knowledge Graphs. arXiv preprint arXiv:2211.13469, 2022.369
+[24] Francois Luus, Prithviraj Sen, Pavan Kapanipathi, Ryan Riegel, Ndivhuwo Makondo, Thabang370
+Lebese, and Alexander Gray. Logic embeddings for complex query answering. arXiv preprint371
+arXiv:2103.00418, 2021.372
+[25] Meikel Poess and Chris Floyd. New TPC benchmarks for decision support and web commerce.373
+ACM Sigmod Record, 29(4):64–71, 2000. Publisher: ACM New York, NY , USA.374
+[26] H Ren, W Hu, and J Leskovec. Query2box: Reasoning Over Knowledge Graphs In Vector Space375
+Using Box Embeddings. In International Conference on Learning Representations (ICLR) ,376
+2020.377
+[27] Hongyu Ren, Mikhail Galkin, Michael Cochez, Zhaocheng Zhu, and Jure Leskovec. Neural378
+Graph Reasoning: Complex Logical Query Answering Meets Graph Databases, March 2023.379
+arXiv:2303.14617 [cs].380
+[28] Hongyu Ren and Jure Leskovec. Beta embeddings for multi-hop logical reasoning in knowledge381
+graphs. Advances in Neural Information Processing Systems, 33:19716–19726, 2020.382
+[29] Francesca Rossi, Peter van Beek, and Toby Walsh. Handbook of Constraint Programming.383
+Elsevier Science Inc., USA, 2006.384
+[30] Apoorv Saxena, Soumen Chakrabarti, and Partha Talukdar. Question Answering Over Temporal385
+Knowledge Graphs, June 2021. arXiv:2106.01515 [cs].386
+[31] Fabian M Suchanek, Gjergji Kasneci, and Gerhard Weikum. Yago: a core of semantic knowl-387
+edge. In Proceedings of the 16th international conference on World Wide Web, pages 697–706,388
+2007.389
+[32] Kristina Toutanova and Danqi Chen. Observed versus latent features for knowledge base and390
+text inference. In Proceedings of the 3rd workshop on continuous vector space models and their391
+compositionality, pages 57–66, 2015.392
+11
+
+[33] Kush R. Varshney. Trustworthy machine learning and artificial intelligence. XRDS: Crossroads,393
+The ACM Magazine for Students, 25(3):26–29, 2019.394
+[34] Denny Vrandeˇci´c and Markus Krötzsch. Wikidata: a free collaborative knowledgebase. Com-395
+munications of the ACM, 57(10):78–85, 2014. Publisher: ACM New York, NY , USA.396
+[35] Zihao Wang, Yangqiu Song, Ginny Wong, and Simon See. Logical Message Passing Networks397
+with One-hop Inference on Atomic Formulas. In The Eleventh International Conference on398
+Learning Representations, 2023.399
+[36] Zihao Wang, Hang Yin, and Yangqiu Song. Benchmarking the Combinatorial Generalizability400
+of Complex Query Answering on Knowledge Graphs. Proceedings of the Neural Information401
+Processing Systems Track on Datasets and Benchmarks, 1, December 2021.402
+[37] Zihao Wang, Hang Yin, and Yangqiu Song. Logical Queries on Knowledge Graphs: Emerging403
+Interface of Incomplete Relational Data. Data Engineering, page 3, 2022.404
+[38] Zezhong Xu, Wen Zhang, Peng Ye, Hui Chen, and Huajun Chen. Neural-Symbolic Entangled405
+Framework for Complex Query Answering, September 2022. arXiv:2209.08779 [cs].406
+[39] Hang Yin, Zihao Wang, and Yangqiu Song. Rethinking existential first order queries and407
+their inference on knowledge graphs. In The Twelfth International Conference on Learning408
+Representations, 2024.409
+[40] Zhanqiu Zhang, Jie Wang, Jiajun Chen, Shuiwang Ji, and Feng Wu. Cone: Cone embeddings410
+for multi-hop reasoning over knowledge graphs. Advances in Neural Information Processing411
+Systems, 34:19172–19183, 2021.412
+[41] Tao Zhou, Jie Ren, Matúš Medo, and Yi-Cheng Zhang. Bipartite network projection and413
+personal recommendation. Physical review E, 76(4):046115, 2007. Publisher: APS.414
+Checklist415
+1. For all authors...416
+(a) Do the main claims made in the abstract and introduction accurately reflect the paper’s417
+contributions and scope? [Yes]418
+(b) Did you describe the limitations of your work? [Yes] We can not handle queries with419
+the universal quantifier, meaning that we can not cover all queries that have been420
+proposed by previous dataset and benchmarks.421
+(c) Did you discuss any potential negative societal impacts of your work? [Yes] We have422
+discussed the possible negative social impact, see Appendix I.423
+(d) Have you read the ethics review guidelines and ensured that your paper conforms to424
+them? [Yes]425
+2. If you are including theoretical results...426
+(a) Did you state the full set of assumptions of all theoretical results? [Yes] Clear assump-427
+tions are made in Section 3 to define the scope of the query we investigate.428
+(b) Did you include complete proofs of all theoretical results? [Yes] All the proofs are429
+provided in Appendix D.1.430
+3. If you ran experiments (e.g. for benchmarks)...431
+(a) Did you include the code, data, and instructions needed to reproduce the main experi-432
+mental results (either in the supplemental material or as a URL)? [Yes] We have given433
+the link in the abstract.434
+(b) Did you specify all the training details (e.g., data splits, hyperparameters, how they435
+were chosen)? [Yes] This is in Appendix F.436
+12
+
+(c) Did you report error bars (e.g., with respect to the random seed after running experi-437
+ments multiple times)? [No] However, we have evaluated CQA models in the previous438
+dataset and the result is similar to the scores in original paper.439
+(d) Did you include the total amount of compute and the type of resources used (e.g., type440
+of GPUs, internal cluster, or cloud provider)? [Yes]441
+4. If you are using existing assets (e.g., code, data, models) or curating/releasing new assets...442
+(a) If your work uses existing assets, did you cite the creators? [Yes]443
+(b) Did you mention the license of the assets? [No] They are all open datasets.444
+(c) Did you include any new assets either in the supplemental material or as a URL? [Yes]445
+(d) Did you discuss whether and how consent was obtained from people whose data you’re446
+using/curating? [N/A] We only use public data and don’t obtain from individuals.447
+(e) Did you discuss whether the data you are using/curating contains personally identifiable448
+information or offensive content? [N/A]449
+5. If you used crowdsourcing or conducted research with human subjects...450
+(a) Did you include the full text of instructions given to participants and screenshots, if451
+applicable? [N/A] We have not used crowdsourcing.452
+(b) Did you describe any potential participant risks, with links to Institutional Review453
+Board (IRB) approvals, if applicable? [N/A]454
+(c) Did you include the estimated hourly wage paid to participants and the total amount455
+spent on participant compensation? [N/A]456
+A Related works457
+Answering complex queries on knowledge graphs differs from database query answering by being a458
+data-driven task [37], where the incompleteness of the knowledge graph is addressed by methods that459
+learn from data. Meanwhile, learning-based methods enable faster neural approximate solutions of460
+symbolic query answering problems [27].461
+The prevailing way is query embedding, where the computational results are embedded and computed462
+in the low-dimensional embedding space. Specifically, the query embedding over the set operator trees463
+is the earliest proposed [13]. The supported set operators include projection[13], intersection [26],464
+union and negation [28], and later on be improved by various designs [40, 3]. Such methods assume465
+queries can be converted into the recursive execution of set operations, which imposes additional466
+assumptions on the solvable class of queries [36]. These assumptions introduce additional limitations467
+of such query embeddings468
+Recent advancements in query embedding methods adapt query graph representation and graph469
+neural networks, supporting atomics [21] and negated atomics [35]. Query embedding on graphs470
+bypasses the assumptions for queries [36]. Meanwhile, other search-based inference methods [2, 39]471
+are rooted in fuzzy calculus and not subject to the query assumptions [36].472
+Though many efforts have been made, the datasets of complex query answering are usually subject to473
+the assumptions by set operator query embeddings [36]. Many other datasets are proposed to enable474
+queries with additional features, see [27] for a comprehensive survey of datasets. However, only one475
+small dataset proposed by [39] introduced queries and answers beyond such assumptions [36]. It is476
+questionable that this small dataset is fair enough to justify the advantages claimed in advancement477
+methods [35, 39] that aim at complex query answering. The dataset [39] is still far away from the478
+systematical evaluation as proposed in [36] and EFOk-CQA proposed in this paper fills this gap.479
+B Details of constraint satisfaction problem480
+In this section, we introduce the constraint satisfaction problem (CSP) again. One instance of CSP P481
+can be represented by a triple P “pX, D, Cqwhere X “px1, ¨¨¨ , xnqis an n-tuple of variables,482
+13
+
+D “pD1, ¨¨¨ , Dnqis the corresponding n-tuple of domains, meaning for each i, xi PDi. Then,483
+C “pC1, ¨¨¨ , Ctqis t-tuple constraint, each constraint Ci is a pair of pSi, RSiqwhere Si is called484
+the scope of the constraint, meaning it is a set of variables Si “txij uand RSi is the constraint over485
+those variables [29], meaning that RSi is a subset of the cartesian product of variables in Si.486
+Then the formulation of existential conjunctive formulas as CSP has already been discussed in487
+Section 2.2. Additionally, for the negation of atomic formula ␣rph, tq, we note the constraint C is488
+also binary with Si “th, tu, RSi “tph, tq|h, tPE, ph, r, tqR KGu, this means that RSi is a very489
+large set, thus the constraint is less “strict” than the positive ones.490
+C Preliminary of tree form query491
+We explain the operator tree method, as well as the tree-form queries in this section, which is firstly492
+introduced in [39]. The tree-form queries are defined to be the syntax closure of the operator tree493
+method and are the prevailing query types in the existing datasets [28, 36], see the definition below:494
+Definition 17 (Tree-Form Query). The set of the Tree-Form queries is the smallest setΦ such that:495
+(i) If ϕpyq“ rpa, yq, where a PE, then ϕpyqP Φ;496
+(ii) If ϕpyqP Φ, ␣ϕpyqP Φ;497
+(iii) If ϕpyq, ψpyqP Φ, then pϕ ^ψqpyqP Φ and pϕ _ψqpyqP Φ;498
+(iv) If ϕpyqP Φ and y1is any variable, then ψpy1q“D y.rpy, y1q^ ϕpyqP Φ.499
+We note that the family of tree-form queries deviates from the targeted EFO 1 query family [39]. The500
+rationale of the definition is that the previous model relied on the representation of “operator tree”501
+which addresses logical queries to simulate logical reasoning as the execution of set operators [28, 40,502
+38], where each node represents a set of entities corresponding to the answer set of a sub-query [39].503
+Then, logical connectives are transformed into operator nodes for set projections(Definition 17 i,iv),504
+complement(Definition 17 ii), intersection, and union(Definition 17 iii) [ 36]. Particularly, the set505
+projections are derived from the Skolemization of predicates [ 24]. Therefore, the operator tree506
+method that has been adopted in lines of research [28, 40, 38] is just a model that neuralizes these set507
+operations: projection, complement, intersection, and union. These different models basically only508
+differ from each other by their parameterization while having the same expressiveness as characterized509
+by the tree form query.510
+Specifically, the left side of the Figure 1 shows an example of the operator tree, where “Held” and511
+“Located” are treated as two projections, “N” represents set complement, and “I” represents set512
+intersection. Therefore, the embedding of the root representing the answer set can be computed based513
+on these set operations in a bottom-up manner [28].514
+Finally, it has been noticed that tree-form query is subject to structural traceability and only has515
+polynomial time combined complexity for inference while the general EFOk, or even EFO 1 queries,516
+is NP-complete, with detailed proof in [ 39]. Therefore, this result highlights the importance of517
+investigating the EFOk queries as it greatly extends the previous tree-form queries.518
+D Construction of the whole EFO k-CQA datset519
+In this section, we provide details for the construction of the EFO k-CQA dataset.520
+D.1 Enumeration of the abstract query graphs521
+We first give a proposition of the property of abstract query graph:522
+Proposition 18. For an abstract query graphG, if it conforms Assumption 13 and Assumption 14,523
+then removing all constant entities in G will lead to only one connected component and no edge is524
+connected between two constant entities.525
+14
+
+𝑦2
+𝑦1
+𝑥1
+𝑐1
+𝑐2
+(1) (2) (3) (4)
+𝑟3
+𝑟2
+𝑟1
+𝑟5 𝑟6
+𝑦2
+𝑦1
+𝑥1
+𝑐1
+𝑐2
+𝑟3
+𝑟2
+𝑟1
+𝑟5 𝑟6
+𝑦2
+𝑦1
+𝑥1
+𝑟3
+𝑟5 𝑟6
+𝑦2
+𝑦1
+𝑥1
+𝑟3
+𝑟5
+𝑟4 𝑟4 𝑟4 𝑟4
+Figure 5: The four steps of enumerating the abstract query graphs. We note that the example and
+representation follow Figure 3.
+Proof. We prove this by contradiction. If there is an edge (whether positive or negative) between526
+constant entities, then this edge is redundant, violating Assumption 13. Then, if there is more than one527
+connected component after removing all constant entities in G. Suppose one connected component528
+has no free variable, then this part is a sentence and thus has a certain truth value, whether 0 or 1,529
+which is redundant, violating Assumption 13. Then, we assume every connected component has at530
+least one free variable, we assume there is m connected component and we have:531
+NodepGq“pY m
+i“1NodepGiqqY NodepGcq
+where m ą1, the Gc is the set of constant entities and each Gi is the connected component, we use532
+NodepGqto denote the node set for a graph G. Then this equation describes the partition of the node533
+set of the original G.534
+Then, we construct Ga “GrNodepG1qYGcsand Gb “GrpYm
+i“1NodepGiqqYNodepGcqs, where G535
+represents the induced graph. Then we naturally have that ArIpGqs“ ArIpGaqsŚArIpGbqs, where536
+the Śrepresents the Cartesian product, violating Assumption 14.537
+538
+Additionally, as mentioned in Appendix B, the negative constraint is less “strict”, we formally put an539
+additional assumption of the real knowledge graph as the following:540
+Assumption 19. For any knowledge graphKG, with its entity set E and relations set R, we assume541
+it is somewhat sparse with regard to each relation, meaning: for any r PR, |ta PE|Db.pa, r, bqP542
+KG or pb, r, aqP KGu|!| E|.543
+Then we develop another proposition for the abstract query graph:544
+Proposition 20. With the knowledge graph conforming Assumption 19, for any nodeu in the abstract545
+query graph G, if u is an existential variable or free variable, then it can not only connect with546
+negative edges.547
+Proof. Suppose u only connects to m negative edge e1, ¨¨¨ , em. For any grounding I, we assume
+Ipeiq“ ri PR. For each ri, we construct its endpoint set
+Endpointpriq“t a PE|Db.pa, r, bqP KG or pb, r, aqP KGu
+by the assumption 19, we have |Endpointpriq|! E|, then we have:
+|Ym
+i“1 Endpointpriq|ď Σm
+i“1|Endpointpriq|!| E|
+since m is small due to the size of the abstract query graph. Then we have two situations about the548
+type of node u:549
+1.If node u is an existential variable.550
+Then we construct a subgraph Gs be the induced subgraph of NodepGq´ u, then for any possible551
+grounding I, we prove that ArIpGsqs=ArIpGqs, the right is clearly a subset of the left due to it552
+15
+
+contains more constraints, then we show every answer of the left is also an answer on the right, we553
+merely need to give an appropriate candidate in the entity set for node v, and in fact, we choose any554
+entity in the set E ´Ym
+i“1Endpointpriqsince it suffices to satisfies all constraints of node u, and we555
+have proved that |E ´Ym
+i“1Endpointpriq|ą 0.556
+This violates the Assumption 13.557
+2.If node u is a free variable.558
+Similarly, any entity in the set E ´Ym
+i“1Endpointpriqwill be an answer for the node u, thus violating559
+the Assumption 16.560
+561
+We note the proposition 20 extends the previous requirement about negative queries, which is firstly562
+proposed in [28] and inherited and named as “bounded negation” in [36], the “bounded negation”563
+requires the negation operator should be followed by the intersection operator in the operator tree.564
+Obviously, the abstract query graph that conforms to “bounded negation” will also conform to the565
+requirement in Proposition 20. A vivid example is offered in Figure 2.566
+Finally, we make the assumption of the distance to the free variable of the query graph:567
+Assumption 21. There is a constant d, such that for every node u in the abstract query graph G, it568
+can find a free variable in its d-hop neighbor.569
+We have this assumption to exclude the extremely long-path queries.570
+Equipped with the propositions and assumptions above, we explore the combinatorial space of the571
+abstract query graph given certain hyperparameters, including: the max number of free variables,572
+max number of existential variables, max number of constant entities, max number of all nodes, max573
+number of all edges, max number of edges surpassing the number of nodes, max number of negative574
+edge, max distance to the free variable. In practice, these numbers are set to be: 2, 2, 3, 6, 6, 0, 1, 3.575
+We note that the max number of edges surpassing the number of nodes is set to 0, which means that576
+the query graph can at most have one more edge than a simple tree, thus, we exclude those query577
+graphs that are both cyclic graphs and multigraphs, making our categorization and discussion in the578
+experiments in Section 5.2 and Section 5.3 much more straightforward and clear.579
+Then, we create the abstract query graph by the following steps, which is a graph with three types of580
+nodes and two kinds of edges:581
+1. First, create a simple connected graph G1 with two types of nodes, the existential variable582
+and the free variable, and one type of edge, the positive edge.583
+2. We add additional edges to the simple graph G1 and make it a multigraph G2.584
+3. Then, the constant variable is added to the graph G2, In this step, we make sure not too long585
+existential leaves. The result is graph G3.586
+4. Finally, random edges in G3 are replaced by the negation edge, and we get the final abstract587
+query graph G4.588
+In this way, all possible query graphs within a certain combinatorial space are enumerated, and finally,589
+we filter duplicated graphs with the help of the graph isomorphism algorithm. We give an example to590
+illustrate the four-step construction of an abstract query graph in Figure 5.591
+D.2 Ground abstract query graph with meaningful negation592
+To fulfill the Assumption 15 as discussed in Section 4.2, for an abstract query graphG “pV, E, f, gq,593
+we have two steps: (1). Sample grounding for the positive subgraph Gp and compute its answer (2).594
+Ground the Gn to decrease the answer got in the first step. Then we define positive subgraph Gp to595
+be defined as such, its edge set E1 “te PE|gpeq“ positiveu, its node set V 1 “tu|u PV, De P596
+16
+
+Tree Form
+EFOk-CQA
+EFO-1-QA
+FIT
+EFO1
+BetaE
+Figure 6: Illustration of the comparison between the EFO k-CQA dataset (navy blue box) and the
+previous dataset (three yellow boxes), where the BetaE and EFO-1-QA aim to investigate the tree
+form query, explained in Appendix C, while the FIT dataset aims to investigate EFO 1 query that
+is not tree form. FIT is not a subset of EFO k-CQA because its “3pm” query is not included in
+EFO k-CQA.
+E1and e connects to uu. Then Gp=pV 1, E1, f, gq. We note that because of Proposition 20, if a node597
+u PV ´V 1, then we know node u must be a constant entity.598
+Then we sample the grounding for the positive subgraph Gp, we also compute the CSP answer Ap for599
+this subgraph.600
+Then we ground what is left in the positive subgraph, we split each negative edge in E ´E1into two601
+categories:602
+1. This edge e connects two nodes u, v, and u, vPV 1.603
+In this case, we sample the relation r to be the grounding of e such that it negates some of the answers604
+in Ap.605
+2. This edge e connects two nodes u, v, where u PV 1, while v RV 1.606
+In this case, we sample the relation r for e and entity a for v such that they negate some answer in607
+Ap, we note we only need to consider the possible candidates for node u and it is quite efficient.608
+We note that there is no possibility that neither of the endpoints is inV 1because as we have discussed609
+above, this means that both nodes are constant entities, but in Proposition 18 we have asserted that no610
+edge is connected between two entities.611
+D.3 The comparison to previous benchmark612
+To give an intuitive comparison of our EFOk-CQA dataset against those previous datasets and613
+benchmark, including the BetaE dataset [ 28], the EFO-1-QA benchmark [36] that extends BetaE614
+dataset, and the FIT dataset [39] that explores 10 more new query types, we offer a new figure in615
+Figure 6.616
+It can be clearly observed that EFO-1-QA covers the BetaE dataset and has provided a quite systematic617
+investigation in tree form query, while FIT deviates from them and studies ten new query types that618
+are in EFO 1 but not tree form.619
+As discussed in Section 3, the scope of the formula investigated in our EFO k-CQA dataset surpasses620
+the previous EFO-1-QA benchmark and FIT dataset because of three reasons: (1). We include621
+the EFO k formula with multiple free variables that has never been investigated(the bottom part of622
+17
+
+Table 3: The number of abstract query graphs with one free variable. We denote e as the number of
+existential variables and c as the number of constant entities. SDAG represents the Simple Directed
+Acyclic Graph, Multi for multigraph, and Cyclic for the cyclic graph. Sum.( c) and Sum.(e) is the
+total number of queries with the number of constant entities / existential variables fixed.
+c
+e 0 1 2 Sum.(c) Sum.
+SDAG SDAG Multi SDAG Multi Cyclic
+1 1 2 4 4 16 4 31
+251 2 2 6 6 20 40 8 82
+3 2 8 8 36 72 12 138
+Sum.(e) 5 16 18 60 128 24
+navy blue box in Figure 6); (2). We systematically investigate those EFO 1 queries that are not tree623
+form while the previous FIT dataset only discusses ten hand-crafted query types (the navy blue part624
+between two white lines in Figure 6); (3) Our assumption is more systematic than previous ones as625
+shown by the example in Figure 2(the top navy blue part above two white lines in Figure 6). Though626
+we only contain 741 query types while the EFO-1-QA benchmark contains 301 query types, we list627
+reasons for the number of query types is not significantly larger than the previous benchmark: (1).628
+EFO-1-QA benchmark relies on the operator tree that contains union, which represents the logic629
+conjunction(_), however, we only discuss the conjunctive queries because we always utilize the630
+DNF of a query. We notice that there are only 129 query types in EFO-1-QA without the union,631
+significantly smaller than the EFOk-CQA dataset. (2). In the construction of EFO k-CQA dataset,632
+we restrict the query graph to have at most one negative edge to avoid the total number of query types633
+growing quadratically, while in EFO-1-QA benchmark, their restrictions are different than ours and it634
+contains queries that have two negative atomic formulas as indicated by the right part of yellow box635
+is not contained in the navy blue box.636
+D.4 EFO k-CQA statistics637
+The statistics of our EFOk-CQA dataset are shown in Table 3 and Table 4, they show the statistics638
+of our abstract query graph by their topology property, the statistics are split into the situation that639
+the number of free variable k “ 1 and the number of free variable k “ 2, correspondingly. We640
+note abstract query graphs with seven nodes have been excluded as the setting of hyperparameters641
+discussed in Appendix D.1, we make these restrictions to control the quadratic growth in the number642
+of abstract query graphs.643
+Finally, in FB15k-237, we sample 1000 queries for an abstract query graph without negation, 500644
+queries for an abstract query graph with negation; in FB15k, we sample 800 queries for an abstract645
+query graph without negation, 400 queries for an abstract query graph with negation; in NELL,646
+we sample 400 queries for an abstract query graph without negation, 100 queries for an abstract647
+query graph with negation. As we have discussed in Appendix D.2, sample negative query is648
+computationally costly, thus we sample less of them.649
+Moreover, we provide our EFO k-CQA dataset an inductive version, with the same query types as the650
+transductive version, while the number of queries per query type is set to 400 for positive ones and651
+100 for negative ones. The inductive ratio is set to 175%, following the setting in [9].652
+E Evaluation details653
+We explain the evaluation protocol in detail for Section 4.5.654
+Firstly, we explain the computation of common metrics, including Mean Reciprocal Rank(MRR) and655
+HIT@K, given the full answer A in the whole KG and the observed answer Ao in the observed KG,656
+we focus on the hard answer Ah as it requires more than memorizing the observed KG and serves as657
+the indicator of the capability of reasoning.658
+18
+
+Table 4: The number of abstract query graphs with two free variables. The notation of e, c SDAG,
+Multi, and Cyclic are the same as Table 3. And "-" means that this type of abstract query graph is not
+included.
+c
+e e “ 0 e “ 1 e “ 2 A VG.
+SDAG Multi SDAG Multi Cyclic SDAG Multi Cyclic
+c “ 1 1 2 7 18 4 6 32 26 96
+c “ 2 4 4 20 36 8 38 108 64 282
+c “ 3 4 4 32 60 12 - - - 112
+Algorithm 1 Embedding computation on the query graph.
+Require: The query graph G.
+Compute the ordering of the nodes as explained in Algorithm 2.
+Create a dictionary E to store the embedding for each node in the query graph
+for i Ð1 to n do
+if node ui is a constant entity then
+The embedding of ui, Erisis gotten from the entity embedding
+else
+Then we know node ui is either free variable or existential variable
+Compute the set of nodes tuij ut
+j“1 that are previous to i and adjacency to node ui.
+Create a list to store projection embedding L.
+for j Ð1 to t do
+Find the relation r between node ui and uij , get the embedding of node uij as Erijs.
+if Erijsis not None then
+if The edge between ui and uiJ is positive then
+Compute the embedding of projection(Erijs, r), add it to the list L.
+else
+Compute the embedding of the negation of the projection(Erijs, r), add it to the list
+L.
+end if
+end if
+end for
+if The list L has no element then
+Erisis set to none.
+else if The list L has one element then
+Eris“ Lr0s
+else
+Compute the embedding as the intersection of the embedding in the list L, and set Erisas
+the outcome.
+end if
+end if
+end for
+return The embedding dictionary E for each node in the query graph.
+Specifically, we rank each hard answer a PAh against all non-answers E ´A ´Ao, the reason is659
+that we need to neglect other answers so that answers do not interfere with each other, finally, we get660
+the ranking for a as r. Then its MRR is 1{r, and its HIT@k is 1rďk, thus, the score of a query is the661
+mean of the scores of every its hard answer. We usually compute the score for a query type (which662
+corresponds to an abstract query graph) as the mean score of every query within this type.663
+As the marginal score and the multiply score have already been explained in Section 4.5, we only664
+mention one point that it is possible that every free variable does not have marginal hard answer.665
+Assume that for a query with two free variables, its answer set A “tpa1, a2q, pa1, a3q, pa4, a2quand666
+its observed answer set Ao “tpa1, a3q, pa4, a2qu. In this case, a1 is not the marginal hard answer for667
+the first free variable and a2 is not the marginal hard answer for the second free variable, in general,668
+no free variable has its own marginal hard answer.669
+19
+
+Algorithm 2 Node ordering on the abstract query graph.
+Require: The abstract query graph G “pV, E, f, gq, V consists m nodes, u1, ¨¨¨ , um.
+Creates an empty list L to store the ordering of the node.
+Creates another two set S1 and S2 to store the nodes that are to be explored next.
+for i Ð1 to m do
+if The type of node fpuiqis constant entity then
+list L append the node ui
+for Node uj that connects to ui do
+if fpujqis existential variable then
+uj is added to set S1
+else
+uj is added to set S2
+end if
+end for
+end if
+while Not all node is included in L do
+if Set S1 is not empty then
+We sort the set S1 by the sum of their distance to every free variable in G, choose the most
+remote one, and if there is a tie, randomly choose one node, ui to be the next to explore.
+We remove ui from set S1.
+else
+In this case, we know set S2 is not empty because of the connectivity of G.
+We randomly choose a node ui PS2 to be the next node to explore.
+We remove ui from set S2.
+end if
+for Node uj that connects to ui do
+if fpujqis existential variable then
+uj is added to set S1
+else
+uj is added to set S2
+end if
+end for
+List L append the node ui
+end while
+end for
+return The list L as the ordering of nodes in the whole abstract query graph G
+Then we only discuss the joint metric, specifically, we only explain how to estimate the joint ranking670
+by the individual ranking of each free variable. For each possiblek-tuple pa1, ¨¨¨ , akq, if ai is ranked671
+as ri among the whole entity set E, we compute the score of this tuple as Σk
+i“1ri, then we sort672
+the whole Ek k-tuple by their score, for the situation of a tie, we just use the lexicographical order.673
+After the whole joint ranking is got, we use the standard evaluation protocol that ranks each hard674
+answer against all non-answers. It can be confirmed that this estimation method admits a closed-form675
+solution for the sorting in Ek space, thus the computation cost is affordable.676
+We just give the closed-form solution when there are two free variables:677
+for the tuple pr1, r2q, the possible combinations that sum less than r1 `r2 is
+`r1`r2´1
+2
+˘
+, then, there678
+is r1 ´1 tuple that ranks before pr1, r2qbecause of lexicographical order, thus, the final ranking for679
+the tuple pr1, r2qis just
+`r1`r2´1
+2
+˘
+`r1 that can be computed efficiently.680
+F Implementation details of CQA models681
+In this section, we provide implementation details of CQA models that have been evaluated in our682
+paper. For query embedding methods that rely on the operator tree, including BetaE [28], LogicE [24],683
+and ConE [40], we compute the ordering of nodes in the query graph in Algorithm 2, then we compute684
+20
+
+the embedding for each node in the query graph Algorithm 1, the final embedding of every free685
+node are gotten to be the predicted answer. Especially, the node ordering we got in Algorithm 2686
+coincides with the natural topology ordering induced by the directed acyclic operator tree, so we can687
+compute the embedding in the same order as the original implementation. Then, in Algorithm 1, we688
+implement each set operation in the operator tree, including intersection, negation, and set projection.689
+By the merit of the Disjunctive Normal Form (DNF), the union is tackled in the final step. Thus, our690
+implementation can coincide with the original implementation in the original dataset [28].691
+For CQD [2] and LMPNN [35], their original implementation does not require the operator tree, so692
+we just use their original implementation. Specifically, in a query graph with multiple free variables,693
+for CQD we predict the answer for each free variable individually as taking others free variables as694
+existential variables, for LMPNN, we just got all embedding of nodes that represent free variables.695
+For FIT [39], though it is proposed to solve EFO 1 queries, it is computationally costly: it has a696
+complexity of OpE2qin the acyclic graphs and is even not polynomial in the cyclic graphs, the697
+reason is that FIT degrades to enumeration to deal with cyclic graph. In our implementation, we698
+further restrict FIT to at most enumerate 10 possible candidates for each node in the query graph, this699
+practice has allowed FIT to be implemented in the dataset FB15k-237 [32]. However, it cost 20 hours700
+to evaluate FIT on our EFO k-CQA dataset while other models only need no more than two hours.701
+Moreover, for larger knowledge graph, including NELL [7] and FB15k [5], we have also encountered702
+an out-of-memory error in a Tesla V100 GPU with 32G memory when implementing FIT, thus, we703
+omit its result in these two knowledge graphs.704
+G Extension to more complex query answering705
+In this section, we discuss possible further development in the task of complex query answering and706
+how our work, especially our framework proposed in Section 4 can help with future development.707
+We list some new features that may be of interest and show the maximum versatility our framework708
+can reach. Our analysis and characterization of future queries inherit the outlook in [37] and also is709
+based on the current development.710
+Inductive Reasoning Inductive reasoning is a new trend in the field of complex query answering.711
+Some entities [9] or even relations [15] are not seen in the training period, namely they can not be712
+found by the observed knowledge graph Go therefore, the inductive generalization is essential for713
+the model to infer answers. We note that our framework is powerful enough to sample inductive714
+queries with the observed knowledge graph Go given. Therefore, the functionality of sampling715
+inductive query is easily contained and implemented in our framework, see https://github.com/716
+HKUST-KnowComp/EFOK-CQA. We note there we have already provided our EFO k-CQA dataset in717
+this setting as discussed in Appendix D.4.718
+N-ary relation N-ary relation is a relation that hasn ą2 corresponding entities, therefore, the factual719
+information in the knowledge graph is not a triple but a pn `1q-tuple. Moreover, the query graph is720
+also a hypergraph, making the corresponding CSP problem even harder. This is a newly introduced721
+topic [23, 1] in complex query answering, which our framework has limitations in representing.722
+Knowledge graph with attribute Currently, there has been some research that has taken the723
+additional attribute of the knowledge graph into account. Typical attributes include entity types [14],724
+numerical literals [4],triple timestamps [16, 30], and triple probabilities [7]. We note that attributes725
+expand the entity set E from all entities to entities with attribute values, it is also possible that the726
+relation set R is also extended to contain corresponding relations, like “greater”, “less” when dealing727
+with numerical literals. Then, our framework can represent queries on such extended knowledge728
+graphs like in [4], where no function like “plus”, or “minus” is considered and the predicates are also729
+binary.730
+Overall, our framework can be applied to some avant-garde problem settings given certain properties,731
+thus those functionalities proposed in Section 4 can be useful. We hope our discussion helps with the732
+future development of complex query answering.733
+21
+
+0 100 200 300 400 500
+Ranking of query types
+0
+20
+40
+60Multiply HIT@10(%)
+BetaE
+LogicE
+ConE
+CQD
+LMPNN
+FIT
+AVG.
+Figure 7: Relative performance of the six representative CQA models in referring queries with two
+free variables, the ranking of query types is determined by the average Multiply HIT@10 score. A
+Gaussian filter with sigma=1 is added to smooth the curve.
+H Additional experiment result and analysis734
+In this section, we offer another experiment result not available to be shown in the main paper. For the735
+purpose of supplementation, we select some representative experiment result as the experiment result736
+is extremely complex to be categorized and be shown. we present the further benchmark result of the737
+following: the analysis of benchmark result in detail, more than just the averaged score in Table 1 and738
+Table 2, which is provided in Appendix H.1; result of different knowledge graphs, including NELL739
+and FB15k, which is provided in Appendix H.2 and H.3, the situation of more constant entities since740
+we only discuss when there are two constant entities in Table 2, the result is provided in Appendix H.4,741
+and finally, all queries(including the queries without marginal hard answers), in Appendix H.5.742
+We note that we have explained in Section 4.5 and Appendix E that for a query with multiple free743
+variables, some or all of the free variables may not have their marginal hard answer and thus the744
+marginal metric can not be computed. Therefore, in the result shown in Table 2 in Section 5.3, we745
+only conduct evaluation on those queries that both of their free variables have marginal hard answers,746
+and we offer the benchmark result of all queries in Appendix H.5 where only two kinds of metrics747
+are available.748
+H.1 Further result and analysis of the experiment in main paper749
+To supplement the experiment result already shown in Section 5.2 and Section 5.3, we have included750
+more benchmark results in this section. Though the averaged score is a broadly-used statistic to751
+benchmark the model performance on our EFO k queries, this is not enough and we have offered752
+much more detail in this section.753
+Whole combinatorial space helps to develop trustworthy machine learning models. Firstly, we754
+show more detailed benchmark results of the relative performance between our selected six CQA755
+models, the result is shown in Table 4. Specifically, we plot two boxes, the black one, including the756
+most difficult query types, and the red box, including the easiest query types. In the easiest part, we757
+find that even the worst model and the best model have pretty similar performance despite that they758
+22
+
+0 50 100 150 200 250
+Ranking of EFO1 query types
+0
+10
+20
+30
+40
+50
+60
+70
+80
+90HIT@10(%)
+Mean
+Standard deviation
+0 5 10 15 20 25 30
+Dataset distribution(%)
+BetaE query types 
+FIT query types 
+EFO1 query types
+Figure 8: Query type distribution in three different datasets, BetaE one, FIT one, and the EFO1 part
+in our EFO k-CQA dataset. The left part shows the histogram that represents the probability density
+function of each dataset. The ranking of query types is also determined by the mean HIT@10 score
+as in Figure 4, with the standard deviation of the performance of the six CQA models shown as the
+light blue error bar.
+may differ greatly in other query types. The performance in the most difficult query types is more759
+important when the users are risk-sensitive and desire a trustworthy machine-learning model that760
+does not crash in extreme cases [33] and we highlight it in the black box. In the black box, we note761
+that CQD [2], though designed in a rather general form, is pretty unstable when comes to empirical762
+evaluation, as it has a clear downward curve and deviates from other model’s performance enormously763
+in the most difficult query types. Therefore, though its performance is better than LMPNN and764
+comparable to BetaE on average as reported in Table 1, its unsteady performance suggests its inherent765
+weakness. On the other hand, ConE [40] is much more steady and outperforms BetaE and LogicE766
+consistently. We also show the result when there are two free variables in Figure 7, where the model767
+performance is much less steady but the trend is similar to the EFO 1 case in general.768
+Empirical hardness of query types and incomplete discussion of the previous dataset. Moreover,769
+we also discuss the empirical hardness of query types themselves and compare different datasets770
+accordingly in Figure 8. We find the standard deviation of the six representative CQA models771
+increases in the most difficult part and decreases in the easiest part, corroborating our discussion in772
+the first paragraph. We also highlight those query types that have already been investigated in BetaE773
+dataset [28] and FIT dataset [39]. We intuitively find that the BetaE dataset does not include very774
+challenging query types while the FIT dataset mainly focuses on them. This can be explained by the775
+fact that nine out of ten most challenging query types correspond to multigraph, which the BetaE776
+dataset totally ignores while the FIT dataset highlights it as a key feature. To give a quantitative777
+analysis of whether their hand-crafted query types are sampled from the whole combinatorial space,778
+we have adopted the Kolmogorov–Smirnov test to test the distribution discrepancy between their779
+distribution and the query type distribution in EFOk-CQA since EFO k-CQA enumerates all possible780
+query types in the given combinatorial space and is thus unbiased. We find that the BetaE dataset781
+is indeed generally easier and its p-value is 0.78, meaning that it has a 78 percent possibility to be782
+unbiased, while the FIT dataset is significantly harder and its p-value is 0.27. Therefore, there is783
+23
+
+Table 5: MRR scores(%) for inferring queries with one free variable on FB15k-237. We denote e as
+the number of existential variables and c as the number of constant entities. SDAG represents the
+Simple Directed Acyclic Graph, Multi for multigraph, and Cyclic for the cyclic graph. A VG.(c) and
+A VG.(e) is the average score of queries with the number of constant entities / existential variables
+fixed.
+Model c
+e 0 1 2 A VG.(c) A VG.
+SDAG SDAG Multi SDAG Multi Cyclic
+BetaE
+1 16.2 17.9 10.9 10.6 8.5 16.5 11.1
+20.72 35.6 20.2 19.1 15.7 15.7 27.1 17.8
+3 53.3 32.4 33.1 21.7 21.6 37.4 24.8
+A VG.(e) 37.4 25.7 23.5 18.8 18.1 30.5
+LogicE
+1 17.4 19.0 11.5 11.0 8.5 16.8 11.5
+21.32 36.7 21.2 19.8 16.5 16.1 27.3 18.4
+3 55.5 34.6 34.5 22.3 22.0 37.5 25.4
+A VG.(e) 38.9 27.3 24.5 19.4 18.5 30.6
+ConE
+1 18.6 19.9 11.8 11.4 9.3 18.7 12.3
+23.12 39.1 22.4 20.8 18.1 17.6 30.7 20.1
+3 58.8 36.4 37.0 24.6 23.8 41.7 27.6
+A VG.(e) 41.4 28.7 26.0 21.3 20.1 34.2
+CQD
+1 22.2 19.5 9.0 9.2 6.4 15.6 10.0
+21.92 35.3 20.1 19.1 16.4 16.2 27.6 18.4
+3 40.3 32.9 34.3 24.4 24.0 40.2 26.8
+A VG.(e) 33.9 26.2 23.7 20.5 19.4 31.9
+LMPNN
+1 20.5 21.4 11.2 11.6 8.7 17.0 11.9
+20.52 42.0 22.6 18.5 16.5 14.9 26.5 17.9
+3 62.3 35.9 31.6 22.1 19.8 35.5 24.0
+A VG.(e) 44.2 28.8 22.7 19.4 16.9 29.4
+FIT
+1 22.2 25.0 17.4 13.9 11.7 23.3 15.6
+30.32 45.3 29.6 28.5 23.8 24.3 35.5 26.5
+3 64.5 44.8 45.4 33.3 33.5 44.4 36.2
+A VG.(e) 46.7 36.2 33.6 28.6 27.9 37.9
+no significant statistical evidence to prove they are sampled from the whole combinatorial space784
+unbiasedly.785
+H.2 Further benchmark result of k=1786
+Firstly, we present the benchmark result when there is only one free variable, since the result in787
+FB15k-237 is provided in Table 1, we provide the result for other standard knowledge graphs, FB15k788
+and NELL, their result is shown in Table 6 and Table 7, correspondingly. We note that FIT is out789
+of memory with the two large graphs FB15k and NELL as explained in Appendix F and we do790
+not include its result. As FB15k and NELL are both reported to be easier than FB15k-237, the791
+models have better performance. The trend and analysis are generally similar to our discussion in792
+Section 5.2 with some minor, unimportant changes that LogicE [24] has outperformed ConE [40] in793
+the knowledge graph NELL, indicating one model may not perform identically well in all knowledge794
+graphs.795
+H.3 Further benchmark result for k=2 in more knowledge graphs796
+Then, similar to Section 5.3, we provide the result for other standard knowledge graphs, FB15k and797
+NELL, when the number of constant entities is fixed to two, their result is shown in Table 8 and798
+Table 9, correspondingly.799
+24
+
+Table 6: MRR scores(%) for inferring queries with one free variable on FB15k. The notation of e, c,
+SDAG, Multi, Cyclic, A VG.(c) and A VG.(e) are the same as Table 1.
+Model c
+e 0 1 2 A VG.(c) A VG.
+SDAG SDAG Multi SDAG Multi Cyclic
+BetaE
+1 38.6 30.4 29.2 21.7 21.7 24.1 24.3
+34.02 49.7 34.0 37.2 28.3 29.2 35.5 31.0
+3 63.5 46.4 48.6 33.9 36.1 45.8 38.1
+A VG.(e) 63.5 46.4 48.6 33.9 36.1 45.8 38.1
+LogicE
+1 46.0 33.8 32.1 23.3 22.8 25.6 26.2
+35.62 51.2 35.9 39.0 30.6 30.5 36.9 32.7
+3 64.5 48.6 49.8 35.4 37.5 47.7 39.6
+A VG.(e) 54.9 41.7 42.3 32.8 33.4 40.4
+ConE
+1 52.5 35.8 34.9 25.9 25.9 29.5 29.3
+39.52 57.0 40.0 43.4 33.2 34.2 40.8 36.3
+3 70.6 53.1 55.3 39.3 41.8 52.5 43.9
+A VG.(e) 61.0 45.6 46.8 36.1 37.4 44.8
+CQD
+1 74.6 36.1 32.7 17.6 16.7 25.4 23.7
+37.22 52.2 35.2 40.9 29.2 31.5 39.2 33.2
+3 53.3 32.4 33.1 21.7 21.6 37.4 24.8
+A VG.(e) 59.4 41.5 44.6 33.3 35.3 43.3
+LMPNN
+1 63.7 39.9 35.3 28.7 26.4 28.7 30.7
+37.72 65.0 41.9 38.8 34.4 31.7 38.4 35.1
+3 79.8 54.0 49.5 38.9 37.1 48.0 40.8
+A VG.(e) 70.2 47.4 42.8 36.6 34.1 41.6
+We note that though in some breakdowns, the marginal score is over 90 percent, almost close to 100800
+percent, the joint score is pretty slow, which further corroborates our findings that joint metric is801
+significantly harder and more challenging in Section 5.3.802
+H.4 Further benchmark result for k=2 with more constant numbers.803
+As the experiment in Section 5.3 only contains the situation where the number of constant entity is804
+fixed as one, we offer the further experiment result in Table 10.805
+The result shows that models perform worse with fewer constant variables when compares to the806
+result in Table 2, this observation is the same as the previous result with one free variable that has807
+been discussed in Section 5.2.808
+H.5 Further benchmark result for k=2 including all queries809
+Finally, as we have explained in Section 4.5 and Appendix E, there are some valid EFOk queries810
+without marginal hard answers when k ą1. Thus, there is no way to calculate the marginal scores,811
+all our previous experiments are therefore only conducted on those queries that all their free variables812
+have marginal hard answers. In this section, we only present the result of the Multiply and Joint score,813
+as they can be computed for any valid EFOk queries, and therefore this experiment is conducted on814
+the whole EFO k-CQA dataset.815
+We follow the practice in Section 5.3 that fixed the number of constant entities as two, as the impact816
+of constant entities is pretty clear, which has been further corroborated in Appendix H.4. The817
+experiments are conducted on all three knowledge graphs, FB15k-237, FB15k, and NELL, the result818
+is shown in Table 11, Table 12, and Table 13, correspondingly.819
+25
+
+Table 7: MRR scores(%) for inferring queries with one free variable on NELL. The notation of e, c,
+SDAG, Multi, Cyclic, A VG.(c) and A VG.(e) are the same as Table 1.
+Model c
+e 0 1 2 A VG.(c) A VG.
+SDAG SDAG Multi SDAG Multi Cyclic
+BetaE
+1 13.9 26.4 35.0 8.6 14.9 19.1 17.5
+33.62 58.8 31.5 43.8 22.4 30.6 34.7 30.7
+3 78.8 48.6 58.3 29.6 39.0 47.0 39.5
+A VG.(e) 53.1 38.5 48.3 25.2 33.3 38.2
+LogicE
+1 18.3 29.2 39.6 12.1 19.0 20.4 21.1
+36.92 63.5 34.4 47.3 26.4 34.0 37.6 34.2
+3 79.6 51.2 59.3 33.1 42.2 50.1 42.6
+A VG.(e) 56.3 41.3 50.9 28.8 36.7 41.0
+ConE
+1 16.7 26.9 36.6 11.1 16.9 22.3 19.6
+36.62 60.5 33.6 46.6 25.3 33.1 40.1 33.6
+3 79.9 50.6 59.2 33.2 42.2 52.6 42.8
+A VG.(e) 54.9 40.3 50.0 28.4 36.2 43.4
+CQD
+1 22.3 30.6 37.3 13.3 17.9 20.7 20.9
+38.22 59.8 34.0 45.2 28.8 35.4 38.9 35.3
+3 62.7 48.8 59.9 36.4 44.1 52.6 44.3
+A VG.(e) 50.1 40.2 49.9 31.6 38.1 42.7
+LMPNN
+1 20.7 29.8 33.3 13.4 16.5 21.8 19.8
+35.12 63.5 35.4 43.3 27.0 30.2 37.6 32.3
+3 80.8 50.7 56.0 33.6 39.2 47.6 40.7
+A VG.(e) 57.4 41.5 46.7 29.4 33.6 40.0
+Interestingly, comparing the result in Table 2 and Table 11, the multiple scores actually increase820
+through the joint scores are similar. This may be explained by the fact that if one free variable has no821
+marginal hard answer, then it can be easily predicted, leading to a better performance for the whole822
+query.823
+I Society impact824
+This paper addresses the topic of complex query answering on knowledge graphs, a subject that825
+has garnered attention within the machine learning community for approximately four years. This826
+paper mainly focuses on extending the scope of the complex query given the same knowledge graph827
+and also presents systematic benchmarks and convenient implementation for the whole pipeline of828
+complex query answering, which holds the potential to significantly advance the development of829
+complex query answering models.830
+The outcomes of this work have practical applications, particularly in areas such as fraud detection,831
+where queries involving multiple free variables and cyclic patterns are necessary. Furthermore,832
+since this study utilizes publicly available knowledge graphs without incorporating new information833
+sources, concerns regarding data leakage are unlikely to arise. However, it’s still important to note834
+that this work may lead to unexpected negative societal impact which we are unable to foresee in835
+the current stages. We recognize the necessity of ongoing evaluation and responsible oversight to836
+identify and address any unintended consequences that may arise as a result of this research.837
+Additionally, the figure of the real-world KG in Figure 3is taken from https://medium.com/838
+@fakrami/re-evaluation-of-knowledge-graph-completion-methods-7dfe2e981a77 .839
+26
+
+Table 8: HIT@10 scores(%) of three different types for answering queries with two free variables on
+FB15k. The constant number is fixed to be two. The notation of e, SDAG, Multi, and Cyclic is the
+same as Table 2.
+Model HIT@10
+Type
+e “ 0 e “ 1 e “ 2 A VG.
+SDAG Multi SDAG Multi Cyclic SDAG Multi Cyclic
+BetaE
+Marginal 76.9 77.2 68.9 69.3 75.1 55.0 57.4 73.6 63.6
+Multiply 41.7 41.6 31.7 31.0 38.7 25.2 25.9 36.1 29.7
+Joint 11.6 13.7 8.7 8.6 17.8 4.9 5.4 14.3 8.4
+LogicE
+Marginal 82.9 80.9 73.6 72.9 76.6 58.9 60.7 75.7 66.9
+Multiply 47.5 45.0 36.3 34.1 40.4 28.5 29.0 38.0 32.7
+Joint 12.7 13.9 10.0 9.9 19.2 6.1 6.5 15.9 9.6
+ConE
+Marginal 84.1 84.8 76.5 76.3 81.4 61.8 63.8 79.7 70.2
+Multiply 48.7 48.1 37.7 35.9 44.2 29.9 30.4 41.4 34.6
+Joint 14.2 15.6 10.3 10.4 20.6 6.2 6.6 16.9 10.1
+CQD
+Marginal 73.8 76.8 69.0 71.9 76.3 51.1 54.4 77.0 62.9
+Multiply 45.0 46.6 37.4 36.9 43.9 28.1 29.2 41.9 34.0
+Joint 17.1 19.0 13.1 13.0 20.6 7.7 8.6 18.1 11.9
+LMPNN
+Marginal 89.2 80.1 80.3 78.2 84.2 65.6 63.7 80.2 71.3
+Multiply 56.6 50.5 45.7 42.4 49.0 37.6 34.8 44.6 39.7
+Joint 18.9 17.2 12.9 12.4 22.4 8.0 7.5 16.9 11.2
+Table 9: HIT@10 scores(%) of three different types for answering queries with two free variables on
+NELL. The constant number is fixed to be two. The notation of e, SDAG, Multi, and Cyclic is the
+same as Table 2.
+Model HIT@10
+Type
+e “ 0 e “ 1 e “ 2 A VG.
+SDAG Multi SDAG Multi Cyclic SDAG Multi Cyclic
+BetaE
+Marginal 81.3 95.9 72.8 85.5 79.9 57.2 66.7 77.0 71.2
+Multiply 48.2 56.7 41.3 46.1 47.6 33.1 36.5 42.9 39.6
+Joint 19.2 31.8 21.2 26.5 21.7 13.8 17.5 18.5 18.8
+LogicE
+Marginal 87.1 99.8 81.0 91.8 83.2 65.7 74.0 81.0 77.7
+Multiply 52.5 60.3 47.6 51.7 50.2 39.4 42.6 46.0 44.8
+Joint 21.1 32.8 25.4 30.5 23.3 18.0 21.5 20.5 22.3
+ConE
+Marginal 82.6 96.4 76.0 87.8 88.1 60.0 69.3 83.0 74.7
+Multiply 48.7 56.9 41.9 46.3 52.2 34.5 38.1 47.7 41.7
+Joint 17.0 30.9 19.3 25.0 24.9 12.9 17.2 20.3 18.8
+CQD
+Marginal 79.5 96.3 83.2 92.2 83.5 65.8 75.7 84.8 79.4
+Multiply 49.2 57.8 51.1 53.1 51.4 40.6 45.1 50.6 47.4
+Joint 23.0 38.0 29.7 34.2 26.4 21.4 25.4 24.0 26.0
+LMPNN
+Marginal 88.5 96.6 81.5 90.9 85.3 65.0 70.7 83.1 76.7
+Multiply 55.7 62.4 50.3 53.3 54.0 40.8 42.6 50.3 46.5
+Joint 23.4 36.4 25.5 29.4 24.0 16.6 19.7 21.5 21.5
+27
+
+Table 10: HIT@10 scores(%) of three different types for answering queries with two free variables
+on FB15k-237. The constant number is fixed to be one. The notation of e, SDAG, Multi, and Cyclic
+is the same as Table 2.
+Model HIT@10
+Type
+e “ 0 e “ 1 e “ 2 A VG.
+SDAG Multi SDAG Multi Cyclic SDAG Multi Cyclic
+BetaE
+Marginal 37.5 29.7 33.4 28.1 35.6 30.0 25.9 41.2 31.2
+Multiply 18.9 13.7 15.3 10.3 15.2 17.7 13.3 17.2 14.3
+Joint 0.9 1.1 1.4 0.9 3.3 1.1 0.9 3.9 1.7
+LogicE
+Marginal 40.6 30.7 36.0 29.1 34.6 29.8 25.3 41.5 31.4
+Multiply 21.1 14.3 17.2 10.9 16.3 17.8 13.3 17.5 14.7
+Joint 1.4 1.4 1.6 0.9 3.7 1.4 1.0 4.3 1.9
+ConE
+Marginal 40.8 32.4 37.3 30.4 40.7 31.1 26.9 45.0 33.5
+Multiply 22.1 15.2 18.4 11.7 19.3 18.5 14.8 20.9 16.5
+Joint 1.4 1.0 1.7 1.0 4.3 1.4 1.0 4.4 2.0
+CQD
+Marginal 73.8 76.8 69.0 71.9 76.3 51.1 54.4 77.0 62.9
+Multiply 23.3 9.1 18.5 9.2 16.2 14.6 9.2 19.1 12.9
+Joint 1.5 0.6 2.0 1.1 3.4 1.5 0.9 4.4 1.9
+LMPNN
+Marginal 39.0 27.6 40.0 29.5 39.3 30.6 24.8 42.7 32.0
+Multiply 25.1 13.9 24.3 13.3 21.6 20.0 14.0 21.1 17.1
+Joint 1.6 1.3 2.5 1.3 3.9 1.5 1.0 4.0 2.0
+Table 11: HIT@10 scores(%) of two different types for answering queries with two free variables on
+FB15k-237(including queries without the marginal hard answer). The constant number is fixed to be
+two. The notation of e, SDAG, Multi, and Cyclic is the same as Table 2.
+Model HIT@10
+Type
+e “ 0 e “ 1 e “ 2 A VG.
+SDAG Multi SDAG Multi Cyclic SDAG Multi Cyclic
+BetaE
+Multiply 29.1 29.1 18.3 37.5 10.4 28.0 93.6 74.6 24.1
+Joint 2.1 2.2 1.7 3.0 2.4 1.8 5.8 14.2 4.6
+LogicE
+Multiply 31.6 32.9 19.8 39.6 10.9 28.7 96.3 73.8 25.4
+Joint 2.6 2.5 2.1 3.1 2.5 2.2 6.4 15.6 5.0
+ConE
+Multiply 32.6 31.9 20.5 41.0 12.6 29.0 99.7 86.8 27.0
+Joint 3.0 2.1 1.9 3.3 2.7 2.2 6.6 16.8 5.4
+CQD
+Multiply 34.5 23.4 22.3 36.8 10.6 26.4 75.3 77.3 25.6
+Joint 2.9 1.4 2.1 3.3 2.3 2.0 5.0 15.0 5.6
+LMPNN
+Multiply 36.8 29.3 27.5 45.8 13.9 31.2 97.0 86.5 27.9
+Joint 2.7 2.2 2.7 3.9 2.5 2.1 5.8 14.6 5.0
+FIT
+Multiply 41.5 44.4 28.9 56.8 10.2 39.4 139.7 100.3 35.0
+Joint 2.4 2.3 2.1 3.4 1.6 2.2 7.4 15.4 5.9
+28
+
+Table 12: HIT@10 scores(%) of two different types for answering queries with two free variables on
+FB15k(including queries without the marginal hard answer). The constant number is fixed to be two.
+The notation of e, SDAG, Multi, and Cyclic is the same as Table 2.
+Model HIT@10
+Type
+e “ 0 e “ 1 e “ 2 A VG.
+SDAG Multi SDAG Multi Cyclic SDAG Multi Cyclic
+BetaE
+Multiply 42.1 57.2 26.5 66.5 15.5 34.6 134.9 100.0 35.0
+Joint 6.6 9.4 4.5 10.2 4.6 4.3 16.7 26.0 9.2
+LogicE
+Multiply 48.2 65.6 31.0 71.6 16.8 37.8 143.9 105.8 38.1
+Joint 7.5 11.2 5.6 12.5 5.3 5.6 20.4 28.5 10.5
+ConE
+Multiply 50.2 72.2 32.8 74.6 18.3 38.3 149.3 114.3 40.4
+Joint 6.8 10.0 5.2 12.5 5.5 5.2 19.4 30.4 11.0
+CQD
+Multiply 48.1 55.9 31.9 69.0 15.8 29.5 93.5 103.2 37.6
+Joint 9.4 11.4 6.6 14.8 4.8 5.5 17.5 27.2 12.0
+LMPNN
+Multiply 58.4 79.5 43.1 94.6 21.3 40.9 146.2 135.9 45.0
+Joint 8.6 12.9 6.8 15.6 6.2 5.4 19.3 31.7 11.6
+Table 13: HIT@10 scores(%) of two different types for answering queries with two free variables on
+NELL(including queries without the marginal hard answer). The constant number is fixed to be two.
+The notation of e, SDAG, Multi, and Cyclic is the same as Table 2.
+Model HIT@10
+Type
+e “ 0 e “ 1 e “ 2 A VG.
+SDAG Multi SDAG Multi Cyclic SDAG Multi Cyclic
+BetaE
+Multiply 21.2 47.3 22.0 51.9 14.7 24.1 80.5 79.7 33.4
+Joint 4.2 19.6 6.8 19.1 5.1 6.8 26.7 24.0 14.1
+LogicE
+Multiply 26.6 52.8 28.8 63.4 16.0 32.8 103.1 88.5 38.9
+Joint 3.8 21.5 9.7 26.0 5.9 11.5 36.9 27.3 16.5
+ConE
+Multiply 25.3 51.4 23.9 53.9 16.9 27.3 90.7 90.6 36.7
+Joint 3.4 20.2 6.4 17.0 6.1 7.2 27.0 27.1 14.2
+CQD
+Multiply 30.3 48.9 30.6 64.3 15.9 33.1 88.9 91.2 40.9
+Joint 4.4 21.9 9.8 27.5 5.6 12.0 37.6 28.1 18.0
+LMPNN
+Multiply 33.4 58.3 33.7 65.3 19.4 30.7 85.1 105.0 41.8
+Joint 4.4 23.7 10.0 21.9 5.8 8.2 23.2 28.8 15.7
+29

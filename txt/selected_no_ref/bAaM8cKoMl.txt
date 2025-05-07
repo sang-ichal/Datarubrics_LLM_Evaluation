@@ -1,0 +1,1226 @@
+MindSet: Vision. A toolbox for testing DNNs on key
+psychological experiments
+Valerio Biscione1∗ Dong Yin1 Gaurav Malhotra2 Marin Dujmovic3
+Milton L. Montero4 Guillermo Puebla5 Federico Adolfi1,6
+Rachel F. Heaton7,8 John E. Hummel8 Benjamin D. Evans9 Karim Habashy1
+Jeffrey S. Bowers1
+1School of Psychological Science, University of Bristol
+2University at Albany, State University of New York
+3School of Physiology, Pharmacology and Neuroscience, University of Bristol
+4IT University of Copenhagen
+5Instituto de Alta Investigación, Universidad de Tarapacá, Chile
+6Ernst Strüngmann Institute for Neuroscience, Max-Planck Society, Germany
+7Siebel Center for Design, University of Illinois Urbana-Champaign
+8Department of Psychology, University of Illinois Urbana-Champaign
+9School of Engineering and Informatics, University of Sussex
+Abstract
+Multiple benchmarks have been developed to assess the alignment between deep1
+neural networks (DNNs) and human vision. In almost all cases these benchmarks2
+are observational in the sense they are composed of behavioural and brain re-3
+sponses to naturalistic images that have not been manipulated to test hypotheses4
+regarding how DNNs or humans perceive and identify objects. Here we intro-5
+duce the toolbox MindSet: Vision, consisting of a collection of image datasets6
+and related scripts designed to test DNNs on 30 psychological findings. In all7
+experimental conditions, the stimuli are systematically manipulated to test spe-8
+cific hypotheses regarding human visual perception and object recognition. In9
+addition to providing pre-generated datasets of images, we provide code to regen-10
+erate these datasets, offering many configurable parameters which greatly extend11
+the dataset versatility for different research contexts, and code to facilitate the12
+testing of DNNs on these image datasets using three different methods (similar-13
+ity judgments, out-of-distribution classification, and decoder method), accessible14
+at https://github.com/ValerioB88/mindset-vision. We test ResNet-15215
+on each of these methods as an example of how the toolbox can be used.16
+1 Introduction17
+Deep neural networks (DNNs) provide the best solution for visual identification of objects short of18
+biological vision, and many researchers claim that DNNs are the best current models of human vision19
+and object recognition [70, 79, 120, 38, 53]. Key evidence in support of this claim comes from the20
+finding that DNNs perform the best on various behavioural and brain benchmarks. In the case of21
+behavioural benchmarks, models are assessed on how well they account for human (or macaque)22
+∗corresponding author: valerio.biscione@gmail.com
+Submitted to the 38th Conference on Neural Information Processing Systems (NeurIPS 2024) Track on Datasets
+and Benchmarks. Do not distribute.
+
+errors in classifying a large set of objects [91, 108, 60], or how well they predict human similarity23
+judgements [84, 12]. In the case of brain benchmarks, models are assessed with regard to how well24
+they predict brain recordings (e.g., single-cell responses or fMRI data) in response to a set of objects25
+[96, 97, 60, 4]. The general assumption is that the better a model does at predicting the data, the more26
+similar the model is to biological vision. For instance, the Brain-Score benchmark is described as “a27
+composite of multiple neural and behavioural benchmarks that score any [artificial neural network]28
+on how similar it is to the brain’s mechanisms for core object recognition” [96]29
+A common feature of most benchmark studies is that they treat the to-be-predicted data as observa-30
+tional. That is, there is rarely an attempt to predict the impact of experimental manipulation designed31
+to test specific hypotheses about how human or machine vision works. Rather, observers perform32
+a single task over a set of images that satisfies some general criterion, such as objects presented in33
+isolation [69], in naturalistic contexts [84, 12, 4, 60], or on a range of arbitrary backgrounds [30, 96].34
+This approach is problematic because it is possible to make good predictions on these datasets even35
+when models identify objects in a qualitatively different way from monkeys or humans [ 41]. For36
+example, if the images contain multiple diagnostic cues for object classification (e.g., shape and37
+texture both predict object category), then good predictions might be driven by different features than38
+those that drive human object recognition – that is, predictions might be driven by confounds. For39
+example, a DNN that classifies objects by texture might still be able to predict brain activations in a40
+visual system that classifies objects by shape.41
+The standard way to rule out confounds in order to determine causal relations (e.g. inferring that42
+DNNs learn brain-like representations) is to carry out experiments designed to rule out confounds43
+as the basis of making good predictions. In fact, there is a large literature in psychology describing44
+experiments designed to test specific hypotheses about how human vision works, but surprisingly,45
+this literature is often ignored when modellers compare DNNs to biological vision. Bowers et46
+al.[28] reviewed a wide range of psychological phenomena that current DNNs either fail to capture47
+or that have yet to be considered. Furthermore, when researchers do consider the psychological48
+literature when making claims regarding DNN-human similarities, the models are rarely subject49
+to the kind of “severe” tests that are required to make any strong conclusions, that is tests that are50
+likely to challenge claims in case they are false. Instead, strong conclusions are often drawn based on51
+superficial similarities [26].52
+There are at least four (related) reasons for this. First, many researchers in computer science53
+and computational neuroscience may be unfamiliar with the rich set of experiments carried out54
+in psychology that manipulate independent variables to better understand human vision, memory,55
+language, etc. Those who are aware of these studies might find it challenging to engage with them,56
+as psychological datasets are not readily available in formats that the community is accustomed to57
+working with. Second, it is not always obvious how one should test a model against psychological58
+data. Hence, it may be easier to focus on improving performance on the current benchmarks, and this59
+may have discouraged researchers from exploring data from psychology. A third potential reason is60
+an overall skepticism towards psychological results, a sentiment that may reflect the well-documented61
+replication crisis in psychology [7]. Forth, there is a strong bias to look for DNN-human similarities62
+and downplay the differences [26], and severely testing on psychological data might not result in63
+similarities. However, characterizing these failures provides key insights into the ways DNNs need to64
+be improved when modelling biological vision.65
+Here we present MindSet: Vision, a toolbox aimed at facilitating testing DNNs on visual psychological66
+phenomena by addressing all the problems presented above: our main contribution is to provide a67
+large, easily accessible, parameterized, set of 30 image datasets (and related scripts to re-generate68
+and modify them) accounting for a wide array of well-replicated visual experiment and phenomena69
+reported in psychology. Our stimuli cover aspects of low and mid-level vision (including Gestalt70
+phenomena), visual illusions, and object recognition tasks. We provide a high-level descriptions of71
+the visual phenomena in the main text (Section 2) and more detailed descriptions in the Appendix72
+(A). To facilitate experimentation across a variety of scenario, each dataset can be easily regenerated73
+across different configurations (image size, background colour, stroke colour, number of samples,74
+2
+
+etc.). To address the difficulty in testing DNNs on these stimuli, we provide scripts for using one (or75
+more) of three methods: Similarity Judgment Analysis, Decoder Approach, and Out-of-Distribution76
+classification (Section 3). We provide examples illustrating how to use these scripts with a classic77
+feed-forward CNN (ResNet-152), and an extensively documented code (Section 4).78
+With MindSet: Vision, we aim to bridge the gap between computational modeling and psychological79
+research, bringing experimental studies that manipulate independent variables to the forefront of80
+developing and evaluating of DNN models of human vision. We also hope this initiative will drive81
+further interest in other areas of human psychology, such as memory, language, and speech perception82
+when attempting tounderstand and replicate human-like intelligence in machines.83
+1.1 Related Work84
+Several recent studies share some similarities with our project: [ 119] introduced a new dataset85
+containing five types of visual illusions falling into two categories: color constancy and geometrical86
+illusions. The authors formulated four tasks specifically designed to examine the performance87
+of Visual Language Models, finding low alignment with human responses. [ 75] developed the88
+Good Gestalt datasets, consisting of six types of datasets covering several types of Gestalt grouping89
+principles, including Closure, Continuity, and Proximity, aimed at testing a Latent Noise Segmentation90
+Network. Similarly, [50] developed the model-vs-human benchmark that compares ANN-human91
+classification errors on various ‘out-of-distribution’ datasets composed of naturalistic images that92
+were modified in various ways, including low-level feature manipulations of contrast and spatial93
+frequency, as well as higher-level manipulations, such as generating silhouettes and sketches of94
+images. Evans et al. [ 44] used a dataset of silhouettes, line-drawings, and contours, to investigate95
+robustness to these stimuli in DNNs pretrained on CIFAR-10, and Baker et al. [ 10] employed a96
+dataset of line drawings and silhouettes from ImageNet classes to investigate model robustness to97
+local versus global features. In comparison to these works, we present a toolbox to test DNNs98
+on visual psychological effects, investigating not only a much richer set of visual phenomena, but99
+providing the code base to regenerate images in batches, changing the parameters, and testing each100
+one of them on a variety of methods.101
+2 Datasets102
+We have included datasets from experiments that characterize a wide range of visual phenomena,103
+ranging from low- to high-level vision. We grouped the datasets (indicated in bold) into 3 broad104
+categories (see following Sections) as illustrated in Figure 1. Each dataset comprised multiple105
+sub-conditions designed to test DNN-human similarities, and in some cases, image datasets used to106
+train decoders, as described in Section 3.3.107
+While most of the stimuli are created by us, in a few instances we incorporate stimuli from external108
+sources (when needed, permission was obtained from the authors). In all cases, the stimuli have109
+been integrated into a versatile framework which offers significant flexibility in adjusting parameters110
+such as image size, background, stroke colour, and more, to allow their application to a variety111
+of models and methodologies. Given the extensive range of datasets provided, we only offer a112
+brief summary for each in the article, and provide more details in Appendix A, including details113
+about the suggested way to test each dataset, and the expected result for model-human perceptual114
+alignment. All resources are open-source and freely available under the MIT license at https:115
+//github.com/ValerioB88/mindset-vision.116
+2.1 Low and Mid-Level Vision117
+A fundamental low-level vision phenomena is captured by Weber’s Law [112], which states that118
+the minimum physical change of a stimulus on some dimension (e.g., its size) that is noticeable to119
+an observer is a constant ratio of the original stimulus value on this dimension. For example, it is120
+3
+
+Figure 1: Comprehensive overview of the ‘MindSet: Vision’ datasets, arranged in three main
+categories. Each panel represents a distinct dataset, which is further divided into conditions. The
+images provide examples from these conditions, generated with default parameters.
+equally easy to distinguish between line lengths of 1 and 2 cms and between 2 and 4 cms. We created121
+a dataset that can be used to assess this relation for both line length and stimulus intensity.122
+4
+
+Human perception is also sensitive to various Emergent Features in which simple image features123
+interact to generate “Gestalts" [85]. The dataset is comprised of a set of dots arranged in such a way124
+as to induce the emergent feature of proximity, orientation, and linearity [86, 22]. Another Gestalt125
+effect is manifest in the Crowding/Uncrowding phenomenon. In crowding, the ability to identify126
+an object is compromised by the presence of nearby objects or visual patterns, but in uncrowding,127
+object identification is improved when additional objects or visual patterns are added to the scene and128
+grouped such that they are segregated from the target. We adapt the dataset from [40] so that many129
+crowding conditions with several different shapes can be investigated.130
+Human perception is highly sensitive to non-accidental image features, that is features that are largely131
+invariant to changes in viewpoint when projected on to the retina [ 16], as opposite to accidental132
+features (e.g., degree of curvature) in which the projected image varies with viewpoint. Human vision133
+is known to be more sensitive to changes in images that alter non-accidental compared to accidental134
+properties [5, 6]. We use two datasets to examine model sensitivity to these features: one with 3D135
+geons [5] and another with 2D line segments (based on [71]). Similarly, we present a dataset to136
+compare Relational Changes with Coordinate changes between object parts. DNNs are commonly137
+insensitive to relational change, even after being explicitly trained on these relations [77], whereas138
+human perception is highly sensitive to relational changes [64].139
+To identify partly occluded objects, the human visual system groups contours and surfaces through140
+an amodal completion process [81]. The Amodal Completion dataset (based on [93]) enables the141
+investigation of these processes using images with shapes that are either occluded, unoccluded, or142
+“notched”. These latter shapes are unoccluded but notched in such a way as to maintain a high degree143
+of feature similarity with their occluded counterparts.144
+With the Decomposition dataset we provide a mean to test the extent to which DNNs group object145
+parts in a human-like fashion. We designed familiar and unfamiliar objects composed of two conjoined146
+parts that undergo what humans would perceive as a “natural” or “unnatural” break (inspired by147
+[65]). In the same work, [65] showed that VGG-16 trained on ImageNet did not possess human-like148
+sensitivity to images that could be interpreted as 3D-shapes by using a set of stimuli based on [42].149
+Accordingly, we reconstructed this Depth Drawings dataset.150
+2.2 Visual Illusions151
+Visual illusions are not mere curiosities, but often arise from adaptive perceptual processes [ 56].152
+Detailed computational models of multiple illusions have been advanced that provide theoretical153
+insights into the mechanisms that underlie them (e.g. [58]). We provide datasets exploring illusions154
+related to size perception, orientation, and lightness contrast.155
+Several illusions relate to size perception. In the Müller-Lyer illusion[35], arrow-like segments156
+at the ends of equal-length lines impact our perception of length. In the Ponzo illusion[88], two157
+equal-length horizontal lines cross a pair of converging lines. In this configuration, the top line looks158
+longer, an illusion often explained as related to the process of inferring depth. In the Ebbinghaus159
+illusion[2], the size of a circle is perceived differently depending on the size of surrounding circles.160
+Similarly, in the Jastrow illusion[66, 35], a specific arrangement of identical objects affects our161
+perception of their relative size. For all these illusions, we provide both an illusory condition and a162
+condition in which all elements of the original illusion are “scrambled up”, so that a decoder can be163
+trained to predict a specific feature (e.g. the size of the centre circle in the Ebbinghaus illusion) and164
+subsequently tested on illusory configurations.165
+In the Tilt illusion[52], the orientation of a central grating is perceived as being repulsed from or166
+attracted to the orientation of a surrounding grating. In this case, we provide conditions with either167
+central or background gratings (configurations which do not support the illusion in humans and could168
+be used for training a decoder), and a condition with both (eliciting the illusion in humans) for testing169
+the model. Another orientation illusion is the Thatcher Effect [105]. This is a phenomenon where170
+local changes in facial features (like inverted eyes or mouth) are less noticeable when the entire face is171
+upside down, highlighting our sensitivity to orientation in face perception. An interesting unresolved172
+5
+
+issue is the extent to which this inversion effect is specific to faces [25, 115]. Together with a dataset173
+of faces and their Thatcherized version, we also include a dataset of Thatcherized Words, that is a174
+dataset of images containing words in which one or more letters are rotated by 180 degrees [115].175
+The lightness contrast effect[109] and the Adelson Checker shadow[1] illusions reveal how our176
+visual system perceives color and lightness based on context. We provide a Grayscale Shapes177
+dataset to train a decoder to output estimates of lightness at a given location of an image (indicated178
+by a small white arrow). After training, the network is presented with test images that induce illusions179
+and help assess whether DNNs show similar effects by pointing the arrow at the relevant parts of the180
+images (see Section C.2.6 for a detailed description of this approach).181
+It is important to note that there is no accepted account for some of the illusions described above.182
+However, even when we have no good understanding of the functional role or the mechanism that183
+drives an illusion, a DNN model of human vision should show similar effect. Indeed, understanding184
+the conditions under which DNNs show an illusion may advance our understanding of why the185
+phenomenon is observed in humans. There are now several articles exploring such illusions in various186
+types of DNNs trained in different ways, with some highlighting similarities (e.g., [14, 103, 111])187
+others reporting mixed or discrepant results (e.g., [55, 110, 119]); for a review of the relevant findings,188
+see [67].189
+2.3 Shape and Object Recognition190
+DNN object recognition is much more sensitive than human vision to distributional shifts from the191
+training set. For instance, humans can easily identify line drawings the first time they are exposed192
+to them [62], whereas DNNs perform poorly under these conditions [45] and need to be trained on193
+line drawings in order to recognize them at human levels [99]. We have included the line drawing194
+and silhouettes datasets (from [ 10, 8]) and also manipulated them in various ways to construct195
+additional datasets. The line drawings were converted into dotted contours (Dotted line drawings),196
+line segments (Segments line drawings) [18], or “texturized” ( Texturized line drawings). The197
+texturized images are composed of oriented lines/characters applied to either/both the background198
+or/and the inside area of the line drawing. In all these cases, the resulting images are easily identifiable199
+by human observers due to various Gestalt rules that organize the image features into boundaries.200
+We also apply the same texturization technique outlined above on unfamiliar “blob”-like shapes201
+(Texturized Unfamiliar dataset). Human observers have no difficulty matching a novel “blob”202
+object to its texturized counterpart. In addition, we provide a dataset of fragmented images based on203
+[9] in which the global features of silhouettes or line drawing are modified by reflecting the top part of204
+an object along its vertical axis, leaving the local features mostly unchanged (Global Modifications205
+dataset). Human performance on these stimuli is greatly reduced but typically DNN performance206
+is largely unchanged, suggesting that human vision is more sensitive to global object structure and207
+DNN vision is more sensitive to local features.208
+The Embedded Shapes Dataset (inspired by [36]) provides another condition that greatly impacts209
+on human perception, by embedding geometric shapes within complex arrays of lines in ways that210
+camouflage the original shape. We include both the original images from [ 36] and a procedurally211
+generated dataset in which random polygons are embedded into a configuration that makes recognition212
+challenging for humans.213
+The human visual system supports object recognition following a wide variety of transformations214
+[104, 24]. Importantly, this extends to cases in which an object has only been viewed at one pose.215
+Previous works suggest a complex link between DNN pretraining and their object recognition216
+capabilities under object transformations [20, 21]. To test whether DNNs share these capacities, we217
+provide a dataset in which translations, plane rotations, and scale changes (2D Transformations)218
+are applied to line drawings. To test for Viewpoint Invariance (e.g. the ability to recognize an219
+object from a new viewpoint after a rotation in depth) we adapt the ETH-80 dataset, [32] allowing for220
+controlled variation in azimuth and inclination.221
+6
+
+Finally, we provide a dataset to test whether DNNs possess the ability to solve a basic form of visual222
+reasoning task, namely, the Same/Different task. Drawing from [89], our dataset comprises images223
+composed of pairs of objects, which may be identical or different. These images are organized into224
+ten conditions that vary in their visual form, such as ‘filled polygons’, ‘open squares’, and ‘colored225
+shapes’. While humans effortlessly accomplish this task across all conditions without training, DNNs226
+often struggle when the training and test images come from different conditions.227
+3 Testing methods.228
+Each dataset is designed to align with at least one of three methods of testing, but other approaches229
+can be used as well. We discuss further possibilities in Appendix B.230
+3.1 Out-of-Distribution Classification231
+In this approach, a DNN pretrained on one dataset is tested on a new dataset composed of out-of-232
+distribution images taken from the trained classes (e.g., a DNN pre-trained on ImageNet is tested on233
+line drawings taken from the same categories). This approach is well suited for most of the Shape234
+and Object Recognition datasets that use images from ImageNet categories modified in such a way235
+that human observers have no trouble recognizing them, even without training. We provide scripts to236
+test a wide variety of vision models.237
+3.2 Similarity Judgment Analysis238
+This method involves assessing the pairwise similarity of activation patterns in DNNs (using a239
+Cosine Similarity or an Euclidean Distance metric) evoked by pairs of images and comparing these240
+similarities to human performance. This method has been used to assess how well DNNs capture241
+human similarity judgments [84] and response times to identify target stimuli from foils [22]. It is242
+often useful to carry out these analyses across multiple layers of DNNs given that some psychological243
+phenomena are known to manifest at earlier or later stages of visual processing. A DNN mimicking244
+human perception should show relevant similarity effects at the relevant layers. One key advantage of245
+this approach is that it can be applied to novel images that cannot be classified by a DNN.246
+To illustrate, we applied this method to the Texturized Unfamiliar dataset (Figure 2). The human247
+visual system groups elements in a scene by texture [13] and classify objects by their shapes [16].248
+Accordingly, texturized versions of the same shape should be judged as more similar than texturized249
+versions of different shapes. To explore if DNNs exhibit similar behaviour, we input pairs of images250
+into a ImageNet pre-trained ResNet-152 and, for each pair, we computed the Euclidean Distance251
+between their internal activations at every processing level. A human-like response is indicated by a252
+smaller distance for pairs of the same compared to different shapes. ResNet-152 exhibited a weak253
+manifestation of this pattern in the early layers, a reduced effect in the later layers, and no effect in254
+the output layer. By contrast, the human visual system supports similarity judgements on the basis of255
+shape-based representations that are computed following the early stages of visual processing.256
+3.3 Decoder Method257
+In this method a small, often single-layer, “decoder” network is attached to a layer of a frozen DNN258
+and trained on a task designed to reveal how the DNN encodes a specific type of information. For259
+instance, a frozen DNN might be presented with a set of images that contain a target object varying260
+in size, colour, and orientation, and a decoder is trained to output the value of one or more of these261
+properties at a given layer. We provide scripts for both classification and regression training, and262
+scripts to train and test a series of five decoders at varying levels of a ResNet-152 model. Although263
+these scripts are tailored to ResNet-152, they can easily be used as a template to streamline the264
+adaptation of this technique for different networks.265
+To illustrate, consider the Ebbinghaus Illusion. The Ebbinghaus dataset we provide consists of three266
+conditions: two illusory conditions in which a red centre circle (at different radii) is surrounded by267
+7
+
+either small or large white circles (flankers) in a configuration that, in humans, induces a biased268
+size estimation of the centre circle: the circle appears larger when surrounded by small flankers,269
+everything else being equal. Another condition again contains a red centre circle of different sizes,270
+but the surrounding circles are placed randomly on the canvas so that they would not elicit any271
+illusion on a human observer. We use the latter condition to train decoders attached to a ImageNet272
+pre-trained ResNet-152 model with frozen weights. The task consists of estimating the size of the273
+centre circle. After training, we feed the illusory images to the decoders. For a network to exhibit the274
+Ebbinghaus visual illusion, the size of the centre circle should be overestimated for small flankers and275
+underestimated for big flankers. We did not find this pattern in ResNet-152 and, indeed, no significant276
+difference across prediction errors for the different conditions was observed (result for one decoder277
+shown in Figure 2).278
+Figure 2: Depiction of two of the three proposed methods of evaluating DNNs in the context of two
+representative datasets. The first method, out-of-distribution classification, is not depicted here. The
+Similarity Judgment Analysis (top panel) involves feeding pairs of images to DNNs and comparing
+the elicited internal representations. We illustrate this method via the ‘Texturized Unfamiliar’ dataset,
+showing that the network possesses human-like responses in earlier layers which diminish in the
+later ones. The Decoder Method (bottom panel) involves training and testing a simple linear layer
+attached to different stages of a frozen network. In the given example, we assess the response to the
+Ebbinghaus illusion. Our findings indicate an absence of illusory perception. Both examples use an
+ImageNet pre-trained ResNet-152.
+4 Code and Resources279
+We provide both ready-to-use datasets and scripts to generate them with varying parameters. Most of280
+the ready-to-use datasets’ size span to around 5,000 images per condition, and larger dataset can easily281
+be generated using the provided scripts. To separate code and configuration, each dataset generation282
+script relies on a configuration file, consisting of a plain-text file in TOML format specifying all283
+the available parameters for that dataset. Some parameters are used across most datasets, such as284
+image size, background colour, and number of samples. Other parameters are dataset-specific, for285
+example the size and distance of dots in the Dotted line drawing dataset. For convenience, the same286
+configuration file can specify the configuration for multiple (or all) datasets, so that they can be287
+generated in batches. The “default” configuration file we used to generate the ready-to-use versions is288
+included, which can be used as a template. The output of each script is the dataset itself (with several289
+sub-conditions depending on the dataset) together with a CSV annotation file, containing the path290
+and parameters of each generated image.291
+8
+
+We also provide the code and utilities to evaluate DNNs using the three methods noted above.292
+Each method is highly configurable through TOML files, with options including the type of data-293
+augmentation to apply, the network architecture, the metric to use for the similarity judgments and294
+more. Users have the flexibility to choose specific factors from this file for analysis, extending beyond295
+the factors that we deemed the most relevant for each task. For example, in the script testing the296
+Ebbinghaus Illusion used for Section 3.3, a decoder is trained to predict the normalized size of the297
+centre circle. However, a different research goal might involve predicting the size of the flankers.298
+This can be achieved by simply specifying the corresponding column (‘NormSizeFlankers’) in the299
+annotation file, without needing to re-generate the dataset or change the code.300
+Each method produces a pandas DataFrames [78] as its output, which can be independently analyzed.301
+Additionally, supplementary files containing simple tests and comparisons that serve as a springboard302
+for further and more detailed analysis are automatically generated. Comprehensive documentation303
+for every configurable option across all datasets and methods. Additionally, we offer guidance on the304
+general usage of various scripts and utilities through several examples and multiple README files305
+on the GitHub page.306
+5 Limitations307
+While MindSet: Vision offers a valuable resource for exploring visual psychological phenomena using308
+deep neural networks , there are several limitations to consider. Firstly, our focus is primarily on visual309
+tasks that do not involve high levels of reasoning and are not directly connected with other areas of310
+cognition such as language and memory. Secondly, the methodology for comparing DNN performance311
+to human participants often allows only for qualitative comparisons, as quantitative comparisons may312
+not be feasible with the current analysis methods. Lastly, while we have selected phenomena based313
+on well-replicated and famous visual experiments, there may be additional phenomena that are not314
+covered by our selection. These limitations underscore the need for further research and development315
+in the field of computational modeling of human vision to address these gaps and enhance the utility316
+of MindSet: Vision as a comprehensive toolbox for studying visual perception.317
+6 Conclusion318
+There is much interest in DNNs as models of human vision, but relatively little research is concerned319
+with how DNNs capture key psychological findings. When DNNs are tested against key psychological320
+findings, they often fail [27]. And when they do succeed, it is often because the DNNs have not been321
+severely tested [26]. In our view, to better characterize DNN-human alignment, and to build better322
+DNN models of human vision, it is necessary to systematically test models against key experiments323
+reported in psychology. The MindSet: Vision dataset is designed to facilitate this.324
+Currently it is quite common to rank models in term of how well they perform across several datasets325
+or tasks. For example, the Brain-Score benchmark [96] provides an overall leaderboard that scores any326
+DNN in terms of how good they are at explaining neural activity variance for core object recognition,327
+and the “model-vs-human” benchmark [50] ranks and scores models in terms of their behavioural328
+overlap with humans in identifying a range of out-of-distribution object datasets. We do not propose329
+to rank models in this way as each experiment inMindSet: Vision tests a specific hypothesis regarding330
+how DNNs and humans perceive and encode visual inputs. It makes little sense to provide a score331
+that averages across qualitatively different hypotheses. By making stimuli underlying psychological332
+experiments more accessible, easy to generate, configure, and modify, and by providing ready-to-use333
+scripts to test existing models, we hope that the MindSet: Vision toolbox encourages computational334
+modelling researcher to focus on testing their models on key experiments rather than competing on335
+observational datasets that do not support any conclusions regarding the mechanistic similarity of336
+DNNs and brains.337
+9
+
+Acknowledgments and Disclosure of Funding338
+This project has received funding from the European Research Council (ERC) under the European339
+Union’s Horizon 2020 research and innovation programme (grant agreement No 741134).340
+Methods, 46(2):472–487, November 2014.628
+[107] Michel Treisman. Noise and Weber’s law: The discrimination of brightness and other dimen-629
+sions. Psychological Review, 71(4):314–330, July 1964.630
+[108] Shikhar Tuli, Ishita Dasgupta, Erin Grant, and Thomas L. Griffiths. Are Convolutional Neural631
+Networks or Transformers more like human vision? Proceedings of the 43rd Annual Meeting632
+of the Cognitive Science Society: Comparative Cognition: Animal Minds, CogSci 2021, pages633
+1844–1850, May 2021.634
+[109] H. von Helmholtz. Handbuch Der Physiologischen Optik. Leipziv: V oss, 1867.635
+[110] Emily J Ward. Exploring perceptual illusions in deep neural networks. Journal of Vision,636
+19(10):34b–34b, September 2019.637
+[111] Eiji Watanabe, Akiyoshi Kitaoka, Kiwako Sakamoto, Masaki Yasugi, and Kenta Tanaka.638
+Illusory Motion Reproduced by Deep Neural Networks Trained for Prediction. Frontiers in639
+Psychology, 9, March 2018.640
+[112] E. H. Weber. Der Tastsinn und das Gemeingefühl. Handwörterbuch der Physiologie, 3:481–641
+588, 1983.642
+[113] Gerald Westhhmer. Simultaneous orientation contrast for lines in the human fovea. Vision643
+Research, 30(11):1913–1921, January 1990.644
+[114] Robert L. Whitwell, Mehul A. Garach, Melvyn A. Goodale, and Irene Sperandio. Looking at645
+the Ebbinghaus illusion: Differences in neurocomputational requirements, not gaze-mediated646
+attention, explain a classic perception-action dissociation. Philosophical Transactions of the647
+Royal Society B: Biological Sciences, 378(1869):20210459, December 2022.648
+16
+
+[115] Yetta K Wong, Elyssa Twedt, David Sheinberg, and Isabel Gauthier. Does Thompson’s649
+Thatcher Effect Reflect a Face-Specific Mechanism? Perception, 39(8):1125–1141, August650
+2010.651
+[116] Yetta K Wong, Elyssa Twedt, David Sheinberg, and Isabel Gauthier. Does Thompson’s652
+Thatcher Effect Reflect a Face-Specific Mechanism? Perception, 39(8):1125–1141, August653
+2010.654
+[117] Yaoda Xu and Manish Singh. Early computation of part structure: Evidence from visual655
+search. Perception & psychophysics, 64(7):1039–1054, 2002.656
+[118] Hongtao Zhang, Zhen Li, and Shinichi Yoshida. Müller-Lyer illusion is Replicated by Higher657
+Layer of Pre-trained Deep Neural Network for Object Recognition M ¨ uller-Lyer illusion is658
+Replicated by Higher Layer of Pre-trained Deep Neural Network for Object Recognition. In659
+The 10th International Symposium on Computational Intelligence and Industrial Applications660
+(ISCIIA2022, Zhang2022mullerlyer, 2022.661
+[119] Yichi Zhang, Jiayi Pan, Yuchen Zhou, Rui Pan, and Joyce Chai. Grounding Visual Illusions in662
+Language: Do Vision-Language Models Perceive Illusions Like Humans? October 2023.663
+[120] Chengxu Zhuang, Siming Yan, Aran Nayebi, Martin Schrimpf, Michael C. Frank, James J.664
+DiCarlo, and Daniel L. K. Yamins. Unsupervised Neural Network Models of the Ventral665
+Visual Stream. bioRxiv, page 2020.06.16.155556, 2020.666
+17
+
+Checklist667
+1. For all authors...668
+(a) Do the main claims made in the abstract and introduction accurately reflect the paper’s669
+contributions and scope? [Yes]670
+(b) Did you describe the limitations of your work? [Yes] Yes, Section 5.671
+(c) Did you discuss any potential negative societal impacts of your work? [N/A] We do672
+not believe this work could have any negative societal impact.673
+(d) Have you read the ethics review guidelines and ensured that your paper conforms to674
+them? [Yes]675
+2. If you are including theoretical results...676
+(a) Did you state the full set of assumptions of all theoretical results? [N/A]677
+(b) Did you include complete proofs of all theoretical results? [N/A]678
+3. If you ran experiments (e.g. for benchmarks)... The two experiments we ran are only pre-679
+sented as illustrations of how the datasets could be tested with our suggested methodologies,680
+and are not intended as benchmarks.681
+(a) Did you include the code, data, and instructions needed to reproduce the main experi-682
+mental results (either in the supplemental material or as a URL)? [Yes] Provided code683
+in GitHub repo contains details instruction to replicate the exemplary results presented684
+in this work.685
+(b) Did you specify all the training details (e.g., data splits, hyperparameters, how they686
+were chosen)? [Yes] We used .toml file which contains parameters for each dataset687
+generation process and each methodology, so that full replicability is ensured.688
+(c) Did you report error bars (e.g., with respect to the random seed after running experi-689
+ments multiple times)? [Yes] see 2.690
+(d) Did you include the total amount of compute and the type of resources used (e.g., type691
+of GPUs, internal cluster, or cloud provider)? [N/A]692
+4. If you are using existing assets (e.g., code, data, models) or curating/releasing new assets...693
+(a) If your work uses existing assets, did you cite the creators? [Yes] Creators are cited694
+within the main text, and in the codebase in each file using their assets. All used assets695
+are either publicly available under CC or we obtained the explicit permission from the696
+authors.697
+(b) Did you mention the license of the assets? [Yes]698
+(c) Did you include any new assets either in the supplemental material or as a URL? [Yes]699
+We provide Kaggle links for two different versions of the datasets, and a GitHub repo700
+to regenerate the datasets.701
+(d) Did you discuss whether and how consent was obtained from people whose data you’re702
+using/curating? [Yes] in Section 2.703
+(e) Did you discuss whether the data you are using/curating contains personally identifiable704
+information or offensive content? [No] data are programmatically generated, and705
+their material is not offensive nor contains identifiable information.706
+5. If you used crowdsourcing or conducted research with human subjects... The datasets are707
+ideally used to test psychological phenomena observed and studied in human subjects, but708
+we did not directly conduct any research with humans participants.709
+(a) Did you include the full text of instructions given to participants and screenshots, if710
+applicable? [N/A]711
+(b) Did you describe any potential participant risks, with links to Institutional Review712
+Board (IRB) approvals, if applicable? [N/A]713
+(c) Did you include the estimated hourly wage paid to participants and the total amount714
+spent on participant compensation? [N/A]715
+18
+
+Appendices716
+A General Dataset Info717
+A.1 Pre-Generated Datasets718
+In the pre-generated dataset, we use 224x224 pixel images, and a variable number of samples719
+depending on the task and condition (see section below on the number of samples). However, image720
+size and dataset sizes are parameters that the user can easily modify if needed. The images in the721
+datasets all have 3 channels (RGB). For almost all datasets, the user can specify the background color722
+(either a uniform value, or request a different RGB value for every image), whether to use antialiasing,723
+and the size of the item in the image relative to the whole canvas.724
+A.2 Data Augmentation725
+We do not apply any affine transformation or other data augmentation techniques during the dataset726
+generation phase. For instance, in the majority of Shape and Object Recognition datasets, a sample727
+typically comprises a modified line drawing or silhouette centrally positioned on a canvas without728
+rotation. We deliberately avoid creating replicas of the same sample with additional transformations.729
+This approach prevents unnecessary expansion of the dataset’s size, as most popular deep learning730
+libraries allow for an easy application of data augmentation. Furthermore, our testing methods731
+allow for the application of affine transformation during testing through the configuration file, again732
+avoiding the need to generate pre-augmented datasets.733
+A.3 Number of Samples and procedural generations734
+Some datasets contain a fixed and limited number of samples. For example, the “NAP vs MP: line735
+segments” dataset, recreating the stimuli used in [72], contains 3 conditions with 26 items each. This736
+can be potentially expanded by changing the line stroke, the background color, or by applying dataset737
+augmentation separately. For other datasets much larger samples with extremely low probability of738
+repetition are easily constructed. For example, most Visual Illusions contain a “scrambled” condition739
+in which the elements of the illusions are presented “scrambled up” on the canvas, with varying740
+positions and orientation of each different element. A virtually limitless number of samples can be741
+generated for these conditions, which is important since they are often used for training decoders. The742
+pre-generated dataset typically includes approximately 5,000 samples for these conditions. For users743
+requiring larger sample sizes, they can generate the dataset by changing the configuration argument744
+relative to sample size (e.g., num_samples_scrambled) depending on their needs.745
+B Other Testing Methods746
+The datasets featured in MindSet: Vision are suitable for a range of experimental approaches beyond747
+the ones suggested in Section 3. For example, the relational reasoning capabilities needed to solve the748
+Same/Different task could be tested by training a network (which does not need to be pre-trained) on749
+one or a few of the ten available conditions in the Same/Different dataset, and then testing the network750
+on the remaining conditions (as in [89]). In a similar vein, the 2D transformations and Viewpoint751
+datasets could be approached by training a network on certain transformations/viewpoints and then752
+testing it on the others, as demonstrated in [20].753
+Another method that extends beyond our provided scripts is to input images into Multimodal Large754
+Language Models (LLMs) and query them about what they see [119]. Assuming that the language755
+output of the LLM provides a reliable window into its perceptual processes, this approach allows for756
+an interactive examination of the LLM’s understanding of the images.757
+Our preliminary investigations with GPT-4 reveal that while these models are proficient at recognizing758
+silhouettes and line drawings, they struggle with textured representations of familiar objects. For759
+19
+
+example, a textured image of a banana was misidentified as either a crescent moon or a pair of760
+scissors, and an airplane was mistaken for a butterfly. Moreover, we found instances in which GPT-4761
+is influenced from images it has previously processed, that is prior exposure to an image can lead762
+the model to incorrectly identify later, differently textured images as the same as the initially viewed763
+object. For instance, when the model is first presented with the silhouette of a banana, followed by a764
+textured depiction of an airplane, it sometimes erroneously classifies the airplane as a banana.765
+Figure 3: Samples of GPT4 responses after being prompted by different images from our silhouettes
+and texturized datasets, each time spawning a new conversation. The model accuracy drops signifi-
+cantly with texturized images.
+C Detailed Datasets Information766
+Below we provide more details about the various conditions included in MindSet: Vision and their767
+relevance to understanding human vision. We also highlight the most important parameters for each768
+dataset. For a complete list, refer to the generated HTML page2 which additionally contains several769
+samples for each condition and each dataset when generated using default parameters.770
+C.1 Low and Mid-level vision771
+There is no sharp dividing line between early and middle visual processing, but early vision extracts772
+low level feature information (i.e., color and luminance contrasts, the orientation of bar and edge773
+segments, and contour segments) from the retinal image. By contrast, mid level vision encodes more774
+abstract aspects of shape, such as surfaces and parts of objects, in an increasingly viewpoint invariant775
+manner. This is where representations of 2D and 3D shapes, material properties, and coherence of the776
+substances and surfaces in the world are computed. That is, mid-level vision builds representations of777
+the distal world from the proximal stimulus. This is an ill-posed problem, and accordingly, various778
+heuristics (such as Gestalt perceptual grouping cues) are employed to provide the best estimate of the779
+distal world. Illusions are striking examples of failures to correctly encode the distal world from the780
+proximal stimulus. The experiments we include in MindSet: Vision largely focus on mid-level vision.781
+C.1.1 Weber Law782
+Psychological Significance. The Weber Law (or Weber-Fechner Law) quantifies the psychophysical783
+relation between changes in the world and changes in perception. The law states that the minimum784
+physical change of a stimulus on some dimension (e.g., its size) that is perceptible to an observer is a785
+constant ratio of the original stimulus value on this dimension. For example, it is easy to distinguish786
+between line lengths of 1 and 2 cm, but difficult to distinguish between lines of length 100 and 101787
+cm, despite the fixed difference in length (1 cm). To make the latter distinction equally salient, the788
+two stimuli should be 100 and 200 cm (a fixed ratio of 2). Although Weber’s Law breaks down at789
+extreme values, this relationship applies to a wide range of dimensions, from weight, length, size,790
+2https://bit.ly/mindsetvision-datasets
+20
+
+brightness, and even numbers. Weber’s Law reflects the more general observation that perception is791
+often based on relative rather than absolute encoding of stimulus dimensions. Importantly, Weber’s792
+Law is often manifest in early visual areas [61], and indeed, in some cases, at the level of the retina793
+[11, 49, 107].794
+Jacob et al. [ 65] reported that the convolutional DNN VGG-16 showed a human-like Weber Law795
+effect when encoding line-lengths. However, the authors only observed Weber’s Law for line lengths796
+in the late convolutional layers of the network, did not assess whether discrimination was a constant797
+ratio of the original stimulus (they employed a weaker test), and failed to observe a reliable effect for798
+image intensity.799
+Dataset. Images in this dataset are composed of a simple horizontal white line with varying length800
+and brightness values. Configurable parameters include line width, min/max values for length and801
+brightness. To assess DNNs sensitivity to Weber’s Law, a similarity judgment analysis assesses802
+whether the relative change in the perception of these stimuli (as measured by the level of unit803
+activation in the inner layers of a pre-trained DNN) adheres to a logarithmic relationship with the804
+stimulus strength (e.g. line length).805
+C.1.2 Crowding / Uncrowding806
+Psychological Significance. Our ability to identify objects is impaired by the presence of nearby807
+objects and shapes, a phenomenon called crowding. At the same time, in some conditions, the808
+inclusion of additional surrounding objects makes the identification of the target easier, a phenomenon809
+called uncrowding. This is illustrated in Figure 4, in which participants are asked to perform a810
+vernier discrimination task by deciding whether the top vertical line from a pair of vertical lines811
+is shifted to the left or right. When these lines are surrounded by a square rather than presented812
+by themselves performance is impaired. However, the inclusion of additional squares dramatically813
+improves performance. This is thought to reflect a Gestalt process in which the squares are grouped814
+together and then processed separately from the vernier [95]. Standard DNNs are unable to explain815
+uncrowding [39, 47], but the DNNs inspired by the LAMINART model of Grossberg and colleagues816
+[90] designed to support grouping processes can capture some aspects of uncrowding.817
+Figure 4: Illustration of the Crowding and Uncrowding effect. a. Observers perform a vernier
+discrimination task. A standard approach consists of measuring the vernier offset for which observers
+correctly discriminate in 75% of the trials. With the vernier alone, the offset is quite small. b. When
+a square is added the performance drastically drops (that is, the threshold-offset increases). This is
+the classic crowding effect. c. Adding more flankers increases performance again. This is referred
+to as uncrowding. d. The magnitude of crowding and uncrowding effects is contingent upon both
+short-range and long-range spatial interactions between visual elements. Furthermore, the specific
+characteristics and spatial positioning of flanker stimuli play a crucial role in modulating these effects.
+For example, the performance drops again for the depicted pattern.
+Dataset. Based on [39], with code adapted with authors’ permission. Images are composed of a818
+‘vernier’ stimulus (two parallel line segments with some offset) placed either inside or outside a set of819
+random flankers (squares, circles, hexagons, octagons, stars, diamonds). Each configuration has from820
+1 to 7 columns and from 1 to 3 rows of flankers with a variety of same/different shape patterns used.821
+The vernier can be left/right oriented. The suggested method for this dataset (as per [39]) consists822
+of attaching a decoder at several stages of a pre-trained DNN. The decoder is trained and tested823
+on a classification task to discriminate between left/right types of vernier but, significantly, during824
+training, the vernier and the flankers were non-overlapping, whereas during test, the vernier was often825
+placed inside one of the shapes, allowing the measuring of (un)crowding effect through change in826
+classification accuracy across test conditions. A model with human-like visual characteristics should827
+21
+
+match human perception with regards to both crowding and uncrowding effects, following the pattern828
+in [39, 40]. Users can specify whether the size of the flankers varies or is fixed across samples.829
+C.1.3 Emergent features830
+Psychological Significance. Emergent features provide a compelling example of “the whole is831
+different than the sum of its parts”. Pomerantz and colleagues [ 85, 87] relied on a simple visual832
+search paradigm where participants were asked to identify a target amongst foils. They devised833
+several different types of target and foil stimuli, but the simplest were composed of dot patterns as834
+depicted below. Participants viewed a set of 4 panels, each of which contained a single dot. Three of835
+these panels were identical (dots were in the same location) and one outlier panel (where the dot was836
+in a different location). The task was to identify the outlier panel as quickly as possible. In the single837
+dot condition, the outlier was simply the panel with a dot in a unique position. In the critical emergent838
+feature condition(s), a dot (or more) was added to the single dot images as context. The context dot(s)839
+was in the same location in all panels. Because these added dot(s) were identical in all four panels,840
+there were no new features that could be used to facilitate the identification of the outlier other than841
+configural “emergent” features. For example, in the top row of Figure 5, the extra dot (depicted in the842
+middle column) produces the emergent feature of “orientation”, and in the bottom row, the extra dot843
+produces the emergent feature of proximity. The critical finding was that participants could identify844
+the location of the outlier panel more quickly in the emergent compared to the baseline condition.845
+That is, the “whole” was more discriminable than the sum of its parts.846
+Figure 5: Schematic of the generation procedure for producing a set of dotted stimuli. Starting with a
+pair of images in which the only discriminant feature is the location of a dot (Base Pair), an additional
+dot is added, yielding the Emergent Feature of proximity or orientation. The Emergent Feature of
+linearity is obtained by adding a dot to the orientation pair. Notice that the added dot is the same to
+both elements of the pair so it does not add on its own any discriminative features, but it generates
+additional features in relation with the surrounding dots.
+Biscione and Bowers [22] carried out a series of studies assessing whether DNNs were sensitive to a847
+range of emergent features that facilitated human performance, including testing DNNs on the dot848
+stimuli illustrated in Figure 5. We observed that DNNs did show some sensitivity to some of the849
+emergent features, but only at the later layers of the network. This is problematic given that these850
+emergent features are thought to be computed relatively early in the visual system, such that they851
+support rapid “pop out” search.852
+Dataset. Adapted from [22]. The dataset consisted of sets of paired images. Each set includes four853
+conditions: a base condition (single dots), and composite conditions (orientation, proximity, and854
+linearity). The ‘single dots‘ condition consists of paired images in which each image contains a855
+single dot placed at a different location. In the composite conditions, one or more dots are added to856
+both images of the base condition, in the same locations, in such a way that it would elicit different857
+emergent properties when combined with the original single dots. In the orientation and proximity858
+conditions, the added dot results in different orientation/proximity features. In the linearity condition859
+(generated by adding a dot to the orientation condition), the added dot would either be placed on a860
+straight line with the other two dots or on a different path. Each dot was constrained to be located861
+at a distance of at least 20 pixels from one another, and 40 pixels from the border. By computing862
+22
+
+the difference in similarity scores between each composite condition and the base condition, we can863
+compute how much each emergent feature impairs/facilitates distinction of the additional dots. For864
+example, if the average ‘orientation‘ pair is found to be easier to distinguish (through a similarity865
+analysis of the internal activations of the network) than the pairs from the ‘single dot‘ condition,866
+then we can infer that the network is sensitive to orientation (as the additional dot in the orientation867
+condition was not-diagnostic, e.g. the same for both images in each pair). The same comparison with868
+the ‘single dot‘ pairs can be performed for the proximity and linearity conditions. The overall pattern869
+of similarity scores should match human results, in which the highest effect is obtained through the870
+feature of proximity, followed by linearity, and then orientation [85, 22].871
+C.1.4 Decomposition872
+Psychological Significance. The visual system represents objects in terms of their parts, separating873
+regions at points of deep concavity [63]. Perceptually, searching for an object broken into its natural874
+parts among a set of unsegmented versions of the same object is significantly more challenging than875
+locating the same object when it is segmented at points that do not correspond to its natural divisions.876
+In other words, a segmentation at natural points preserves the basic parts which make up the object877
+and therefore make the segmented version more similar to the uncut object when compared to an878
+’unnatural’ segmentation. There is good evidence that this occurs relatively early in visual processing879
+[117]. To assess whether DNNs encode objects into parts in a similar manner, Jacob et al. [ 65]880
+compared the internal representations of a base object composed of two parts to two segmentations881
+of the object, one natural and one unnatural. The assumption is that a natural segmentation of the882
+image will be encoded in a more similar way to the whole object (the segmented images maintain the883
+integrity of parts that compose the complete object). However, they reported that the VGG-16 did not884
+show this pattern, suggesting that DNNs do not encode objects by their parts, or at least, not in a way885
+similar to humans.886
+Figure 6: The dataset features base images depicting two objects in contact at a single point. It
+includes two variations: natural and unnatural splits. In natural splits, the objects are separated,
+while in unnatural splits, the division occurs within an object itself. Identifying differences between
+base images and unnatural splits is simpler than distinguishing between base and natural splits. The
+dataset presents examples with both familiar and unfamiliar shapes, showcasing the diversity in object
+recognition challenges.
+Dataset. The dataset consists of a variation of the images used in [ 65]: instead of a single object887
+composed of two parts, we used two objects joined at a single point of contact. There are three888
+‘split’ conditions and two ‘familiarity’ conditions. The ‘split’ conditions are: ‘no split‘ in which two889
+parts are touching at one point but not overlapping; ‘natural split‘, in which two parts are separated;890
+‘unnatural split‘ in which the two parts are touching each other as in the ‘no split‘ condition, but one891
+of the parts is ‘cut’ and separated from the rest. The items are silhouettes uniformly coloured on892
+a uniform background, and they can be either familiar or unfamiliar shapes. The familiar shapes893
+23
+
+consist of the following objects: circle, square, rectangle, triangle, heptagon, and a 50-degree arc894
+segment; the unfamiliar shapes consist of blob-like objects. Within each familiar/unfamiliar condition,895
+all possible combinations of two shapes are used (e.g. a triangle with a rectangle). Configuration896
+parameters include the distance between pieces in the ‘unnatural split’ and ‘natural split’ conditions,897
+the colour of items, and the number of different blob-like objects to use for the unfamiliar condition.898
+Following the test from [ 65], similarity judgments between pairs composed of base samples and899
+natural/unnatural splits can be computed for an ImageNet pre-trained network. To match human900
+perception, the natural split samples should have internal representations that are closer to the base901
+samples than the unnatural split samples. This should apply regardless of whether the shapes are902
+familiar or unfamiliar.903
+C.1.5 Encoding relations between object parts904
+Psychological Significance. Humans not only encode objects in terms of their parts, but also the905
+relations between parts which are essential for object recognition [16]. Early evidence for this was906
+reported by [64] who trained participants to identify a small set of artificial stimuli in which they907
+could easily manipulate relations between parts. Two types of changes were introduced to create foils908
+for the base stimuli. First, a coordinate change in which relations between parts were maintained909
+but the position of a part of the object was changed. And second, a relational change in which there910
+was a categorical change in relations between object parts. They reported that participants were911
+much more likely to mistake foil objects for the base object when the relations between object parts912
+were maintained than when the relations changed (coordinate vs relational change in Figure 7). By913
+contrast, [77] showed that two standard convolutional networks are completely insensitive to these914
+relational features, treating Relational and Coordinate foils equally similar to the Basis objects.915
+Figure 7: Reproduction of stimuli used in [64]. Starting with a base shape, the Relational Change
+variant was created by moving one part of the base object up or down (red dashed circle). The move
+was chosen to change the categorical above/below relation between the circled part and the part to
+which it is attached. The coordinate change variant was created by moving the whole horizontal
+(red circled) segment up or down, together with the part moved in the relational change. This
+resulted in no categorical relations change. Therefore, the perceived difference between a base
+and its relational-change pair is greater than the perceived difference between the corresponding
+base-coordinate change pair.
+Dataset. We recreated images originally contained in [64], Experiment 5, using white strokes on a916
+uniform background. To compare to human perception, similarity judgments can be computed from917
+pre-trained DNNs by sequentially inputting pairs of images composed of a base shape and either their918
+corresponding coordinate or relational change. A pattern that mirrors human perception would result919
+in greater similarity between the base shapes and their coordinate modifications foils as opposed to920
+their relational change foils.921
+24
+
+C.1.6 Encoding of 3D shapes922
+Psychological Significance. The human visual system builds 3D representations of images for the923
+sake of object recognition [43, 74], and some perceptual illusions of size, such as the Ponzo illusion924
+described below, are thought to be a by-product of computing depth information. By contrast, there925
+is little evidence that DNNs infer 3D structure from the 2D images they process. For example, [65]926
+tested VGG-16 on three pairs of objects developed by [ 42]: a pair of objects composed of three927
+segmented lines (base pair in Figure 8) are transformed in two different ways (V1 and V2), each928
+time adding the same configuration to both elements of the base pair. Humans were assessed in how929
+quickly they could discriminate the two V1 images and the two V2 images. Discrimination was930
+highly improved for the V2 pair, but not for the V1 pair, most likely the result of enhanced 3D cues931
+in the V2 stimuli.932
+In contrast, Jacob et al. [65] obtained no evidence that VGG-16 was better at discriminating the base933
+pair, suggesting a failure to encode their 3D structure.934
+Figure 8: Illustration of the 3D Drawing dataset stimuli. One where segmented lines (Base shapes)
+are augmented with contextual features to clearly form distinguishable 3D shapes (V2), and another
+where the additions do not contribute as strongly to depth perception, making shape discrimination
+challenging (V1). Importantly, the identical contextual features applied to each pair highlight that
+enhanced discrimination stems solely from the perceived depth, rather than the features themselves.
+Dataset. We recreated stimuli appearing in [42], using white strokes on a uniform background. Using935
+the similarity judgment method on pre-trained DNNs, a perception akin to humans would result in a936
+significantly lower similarity for the V2 pair compared to both the base and V1 images.937
+C.1.7 Amodal completion938
+Psychological Significance: The visual system needs to identify partly occluded objects in the 3D939
+world. A key part of the solution for humans is an amodal completion process in which a surface940
+representation of the occluded object is completed behind the occluder. This process is called amodal941
+because the visual system builds complete surface forms of occluded objects without generating942
+a visible experience of the missing shape. Amodal completion occurs early in the visual system,943
+perhaps as early as V1 [ 81]. Various compelling perceptual effects are associated with amodal944
+completion (for review, see [80]). Here we include the materials of [93] who showed that humans945
+quickly and automatically encode the shape of partially occluded objects in a visual search task.946
+Amongst the various conditions in their experiments, two illustrate the point most clearly. In the947
+’Target - Notched square’ and ’Target - notched circle’ conditions, participants searched for a notched948
+black square or notched white circle, respectively, among full black square and white circle distractors.949
+None of the objects overlapped in this condition. In the ‘Occlusion’ condition participants were again950
+searching for notched squares and circles, but in this case notched squares and circles touched to951
+give the impression of occlusion. Search was significantly faster in the ‘Notched’ condition when952
+compared to the ‘Occlusion’ condition. This is because in the ‘Occlusion’ condition the notched953
+squares were perceived as full squares occluded by white disks due to amodal completion. This made954
+25
+
+the notched black squares much more difficult to find among full black squares. The same was true955
+for the notched white circles in the occlusion condition. This pattern of results suggests that the956
+notched square in the ’Occlusion’ condition was encoded as a square early in visual processing (fast957
+visual search is typically characterized as pre-attentive). Jacob et al. [ 65] reported that the DNN958
+VGG-16 network pre-trained on ImageNet failed to show any evidence for amodal completion with959
+these stimuli.960
+Figure 9: Illustration of the Occluded Shape stimuli as used in [93]. The experiment compares three
+conditions: a baseline condition with squares and disks with no occlusion, an occlusion condition
+in which one object obscures part of the other, and a notched condition in which the occluded part
+of the object in occlusion condition is removed. This turns the notch into a distinctive feature and
+effectively creates a differently perceived shape despite the visible parts being the same as in the
+occlusion condition. The finding that notched circles and squares are more easily identified than
+occluded circles and squares is taken to reflect amodal completion.
+Dataset. We generated samples that look like the stimuli used in [93]. We generated samples for the961
+distractors (‘unoccluded’), ‘occlusion’, and ‘notched’ conditions, with either the square occluding962
+the circle or vice versa. The occluding shape is placed at a variety of degrees from the occluded963
+shape. Each occluded image has a corresponding notched image (that is, using the same shape964
+configurations) so that they can be directly compared. The unoccluded condition is generated by965
+using a non-occluded sample in which the occluding shape is moved radially away from the occluded966
+shape, maintaining the same orientation.967
+To align with human similarity judgments as measured in [93], a DNN should yield internal activations968
+that result in higher similarity scores for distractor (unoccluded) versus occluded samples (where969
+amodal completion generates representations of the full shape of the notched stimuli), compared to970
+those for (distractor) unoccluded versus notched samples.971
+C.1.8 Non-accidental and Metric Properties for Geons and line stimuli972
+Psychological Significance: Human object recognition is highly sensitive to non-accidental properties973
+(NAPs) of an object, that is, visual features that are invariant over rotations in depth. NAPs are974
+hypothesized to be critical for representing object parts such as Geons [16]. For example, curvature975
+(as opposed to a stright line) is a NAP because a curved object in the 3D world will project a curved976
+image on a 2D retina when viewed from most orientations apart from rare “accidental” viewpoints,977
+as when a curve projects a straight contour. NAPs are distinguished from metric properties (MP),978
+features of objects that change continuously with variations over depth orientation when projected on979
+the retina. For example, a curved object in the world will project different degrees of curvature on the980
+retina depending on its orientation to the viewer. A variety of research highlights how human vision981
+is more sensitive to changes in images that alter NAPs (e.g., a change from a curve to straight line)982
+compared to MPs (e.g., changes in degree of curvature) [ 16]. [ 71] provided evidence that several983
+DNNs are also more sensitive to image manipulations that alter NAPs, although the effects were most984
+26
+
+pronounced in later layers of the networks whereas sensitivity to NAP is thought to occur relatively985
+early in human visual processing to encode object parts.986
+Datasets. We have included images of both 2D line segments based on [71], and 3D Geon stimuli987
+originally used in [68] and obtained from 3 to assess the degree in which DNNs are sensitive to NAP988
+vs MP changes. In the case of the Geon stimuli, we have provided a version with shade (as in [72]), a989
+version in which no shades are present and the outline is highlighted, and a version in which only990
+the silhouettes are shown, as one concern with the shaded version is that the similarity judgements991
+produced by DNNs may reflect differences in shades as opposed to shape. For each Geon or line992
+segment, a feature dimension (such as the curvature of a Geon) is altered from a singular value (e.g.993
+straight contour with 0 curvature) to two different values (e.g. slightly curved or very curved). The994
+‘reference‘ condition includes items with the intermediate feature value; in this example, the slightly995
+curved geon. The ‘MP change‘ condition consists of items with a greater non-singular value; in996
+this case, the greater curvature geon. Finally, the ‘NAP change‘ condition includes items with the997
+singular value; the straight contour geon from this example. A human-like similarity judgment would998
+correspond to higher similarity between the reference object to the MP variants than the NAP variants999
+(that is, NAP changes are easier to discriminate). [71] provides a more detailed description of human1000
+performance through reaction times that can be directly compared to similarity judgments in DNNs1001
+(where higher reaction times correspond to lower similarity).1002
+C.2 Visual Illusions1003
+There is now a growing number of articles exploring various illusions in various different types of1004
+DNNs trained in different ways. Some of these highlight similarities with human perception (e.g.,1005
+[14, 103, 111]) while others report mixed or discrepant results (e.g., [55, 54, 110, 119]. For a review1006
+of various findings see [67]). The conditions in which DNNs ’experience’ human-like illusions may1007
+provide insights into why humans experience these phenomena. For instance, [55] found that various1008
+brightness and color illusions can be induced in CNNs trained for image denoising, image deblurring,1009
+and computational color constancy. They argue that these illusions are a byproduct of biological1010
+processes designed to improve efficiency of low-level visual processes. In addition, Storrs et al.1011
+[103] found that unsupervised (as opposed to supervised) learning led DNNs to factorize images into1012
+encoding of reflectance and illumination that resulted in a human-like perceptual illusion of gloss.1013
+Here we consider several classic size, lightness, and orientation illusions.1014
+C.2.1 Müller-Lyer illusion1015
+Psychological Significance. The Müller-Lyer illusion is perhaps the most famous of all illusions.1016
+There is no agreed-upon explanation of the effect but the fact that it is observed across species,1017
+including fish [101], suggests that it reflects something basic about the architecture of the visual1018
+system rather than the training environment. Ward [110] reported that VGG-19 showed the illusion1019
+(to a rough approximation), although they only reported the effect at the final stage of the network. A1020
+similar result was reported by [118] who reported more robust effects in the higher levels of VGG-191021
+and ResNet-101.1022
+Dataset. The Müller-Lyer illusion stimuli were generated in one of two ‘illusory’ configurations1023
+(with inward or outward ‘fins’) or in a ‘scrambled’ configuration. In the latter, the fins are arranged1024
+randomly in the canvas, separated from the line segment. In all three conditions, we vary the1025
+line length, the position of the line, and the angle of the fins. A method to test whether a DNN1026
+is susceptible to this illusion involves training a set of decoders to predict the line length in the1027
+scrambled condition set. These decoders are then tested on the illusory conditions. A human-like1028
+response would be evidenced by a consistent pattern of both overestimating the line length in the1029
+outward illusory condition and underestimating it in the inward illusory condition. Additionally, the1030
+illusory effect should be larger for more acute fin angles.1031
+3https://geon.usc.edu/ ori
+27
+
+C.2.2 Ponzo illusion1032
+Psychological Significance. In this classic illusion, two identical horizontal lines cross a pair of1033
+converging lines, a configuration similar to railway tracks. In this configuration, the top line looks1034
+longer. The standard explanation is that the visual system assumes that the converging lines are1035
+receding in depth and that the upper horizontal line is further away. Given that the two lines project1036
+the same length on the retina, the visual system assumes that the upper line must be longer. That is,1037
+the illusion is a by-product of the visual system attempting to compute size constancy. Interestingly,1038
+there is good evidence that the Ponzo illusion [59], and related size illusions [102], alter the activation1039
+in V1, although this may reflect top-down activation from higher-level visual areas [31]. [110] failed1040
+to observe a Ponzo effect in VGG-19.1041
+Dataset. Two target lines (red and blue) are placed across a railway track pattern. In the illusory1042
+condition, the target lines have the same length (varying across samples). In the scrambled condition,1043
+the target lines have different length, are still placed horizontally one on top of the other, but all the1044
+other segments are randomly placed across the canvas. We include a third condition in which the1045
+railway track pattern is used with target lines which differ in length. The railway track pattern for the1046
+illusory and different lengths conditions is composed of converging segments (with a varying degree1047
+of convergence), and horizontal segments (randomly placed at different horizontal positions). For all1048
+three conditions, the user can specify the number of horizontal segments to use.1049
+The suggested way to test whether DNNs perceive the Ponzo Illusion consists of training a set of1050
+decoders on the scrambled condition, to predict either the length of the target lines or a function of the1051
+length (for example, the difference between the top and the bottom line lengths). Then the decoders1052
+can be tested on the illusory condition. The different lengths condition could be used as a further1053
+way of analysing the decoders response. To match human perception, a decoder should overestimate1054
+the length of the top target line (or underestimate the length of the bottom line, or output a positive1055
+difference in top minus bottom line length, depending on the training setup) in the illusory condition1056
+(where the two target lines have the same length).1057
+C.2.3 Ebbinghaus (or Titchener) illusion.1058
+Psychological Significance: In this classic illusion, the perceived size of a central circle is altered1059
+by the size of surrounding circles. There is evidence that the illusion distorts the perception of size1060
+but not action ([2, 114]; but see [48]) and there is evidence that this illusion is mediated by relatively1061
+low-level (preattentive) vision [29]. Again, there are different explanations for the phenomena [92].1062
+[110] failed to observe this effect in VGG-19.1063
+Dataset. A red target circle is surrounded by a fixed number of white circles (flankers) on a uniform1064
+background. In the two illusory conditions (‘big’ and ‘small’ flankers) the flankers surround the target1065
+circle, and they all have the same size within each sample. In the scrambled condition the target circle1066
+is placed in the center, but white circles with random sizes are randomly placed on the canvas. Across1067
+illusory samples, we varied the radii of the flankers, the radius of the target circle, the displacement1068
+of the flankers around the target. To measure illusory effects in DNNs, decoders can be trained on1069
+estimating the circle size or radius in the scrambled condition, and tested on the big/small flankers1070
+condition. Human-like perception should induce overestimating in the small flankers condition and1071
+under-estimating in the big flankers condition (see example in Figure 2).1072
+C.2.4 Jastrow Illusion1073
+Psychological Significance: In the Jastrow Illusion [66], two identical-sized curved segments are1074
+perceived as different sizes when one is placed above the other in certain configurations. There are1075
+multiple explanations for the phenomenon, but perhaps the simplest explanation is that it is a form of1076
+a contrast effect. The length of the concave edge of the upper object in a Jastrow configuration is1077
+much shorter than the convex edge of the bottom object, and this contrast drives the perception of1078
+size when the edges are closely aligned [94]. Rhesus monkeys do not appear to be affected [3], nor1079
+28
+
+do humans when assessed on grasping behavior [82]. As far as we are aware, no one has reported1080
+whether DNNs show a similar pattern.1081
+Dataset. We used a red and a blue arc shape, either one on top of the other at the centre of the1082
+canvas (‘illusory’ and ‘different lengths’ conditions) or randomly placed in the canvas with a random1083
+orientation (‘scrambled’ condition). In the scrambled and different lengths conditions the two shapes1084
+have different sizes. The size is the same (thus eliciting the illusion) in the illusory condition. To1085
+estimate DNNs susceptibility to the illusion the same approach as the Ponzo Illusion can be used.1086
+C.2.5 Tilt illusion1087
+Psychological Significance: In the tilt illusion, a central grating’s orientation is perceived as being1088
+repulsed from or attracted to the orientation of a surrounding grating. A wide variety of mechanistic1089
+accounts of the illusion have been proposed (for review see [33]), and it is argued to be an adaptive1090
+feature rather than a bug of a visual system optimized for contour detection [98]. There is evidence1091
+that the illusion reflects processes in V1 [ 100]. Linsley, et al. [ 73] reported that a recurrent DNN1092
+optimized for contour detection produces a tilt illusion.1093
+Dataset. We provide one illusory condition, in which an oriented grating pattern is presented within1094
+a circular mask (‘center grating’) and a differently oriented grating is placed as the background1095
+(‘context’ grating); and two non-illusory conditions: one in which the background is uniformly1096
+colored and only a center mask contains the oriented grating pattern; and vice versa. The samples1097
+are varied in their orientation and spatial frequency of the gratings, and in the size of the central1098
+grating. Our suggested approach to test whether a DNN perceives the tilt illusion is to train a decoder1099
+to estimate the orientation of the center grating, and test it on the illusory condition to check whether1100
+the presence of a context affects performance. In particular, the decoder should present the largest1101
+repulsive bias at around 20° and an attractive bias at around 70°-80°. Plus, the attractive effect should1102
+be much smaller than the repelling effect, and larger for matching center-surround gratings spatial1103
+frequencies. [113].1104
+C.2.6 Lightness Illusions1105
+Lightness refers to our perception of the reflective surface of an object (a stable property of an object)1106
+whereas brightness is a measure of the amount of light reflected from an object, something that is1107
+affected by both reflectance as well as the lighting source. We include two famous illusions related to1108
+lightness: the Lightness Contrast Illusion and the Adelson Checker Shadow Illusion. However, to1109
+facilitate testing for these and other lightness-related effects, we created an additional dataset called1110
+‘Grayscale shapes’. The purpose of this dataset is not to elicit any illusion in humans or in DNNs1111
+but to train a network (or, with our suggested method, a decoder attached to a network) to output the1112
+grayscale value of a target pixel.1113
+Grayscale shapes Dataset. Each image is composed of 20 overlapping items amongst the following1114
+types of shapes (circle, circle sector, circle segment, ellipse, rectangle with straight and rounded1115
+corners, heptagon, irregular polygon composed of a random number of edges from 3 to 10). Position,1116
+dimension, orientation, and grayscale colour value are randomized for each shape. We place 20 items1117
+to be sure that most space in the canvas is filled by an item, but that only a few of them are fully1118
+visible. This results in a chaotic canvas with many different shapes with varying grayscale colours1119
+but with coherent patterns (as opposed to, for example, having each pixel of a different random1120
+grayscale value). In order to target a specific pixel to be predicted by the decoder, a small white1121
+vertical arrow (the ‘marker’) of fixed size is placed randomly on the canvas. The arrow points to the1122
+pixel whose value can be used for prediction. Notice that while the images are commonly normalized1123
+from -1 to 1 before being fed into the network, the targeted pixel value to predict is in the 0-255 range.1124
+Once a trained decoder reaches the desired level of accuracy, it can be tested on other configurations1125
+by simply adding the white arrow ‘marker’ into any image. We call this network with the decoder1126
+attached the color-picker. We can then test whether an illusory configuration impacts performance1127
+of the color picker by placing a white arrow marker at several points of the illusory image and check1128
+29
+
+whether the output is biased in a human-like fashion. This is the approach we use in the Lightness1129
+Contrast Effect and Adelson Checker Shadow Illusion.
+Figure 10: Samples of five images from the grayscale dataset, used to train a color-picker, as detailed
+in the text.
+1130
+C.2.7 Lightness Contrast effects1131
+Psychological Significance: In the Lightness Contrast effects our perception of two identical central1132
+gray patches is altered by their surround, such that a patch surrounded by a dark background is1133
+perceived as lighter, and the patch surrounded by a light background is perceived as darker. The1134
+standard explanation of this is that lightness perception is the product of the relative brightness1135
+of surfaces across a boundary given that this ratio will remain constant regardless of the general1136
+illumination, allowing lightness (and color) constancy. However, in the lightness contrast context,1137
+the mechanism designed to produce lightness constancy results in the central grey squares being1138
+perceived differently. These computations are thought to occur in the primary visual cortex [ 76].1139
+Some DNNs can achieve color constancy [ 46] and other forms of constancy [ 103] under some1140
+conditions, although there remain questions as to whether this is achieved in a human-like manner.1141
+There are also computational theories of the lightness contrast effect [57], but we are not aware of1142
+any demonstrations that DNNs support this effect.1143
+Dataset. The dataset consists of the standard Lightness Contrast configuration: square within a1144
+uniform canvas of different grayscale values. The user can specify the grayscale value of the center1145
+square, which is kept fixed, while the value of the background is varied. Importantly, each sample1146
+is replicated many times with the white arrow marker placed at different locations in the canvas. A1147
+color picker network can then be queried for the grayscale value at different locations in order to1148
+measure whether the perceived value of the central square is affected by its surroundings.1149
+C.2.8 Adelson checker shadow illusion1150
+Psychological Significance: In this classic illusion [1], two squares on a checkerboard are perceived1151
+to have different reflectance due to one being in shadow and the other in light, despite being the same1152
+brightness. This phenomenon is explained with the ability of the human brain to perceive reflectance1153
+of a surface as invariant under variation of brightness. In this illusion, the patches inside and outside1154
+the shadow reflect the same brightness, and accordingly, the visual system assumes the patch in the1155
+shadow must be lighter.1156
+Dataset. This dataset simply consists of the Adelson Checker Shadow illusory image replicated1157
+many times, grayscaled, with a white arrow systematically placed at different locations of the canvas,1158
+covering the whole checkerboard. A color-picker network (that is a decoder trained to predict the1159
+value of a marked pixel, e.g. trained on the Grayscale shape dataset, see Section C.2.6) is queried at1160
+all locations. Critically, the color-picker will show illusory perception if the pixels in the two target1161
+patches are seen as two different colours. In particular the pixels of the unshaded patch should be1162
+seen as darker than the shaded patch by the network.1163
+30
+
+C.2.9 Thatcher Illusion1164
+In this illusion the eyes and mouth of upright faces are inverted to produce a grotesque image of1165
+a person. The distinction between a normal face and a distorted face is highly salient. However,1166
+when faces are upside down, the distortions are much less salient. This effect was originally reported1167
+on images of Margret Thatcher, thus the name of the illusion. This effect is sometimes claimed1168
+to be more dramatic for faces compared to other categories, lending support to the hypothesis that1169
+face processing is special [25]. Other researchers claim that similar effects are observed for other1170
+types of objects [115]. Jacobs et al. [65] demonstrated that CNNs trained to identify faces exhibit a1171
+Thatcher-like effect, though they did not assess whether this effect extends to other object categories1172
+[65]. The extent to which this effect is specific to faces or can be generalized to non-face objects1173
+remains a subject of debate (e.g., see [116, 15, 34]). To test DNN sensitivity to the Thatcher Effect for1174
+both faces and non-face dataset, we provide both a Thatcherized dataset of faces and a Thatcherized1175
+dataset of words (in which individual letters are rotated).1176
+Face Dataset. We provide a small dataset of celebrity faces using a subset of CelebA4, but the user1177
+can specify any folder containing images of faces. Each image is resized according to parameters1178
+specified by the user and then reoriented into both an upright and a 180-degree inverted configuration.1179
+Furthermore, it is either ’Thatcherized’ or remains unaltered. To ‘Thatcherize’ an image we compute1180
+landmarks of the eyes and mouth, compute the bounding rectangle for each, and rotate them around1181
+their centre of mass. Blurring on the edge is applied to minimize artefacts. To assess the susceptibility1182
+of DNNs to the Thatcher effect in faces, we propose a similarity judgment analysis. This involves1183
+comparing the perceived similarity between each upright face and its Thatcherized counterpart, as1184
+well as each inverted face with its Thatcherized version. To align with human perception, the latter1185
+comparison is expected to yield a higher similarity score than the former.1186
+Word Dataset. We employ a collection of 1000 English words or artificially generated sequences of1187
+random letters. All entries are uniformly presented in uppercase, covering a range from 3 to 8 letters1188
+in length. Following [116], to simulate the Thatcher Effect for words, we rotate one or more letters1189
+by 180 degrees. To increase variability, each word is displayed in one of ten different fonts, with1190
+variable font sizes, and includes jitter for each letter. The configurable parameters include the number1191
+of words, the exact or range of letter counts per word, the number or range of letters to be rotated, the1192
+font size, the level of jitter, and whether to use random strings or English words.1193
+C.3 Shape and object recognition1194
+A key feature of human vision is that we identify objects largely based on their shape. For example,1195
+we can easily identify line drawings of objects with no colour and texture [19]. To measure shape1196
+bias in DNNs there is now a benchmark that tests models on “style transfer” images composed of the1197
+shape of one category and the texture of another [51]. Many DNNs, including DNNs that perform at1198
+the top of the leaderboard on Brain-Score, rely primarily on non-shape features, as they classify the1199
+images based on their texture rather than shape. More recent DNNs trained on much larger datasets1200
+have started to show a more human-like shape bias [37], but there are many additional attributes of1201
+human shape perception that need to be accounted for by any DNN model of human vision.1202
+C.3.1 Identifying line drawings, dotted line drawings, silhouettes, and image segments1203
+Psychological Significance: Humans can often identify line drawings of objects as quickly and1204
+accurately as photographs, highlighting the importance of shape for object identification [19]. Inter-1205
+estingly, a child who had never previously been exposed to line drawings can readily identify them,1206
+showing that there is no need to be trained on line drawings to identify them [62]. By contrast, DNNs1207
+need to be trained on line drawings in order to recognize them at human levels [99]. Similarly, humans1208
+can easily identify silhouettes of objects, whereas DNNs again struggle (although interestingly, they1209
+do better with silhouettes compared to line drawings; [10]).1210
+4https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html
+31
+
+In addition, by exploiting the Gestalt principle of good continuation, humans can recognise line1211
+drawings with modified local features when the global shape is left intact. In our experiments, we1212
+modified line drawings in three ways: by replacing the continuous line with dots; by replacing1213
+continuous lines with segments; and by texturizing them. These images are easily identifiable, and1214
+accordingly, DNNs should be able to identify these out-of-distribution images.1215
+Line drawings dataset. We use the line-drawing stimuli from [10], consisting of 36 classes from1216
+ImageNet (one line-drawing per class). The line-drawings are white stroke on a uniform canvas1217
+(black by default). We used this dataset to build the Dotted line drawings and Image Segments1218
+datasets. In the former case, the user can specify the dot size and the distance between dots. In the1219
+latter case, we have generated complementary images that have complementary segments removed1220
+(see Figure 11). That is, each line segment in one image is absent in the other, and together the image1221
+is complete. These stimuli are generated by overlapping a grid on the line drawing and deleting1222
+complementary sections. The user can specify the grid orientation, the distance between each grid1223
+row and column, and thickness of each cell. Participants find these images trivial to identify, and1224
+accordingly, DNNs should also. Importantly, humans find complementary images like these hard1225
+to distinguish, and indeed, complementary images produce equivalent priming to repeated images,1226
+highlighting how the visual system treats them as equivalent [ 17]. This would also be the case if1227
+complementary dots were removed for the dotted line drawings. Thus a second approach to compare1228
+humans to DNNs is through a similarity judgment analysis across complementary images, which1229
+should return very high similarity value in some hidden layers of DNN.1230
+Figure 11: Example of the complementary segment dataset. Each linedrawing results in two images
+with complementary segments removed. The resulting samples are very difficult to discriminate for
+humans [17].
+There are many datasets of line drawings available, and the user can specify any folder containing line1231
+drawings, to generate a dotted/segmented dataset. The line drawings are expected to be composed of a1232
+black stroke on a white background, but can otherwise be of any shape, and the line drawing folder is1233
+expected to contain sub-folders for each class (e.g. ‘airplane’) which can contain multiple line drawing1234
+instances for that class (this follows the standard structure used in many deep learning libraries for1235
+image classification, e.g. the ImageFolder dataset in PyTorch). Our script will automatically convert1236
+the image to a white stroke over a uniform background (black by default).1237
+Silhouette dataset. For the Silhouette dataset, we use samples from [8] (9 classes from ImageNet,1238
+each containing 40 samples). As before, the user can specify any folder containing silhouettes. Alter-1239
+natively, the user can also specify a folder containing line-drawings (following the same constraints1240
+as above), which will be converted into silhouettes. Again, humans find these images easy to identify,1241
+so models should as well.1242
+C.3.2 Identifying familiar and unfamiliar images defined by texture boundaries1243
+Psychological Significance: The human visual system can group elements in scenes based on texture,1244
+with texture regions defined by the similarity of their elements. This is an example of a Gestalt1245
+principle (Similarity) contributing to object recognition [13]. One way this manifests is through the1246
+ability to identify familiar (texturized objects) and perceive unfamiliar (texturized unfamiliar) by1247
+their texture.1248
+32
+
+Datasets: Familiar and Unfamiliar Texturized Objects. We provide a dataset of familiar texturized1249
+objects by using line drawings from [ 10] as base items. For unfamiliar shapes, we generated1250
+silhouettes of blob-like objects. For the pre-generated datasets, the texturization consists of masking1251
+the internal contour of a line drawing/silhouette with a pattern of a repeated character with a1252
+randomized font size, rotated by a random degree. The character is randomly selected from letters,1253
+digits, or punctuation, and we kept the background uniformly colored. When generating images, the1254
+user can also specify the texturization of the background as well, although we have found that doing1255
+so will turn object recognition from trivial to challenging, depending on the selected character.1256
+The same approach is used for the unfamiliar shapes. In this case, the user can specify the number of1257
+blobs to generate and texturize. For both familiar and unfamiliar datasets, the user can specify how1258
+many texturization samples to generate for each input image.1259
+To measure alignment with human visual perception, the different datasets require a different approach.1260
+For familiar shapes, DNNs can be tested by simply assessing classification accuracy. For unfamiliar1261
+shapes, a similarity analysis can be carried out. For example, a DNN should find a blob and its1262
+texturized counterpart more similar than a blob and a differently texturized blob (see example in1263
+Figure 2).1264
+C.3.3 Identifying Embedded Shapes1265
+Psychological Significance: The Embedded Figures Test (EFT, [36]) is a widely utilized tool in1266
+research exploring individual differences in perception, with a particular emphasis on studies of1267
+autism spectrum disorder, and as a measure of local versus global perceptual style [83]. Subsequently,1268
+[36] developed a set of stimuli in which several Gestalt grouping principles were manipulated in1269
+order to create increasingly difficult matching to sample tasks. They found that the principle of1270
+good continuation (operationalized in terms of the number of continued lines from the original1271
+shape) impacted performance the most. Each target shape was integrated into four distinct contexts,1272
+each exhibiting a progressive increase in the number of lines extending from the target shape into1273
+its surroundings. The higher the number of lines extending the shape, the lower the performance,1274
+highlighting human susceptibility to camouflage and the role of Gestalt organisation principles in1275
+camouflage.1276
+Dataset. We used the dataset from [36] who developed simple stimuli in which background lines1277
+camouflaged geometric shapes to various extent (Figure 12). Importantly, different embeddings have1278
+different levels of continued lines from the original shape, which strongly affects human performance.1279
+Furthermore, we developed our version by generating 5 irregular polygons, embedding them in a1280
+set of lines, some random and some extending directly from the polygon’s edges (similarly to the1281
+original dataset). Many camouflaging samples can then be procedurally generated from each polygon.1282
+Training decoders to classify the simple geometric forms provides one way to assess the impact1283
+of embedding shapes on DNNs. Decoders would be trained on simple shapes (either our irregular1284
+polygons or the original shapes from [36]) and would then be tested on the embedded version. A1285
+DNN with a human-like perceptual system should show reduced ability to identify the shapes, with1286
+the level of impairment being a function of the amount of lines originating from the polygon (as1287
+in [36]. Notice in this case, human alignment requires a degradation of performance after image1288
+alteration.1289
+C.3.4 Sensitivity to Global Shapes1290
+Psychological Significance: Human object recognition relies more heavily on global shape repre-1291
+sentations than on local features, whereas there is evidence that DNNs rely more heavily on local1292
+features [10], even when trained to have a shape bias [8]. In [8], humans and DNNs were presented1293
+with silhouette stimuli in their normal format, fragmented, or in a ‘Frankenstein’ format where most1294
+of the local features are preserved but the overall configuration of the image was distorted. That is,1295
+the authors modified global shape while maintaining most of the local features. In particular, the1296
+‘fragmented‘ condition (see Figure 13) divides the shape into two distinct, yet adjacent, entities while1297
+33
+
+Figure 12: Illustration of one set of items from the embedded shape dataset. These are the stimuli
+recreated based on [106]. A basic shape is camouflaged using a variety of horizontal and vertical
+line, and extending the segments composing the shape. We also provide a variation of this dataset in
+which, given a set of polygons, camouflaged versions are procedurally generated.
+preserving the local characteristics of the object. The “Frankenstein” scenario involves adjusting the1298
+upper section back into alignment with the lower half, so that the bottom and top halfs are mirror1299
+reversed. This method keeps the object intact as a single entity. Human performance was much1300
+reduced in both the Fragmented and Frankenstein conditions, but DNNs performed similarly in the1301
+Whole and Frankenstein conditions, highlighting the importance of the local features and the lack of1302
+weighting for more global features in driving their performance. Attempts to train networks to focus1303
+on the more global aspects of the images failed.1304
+Dataset. We provide both the dataset extracted directly from [ 8] and a a version in which the1305
+fragmented and Frankenstein versions are automatically generated from any silhouettes or line1306
+drawing samples. The [8] dataset contains 9 classes from ImageNet, each containing 40 samples. A1307
+network with visual capabilities aligned with a humans’ should suffer from performance degradation1308
+in both fragmented and Frankenstein condition, which can be measured through classification accuracy1309
+(as usual, with a network pretrained on ImageNet or some other image dataset).1310
+Figure 13: Example of a stimulus and its transformed version, following [8].
+C.3.5 Invariance to Object Transformation1311
+Psychological Significance. Humans possess the remarkable ability to recognize objects despite1312
+the different retinal images the objects project depending on changes in size, orientation, lighting,1313
+and placement [104]. This is performed on-line: an object, once seen in a new or altered form, can1314
+typically be recognized instantly in subsequent exposures at different angles, without further training.1315
+This capability applies irrespective of the object’s familiarity [24, 23]. Previous work [20, 21] found1316
+that none of the 7 tested classic visual DNNs possess on-line invariance architecturally (that is:1317
+training an object at a viewpoint would not automatically support object recognition at a different1318
+viewpoint, even for simple affine transformations such as translation). However, this ability could be1319
+induced by pre-training the model on the specific transformation of interest, and this would transfer1320
+34
+
+to unfamiliar classes. For example, a network pretrained to classify images in which the objects are1321
+randomly rotated, develop on-line invariance to rotation, even for novel objects and novel classes.1322
+This partially extends even in transformation of viewpoint, in which the object is rotated in depth.1323
+Datasets: 2D Affine Transformations and Viewpoint Transformations. We provide a separate1324
+dataset for affine transformations (rotation in picture plane, translation, scale, and shear) and viewpoint1325
+invariance (rotation in depth). The configurable parameters allow for a fine-grained analysis of the1326
+effect of each transformation. For each transformation dimension, the user can chose one or multiple1327
+ranges of training and testing. As in the previous datasets, the user can specify any folder containing1328
+line-drawings or silhouettes (or any image with a clear contour on a white background). For the1329
+viewpoint invariance dataset, we use the ETH-80 dataset [32]5, which contains 8 categories (apples,1330
+cars, cows, cups, dogs, horses, pears and tomatoes), each consisting of 10 object instances, and each1331
+object captured from 41 different viewpoints. For the pre-generated dataset, we avoided including1332
+views straight from the top. The configurable parameters allow the user to generated dataset only1333
+within a specific azimuth and inclination range.1334
+For both the 2D transformation and viewpoint datasets, there are several ways to test whether a DNNs1335
+possess online invariance to transformation. First, a DNNs (not necessarely pretrained) could be1336
+trained on un-transformed images (e.g. with the object always in the center, unrotated, unscaled, or1337
+from a standard viewpoint). It could then be tested on various transformations of these objects. This1338
+could be used to establish whether the network is architecturally invariant to some transformations.1339
+Several pre-training steps could be used to test how the training environment affects performance.1340
+Another approach avoids training on the target classes (either because we want to test a pretrained1341
+network without altering its weights, or because we want to test the network on unfamiliar classes):1342
+a similarity judgments analysis is performed on transformed versions of the same object, and is1343
+compared to the similarity of different objects. A human-like DNN will have internal activations1344
+that are more similar for same objects across transformations, than for different objects. This is the1345
+approach used in [20] and [21].1346
+C.3.6 Same/Different Task1347
+Psychological Significance. Human shape representations not only support object recognition but1348
+also a wide variety of additional functions, including visual reasoning. Perhaps the simplest form of1349
+visual reasoning is tested in the same/different task – judging whether two shapes are identical apart1350
+from their spatial location. Although DNNs can solve the same/different task when training and test1351
+images are highly similar to one another, performance drops when training/test images are dissimilar1352
+[89]. By contrast, humans can make same/different judgements for any visual patterns as long as they1353
+are perceptible.1354
+Same/Different Dataset. The dataset was extracted from [ 89]. This dataset is composed of 101355
+conditions. Each image consists of two items placed randomly on the canvas. The two items can be1356
+either the same shape or a different shape and cannot overlap. Each condition consists of a different1357
+type of item used. By default, the items are composed of white strokes with no fill on a black1358
+background. See Figure 14 for a summary of all the conditions.1359
+The suggested testing methodology for this condition is slightly different than all other methods, and1360
+consists of training a DNN (not necessarily pre-trained) on a subset of conditions, and testing it on a1361
+different subbset (as in [89]).1362
+5https://github.com/chenchkx/ETH-80/tree/master
+35
+
+Figure 14: Illustration of the ten conditions used for the Same/Different task. Two items can be either
+the same or different shapes up to translation. For the ‘straight lines’ condition, the “same/different”
+dimension considered is the line orientation (with length kept fixed).
+36
