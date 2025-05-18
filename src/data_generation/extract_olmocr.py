@@ -132,4 +132,4 @@ if __name__ == '__main__':
             }
 
             with open(save_output_path, "a+", encoding='utf-8') as f:
-                f.write(json.dumps(json_obj))
+                f.write(json.dumps(json_obj) + "\n")
