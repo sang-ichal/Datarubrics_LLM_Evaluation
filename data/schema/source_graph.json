@@ -1,15 +1,15 @@
 {
-    "name": "source_tabular_metric",
+    "name": "source_graph",
     "schema": {
         "type": "object",
         "properties": {
-            "source_tabular": {
+            "source_graph": {
                 "type": "object",
-                "description": "A breakdown of the tabular data source types in the dataset. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
+                "description": "A breakdown of the graph source types in the dataset. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
                 "properties": {
                     "Human-Generated": {
                         "type": "object",
-                        "description": "The tabular data is entirely compiled, filled, or annotated by human, e.g. spreadsheets, survey results, and census data.",
+                        "description": "The graph is manually created or curated by humans, such as ontologies, citation graphs, or social networks constructed from surveys or human annotations.",
                         "properties": {
                             "is_applicable": {
                                 "type": "boolean",
@@ -17,11 +17,11 @@
                             },
                             "reference": {
                                 "type": "string",
-                                "description": "The location in the paper where the human-generated nature of the tabular data is stated or supported (e.g., 'Section 3.2')."
+                                "description": "The location in the paper where the human-generated nature of the graph is stated or supported (e.g., 'Section 3.2')."
                             },
                             "reasoning": {
                                 "type": "string",
-                                "description": "A justification based on the paper content explaining why the tabular data is classified as human-generated."
+                                "description": "A justification based on the paper content explaining why the graph is classified as human-generated."
                             }
                         },
                         "required": [
@@ -33,7 +33,7 @@
                     },
                     "Model-Generated": {
                         "type": "object",
-                        "description": "The tabular data is produced by AI models, e.g. outputs from text-to-table conversion, summarization, and produced through some generation tasks.",
+                        "description": "The graph is synthetically produced, either by AI systems or codes.",
                         "properties": {
                             "is_applicable": {
                                 "type": "boolean",
@@ -41,11 +41,11 @@
                             },
                             "reference": {
                                 "type": "string",
-                                "description": "The location in the paper where the model-generated nature of the tabular data is stated or supported (e.g., 'Section 3.2')."
+                                "description": "The location in the paper where the model-generated nature of the graph is stated or supported (e.g., 'Section 3.2')."
                             },
                             "reasoning": {
                                 "type": "string",
-                                "description": "A justification based on the paper content explaining why the tabular data is classified as model-generated."
+                                "description": "A justification based on the paper content explaining why the graph is classified as model-generated."
                             }
                         },
                         "required": ["is_applicable", "reference", "reasoning"],
@@ -53,15 +53,15 @@
                     },
                     "Unknown Origin": {
                         "type": "object",
-                        "description": "The source of the tabular data is not specified, not reported, or derived from web-crawl data with unclear provenance.",
+                        "description": "The source of the graph is not specified, not reported, or derived from some data collections with unclear provenance.",
                         "properties": {
                             "is_applicable": {
                                 "type": "boolean",
-                                "description": "Set to true if the dataset includes tabular with unknown provenance. If true, reference and reasoning must be provided."
+                                "description": "Set to true if the dataset includes graph with unknown provenance. If true, reference and reasoning must be provided."
                             },
                             "reference": {
                                 "type": "string",
-                                "description": "The location in the paper indicating the information of the tabular data (e.g., 'Appendix A')."
+                                "description": "The location in the paper indicating the information of the graph dataset (e.g., 'Appendix A')."
                             },
                             "reasoning": {
                                 "type": "string",
@@ -77,19 +77,19 @@
                     },
                     "N/A": {
                         "type": "object",
-                        "description": "The dataset does not contain any tabular data.",
+                        "description": "The dataset does not contain any graph data.",
                         "properties": {
                             "is_applicable": {
                                 "type": "boolean",
-                                "description": "Set to true if the dataset contains no tabular data. If true, reference and reasoning must be provided."
+                                "description": "Set to true if the dataset contains no graph. If true, reference and reasoning must be provided."
                             },
                             "reference": {
                                 "type": "string",
-                                "description": "The location in the paper confirming that the dataset does not include tabular data (e.g., 'Section 1.1')."
+                                "description": "The location in the paper confirming that the dataset does not include graph (e.g., 'Section 1.1')."
                             },
                             "reasoning": {
                                 "type": "string",
-                                "description": "A justification based on the paper content explaining why the dataset is not applicable for tabular-based analysis."
+                                "description": "A justification based on the paper content explaining why the dataset is not applicable for graph-based analysis."
                             }
                         },
                         "required": [
@@ -110,7 +110,7 @@
             }
         },
         "required": [
-            "source_tabular"
+            "source_graph"
         ],
         "additionalProperties": false
     },

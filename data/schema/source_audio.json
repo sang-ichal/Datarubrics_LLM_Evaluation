@@ -1,5 +1,5 @@
 {
-    "name": "source_audio_metric",
+    "name": "source_audio",
     "schema": {
       "type": "object",
       "properties": {

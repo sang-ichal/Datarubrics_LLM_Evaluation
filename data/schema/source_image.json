@@ -1,5 +1,5 @@
 {
-    "name": "source_image_metric",
+    "name": "source_image",
     "schema": {
         "type": "object",
         "properties": {
