@@ -1,0 +1,118 @@
+{
+    "name": "source_text_metric",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "source_text": {
+                "type": "object",
+                "description": "A breakdown of the text source types in the dataset. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
+                "properties": {
+                    "Human-Generated": {
+                        "type": "object",
+                        "description": "The text is entirely produced or captured by humans, e.g. original writing and human-performed translations.",
+                        "properties": {
+                            "is_applicable": {
+                                "type": "boolean",
+                                "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
+                            },
+                            "reference": {
+                                "type": "string",
+                                "description": "The location in the paper where the human-generated nature of the text is stated or supported (e.g., 'Section 3.2')."
+                            },
+                            "reasoning": {
+                                "type": "string",
+                                "description": "A justification based on the paper content explaining why the text is classified as human-generated."
+                            }
+                        },
+                        "required": [
+                            "is_applicable",
+                            "reference",
+                            "reasoning"
+                        ],
+                        "additionalProperties": false
+                    },
+                    "Model-Generated": {
+                        "type": "object",
+                        "description": "The text is synthetically produced by AI models, e.g. model-generated translations.",
+                        "properties": {
+                            "is_applicable": {
+                                "type": "boolean",
+                                "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
+                            },
+                            "reference": {
+                                "type": "string",
+                                "description": "The location in the paper where the model-generated nature of the text is stated or supported (e.g., 'Section 3.2')."
+                            },
+                            "reasoning": {
+                                "type": "string",
+                                "description": "A justification based on the paper content explaining why the text is classified as model-generated."
+                            }
+                        },
+                        "required": ["is_applicable", "reference", "reasoning"],
+                        "additionalProperties": false
+                    },
+                    "Unknown Origin": {
+                        "type": "object",
+                        "description": "The source of the text is not specified, not reported, or derived from web-crawl data with unclear provenance.",
+                        "properties": {
+                            "is_applicable": {
+                                "type": "boolean",
+                                "description": "Set to true if the dataset includes text with unknown provenance. If true, reference and reasoning must be provided."
+                            },
+                            "reference": {
+                                "type": "string",
+                                "description": "The location in the paper indicating the information of the text dataset (e.g., 'Appendix A')."
+                            },
+                            "reasoning": {
+                                "type": "string",
+                                "description": "A justification based on the paper content explaining why the origin is considered unknown."
+                            }
+                        },
+                        "required": [
+                            "is_applicable",
+                            "reference",
+                            "reasoning"
+                        ],
+                        "additionalProperties": false
+                    },
+                    "N/A": {
+                        "type": "object",
+                        "description": "The dataset does not contain any text data.",
+                        "properties": {
+                            "is_applicable": {
+                                "type": "boolean",
+                                "description": "Set to true if the dataset contains no text. If true, reference and reasoning must be provided."
+                            },
+                            "reference": {
+                                "type": "string",
+                                "description": "The location in the paper confirming that the dataset does not include text (e.g., 'Section 1.1')."
+                            },
+                            "reasoning": {
+                                "type": "string",
+                                "description": "A justification based on the paper content explaining why the dataset is not applicable for text-based analysis."
+                            }
+                        },
+                        "required": [
+                            "is_applicable",
+                            "reference",
+                            "reasoning"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "required": [
+                    "Human-Generated",
+                    "Model-Generated",
+                    "Unknown Origin",
+                    "N/A"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "required": [
+            "source_text"
+        ],
+        "additionalProperties": false
+    },
+    "strict": true
+}
