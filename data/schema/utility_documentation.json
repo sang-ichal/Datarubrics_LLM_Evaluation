@@ -1,0 +1,32 @@
+{
+    "name": "utility_documentation",
+    "schema": {
+        "type": "object",
+        "properties": {
+            "documentation": {
+                "type": "object",
+                "description": "This metric evaluates the transparency and completeness of the dataset creation documentation, which is crucial for reproducibility, ethical assessment, and downstream usability.",
+                "properties": {
+                    "has_documentation": {
+                        "type": "boolean",
+                        "description": "Set to true if the dataset creation process is documented in the paper."
+                    },
+                    "reference": {
+                        "type": "string",
+                        "description": "The location in the paper where the process is described (e.g., 'Section 4.1')."
+                    },
+                    "reasoning": {
+                        "type": "string",
+                        "description": "Justification based on the paper content explaining why the dataset creation process is said to be documented or not in the paper."
+                    }
+                },
+                "required": ["has_documentation", "reference", "reasoning"],
+                "additionalProperties": false
+            }
+        },
+        "required": ["documentation"],
+        "additionalProperties": false
+    },
+    "strict": true
+}
+  
