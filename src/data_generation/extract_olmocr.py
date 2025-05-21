@@ -43,7 +43,7 @@ def forum_to_pdf_url(url):
     
 def process_page(model, processor, file_path, page_num):
     # Render page 1 to an image
-    image_base64 = render_pdf_to_base64png(file_path, page_num, target_longest_image_dim=1600)
+    image_base64 = render_pdf_to_base64png(file_path, page_num, target_longest_image_dim=1500)
 
     # Build the prompt, using document metadata
     anchor_text = get_anchor_text(file_path, page_num, pdf_engine="pdfreport", target_length=10000)
