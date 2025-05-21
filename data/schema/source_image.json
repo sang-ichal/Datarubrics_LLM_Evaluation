@@ -7,7 +7,7 @@
                 "type": "object",
                 "description": "A breakdown of the image source types in the dataset. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
                 "properties": {
-                    "Human-Generated": {
+                    "Human Generated": {
                         "type": "object",
                         "description": "The image is entirely produced by humans, e.g. photographs and hand-drawn images.",
                         "properties": {
@@ -31,7 +31,7 @@
                         ],
                         "additionalProperties": false
                     },
-                    "Model-Generated": {
+                    "Model Generated": {
                         "type": "object",
                         "description": "The image is synthetically produced by AI models, e.g. model-generated images.",
                         "properties": {
@@ -101,8 +101,8 @@
                     }
                 },
                 "required": [
-                    "Human-Generated",
-                    "Model-Generated",
+                    "Human Generated",
+                    "Model Generated",
                     "Unknown Origin",
                     "N/A"
                 ],

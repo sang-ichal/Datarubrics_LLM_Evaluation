@@ -7,7 +7,7 @@
                 "type": "object",
                 "description": "A breakdown of the text source types in the dataset. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
                 "properties": {
-                    "Human-Generated": {
+                    "Human Generated": {
                         "type": "object",
                         "description": "The text is entirely produced or captured by humans, e.g. original writing and human-performed translations.",
                         "properties": {
@@ -31,7 +31,7 @@
                         ],
                         "additionalProperties": false
                     },
-                    "Model-Generated": {
+                    "Model Generated": {
                         "type": "object",
                         "description": "The text is synthetically produced by AI models, e.g. model-generated translations.",
                         "properties": {
@@ -101,8 +101,8 @@
                     }
                 },
                 "required": [
-                    "Human-Generated",
-                    "Model-Generated",
+                    "Human Generated",
+                    "Model Generated",
                     "Unknown Origin",
                     "N/A"
                 ],

@@ -3,28 +3,20 @@
     "schema": {
         "type": "object",
         "properties": {
-            "reproducibility": {
-                "type": "object",
-                "description": "This metric pertains to whether the code used for constructing the dataset is made publicly available or not for reproducibility.",
-                "properties": {
-                    "has_code": {
-                        "type": "boolean",
-                        "description": "Set to true if all code related to data collection, preprocessing, and generation is publicly available in an accessible repository (e.g., GitHub)."
-                    },
-                    "reference": {
-                        "type": "string",
-                        "description": "The location in the paper where the code is described (e.g., 'Section 4.1')."
-                    },
-                    "reasoning": {
-                        "type": "string",
-                        "description": "Justification based on the paper content explaining why the code is said to be available or not in the paper."
-                    }
-                },
-                "required": ["has_code", "reference", "reasoning"],
-                "additionalProperties": false
+            "Has Code": {
+                "type": "boolean",
+                "description": "Set to true if all code related to data collection, preprocessing, and generation is publicly available in an accessible repository (e.g., GitHub)."
+            },
+            "reference": {
+                "type": "string",
+                "description": "The location in the paper where the code is described (e.g., 'Section 4.1')."
+            },
+            "reasoning": {
+                "type": "string",
+                "description": "Justification based on the paper content explaining why the code is said to be available or not in the paper."
             }
         },
-        "required": ["reproducibility"],
+        "required": ["Has Code", "reference", "reasoning"],
         "additionalProperties": false
     },
     "strict": true
