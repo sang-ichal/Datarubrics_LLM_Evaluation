@@ -17,6 +17,10 @@ def main():
                         help='Provide the input folder of jsonl(s).')
     parser.add_argument('--output_file', type=str, required=True,
                         help='Provide the name of the output file.')
+    parser.add_argument('--dataset_start_idx', type=int, default=0,
+                        help='Dataset start index.')
+    parser.add_argument('--dataset_end_idx', type=int, default=-1,
+                        help='Dataset end index.')
     parser.add_argument('--flush_size', type=int, default=-1,
                         help='When to flush the results out.')
     parser.add_argument("--combine_prompts", action="store_true", dest="combine_prompts",
@@ -53,6 +57,7 @@ def main():
     output_path = os.path.join(ROOT_DIR, args.output_file)
     os.makedirs(os.path.abspath(os.path.dirname(output_path)), exist_ok=True)
     final_dataset = create_dataset(input_folder=input_folder, output_path=output_path,
+                                   start_idx=args.dataset_start_idx, end_idx=args.dataset_end_idx,
                                    combine_prompts=args.combine_prompts, debug=args.debug)
     generate_responses(model_id=model_id, config=config,
                        final_dataset=final_dataset,

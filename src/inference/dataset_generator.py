@@ -80,7 +80,9 @@ def get_existing_question_ids(output_path):
                     existing_ids.add(obj['id'])
         return existing_ids
 
-def create_dataset(input_folder, output_path, combine_prompts=False, debug=False):
+def create_dataset(input_folder, output_path,
+                   start_idx=0, end_idx=-1,
+                   combine_prompts=False, debug=False):
     existing_question_ids = get_existing_question_ids(output_path)
     
     input_list = []
@@ -184,6 +186,12 @@ def create_dataset(input_folder, output_path, combine_prompts=False, debug=False
                     })
         
     # Process data
+    input_list = sorted(input_list, key=lambda x: x.get('id'))
+    if end_idx < 0:
+        input_list = input_list[start_idx:]
+    else:
+        input_list = input_list[start_idx:end_idx]
+        
     final_dataset_list = []
     for input_item in input_list:
         if input_item['id'] not in existing_question_ids:
