@@ -1,0 +1,4 @@
+vllm>=0.8.4
+outlines>=0.1.11
+openai
+pandas
