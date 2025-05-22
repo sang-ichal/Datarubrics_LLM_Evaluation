@@ -36,12 +36,12 @@ def main():
         with open(config_abs_path, 'r') as f:
             config = json.load(f)
         
-        model_name = config.get('model_name', None)
-        if model_name is None:
-            logging.error(f"Config {config_abs_path} does not have `model_name` provided.")
+        model_id = config.get('model_id', None)
+        if model_id is None:
+            logging.error(f"Config {config_abs_path} does not have `model_id` provided.")
             raise ValueError()
-        elif model_name not in MODEL_LIST:
-            logging.warning(f"Model {model_name} is not recognized! Defaulting to Transformer!")
+        elif model_id not in MODEL_LIST:
+            logging.warning(f"Model {model_id} is not recognized! Defaulting to Transformer!")
             
     input_folder = args.input_folder
     if not os.path.exists(input_folder) or len(glob.glob(os.path.join(input_folder, "*.jsonl"))) < 1:
@@ -52,7 +52,7 @@ def main():
     os.makedirs(os.path.abspath(os.path.dirname(output_path)), exist_ok=True)
     final_dataset = create_dataset(input_folder=input_folder, output_path=output_path,
                                    debug=args.debug)
-    generate_responses(model_name=model_name, config=config,
+    generate_responses(model_id=model_id, config=config,
                        final_dataset=final_dataset,
                        output_path=output_path, flush_size=args.flush_size,)
 

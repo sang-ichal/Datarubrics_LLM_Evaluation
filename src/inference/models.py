@@ -22,11 +22,11 @@ from .utils import *
 MODEL = None
 TOKENIZER = None
 
-def _request_openai_completion(openai_client, model_name, config, input_item):
+def _request_openai_completion(openai_client, model_id, config, input_item):
     for attempt in range(OPENAI_RETRIES):
         try:
             response = openai_client.chat.completions.create(
-                model=model_name,
+                model=model_id,
                 messages=input_item['msg'],
                 response_format={
                     "type": "json_schema",
@@ -55,11 +55,11 @@ def _request_openai_completion(openai_client, model_name, config, input_item):
     logging.exception(f"Could not resolve error after {OPENAI_RETRIES} attempts for input ID: {input_item['data_id']}")
     return None
 
-def openai_completion(model_name, config, batched_input):
+def openai_completion(model_id, config, batched_input):
     """OpenAI completion which uses OpenAI client
 
     Args:
-        model_name (str): Model's name
+        model_id (str): Model's name
         config (dict): Model's configuration
         batched_input (list): List of input
 
@@ -78,7 +78,7 @@ def openai_completion(model_name, config, batched_input):
                     "method": "POST",
                     "url": "/v1/chat/completions",
                     "body": {
-                        "model": model_name,
+                        "model": model_id,
                         "messages": input_item['msg'],
                         "response_format": {
                             "type": "json_schema",
@@ -144,7 +144,7 @@ def openai_completion(model_name, config, batched_input):
                     logging.info(f"Batch still in progress... Status: {batch.request_counts.completed}/{batch.request_counts.failed}/{batch.request_counts.total} (completed/failed/total) requests")
                     time.sleep(60)  # Avoid hitting rate limits, check every 1 mins
     else:
-        if model_name.startswith("deepseek"):
+        if model_id.startswith("deepseek"):
             openai_client = OpenAI(base_url="https://api.deepseek.com")
         else:   
             openai_client = OpenAI()
@@ -153,7 +153,7 @@ def openai_completion(model_name, config, batched_input):
         num_workers = config.get("num_workers", 1)
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
             future_to_input = {
-                executor.submit(partial(_request_openai_completion, openai_client, model_name, config, input_item)): 
+                executor.submit(partial(_request_openai_completion, openai_client, model_id, config, input_item)): 
                 input_item for input_item in batched_input
             }
             for future in tqdm(concurrent.futures.as_completed(future_to_input), total=len(future_to_input), desc="OpenAI requests"):
@@ -163,7 +163,7 @@ def openai_completion(model_name, config, batched_input):
                         
     return results
 
-def gemini_completion(model_name, config, batched_input):
+def gemini_completion(model_id, config, batched_input):
     from google import genai
     from google.genai import types
 
@@ -173,7 +173,7 @@ def gemini_completion(model_name, config, batched_input):
     for input_item in batched_input:
         prompt = input_item['msg'][0]['content'] # Manually get the prompt
         response = client.models.generate_content(
-            model=model_name,
+            model=model_id,
             contents=[prompt],
             config=types.GenerateContentConfig(
                 **config.get("generation_args", {})
@@ -184,11 +184,11 @@ def gemini_completion(model_name, config, batched_input):
     return results
 
 
-def default_completion(model_name: str, config: dict, batched_input: list) -> list[dict]:
+def default_completion(model_id: str, config: dict, batched_input: list) -> list[dict]:
     """Default completion which is either using VLLM or Transformers
 
     Args:
-        model_name (str): Model's name
+        model_id (str): Model's name
         config (dict): Model's configuration
         batched_input (list): List of input
 
@@ -198,10 +198,10 @@ def default_completion(model_name: str, config: dict, batched_input: list) -> li
     # Initialize model and tokenizer
     global MODEL, TOKENIZER
     if TOKENIZER is None:
-        TOKENIZER = AutoTokenizer.from_pretrained(model_name, token=os.getenv('HF_TOKEN'))
+        TOKENIZER = AutoTokenizer.from_pretrained(model_id, token=os.getenv('HF_TOKEN'))
     
     if MODEL is None:
-        MODEL = models.vllm(model_name=model_name, tensor_parallel_size=torch.cuda.device_count(), **config.get("model_args", {}))
+        MODEL = models.vllm(model_id=model_id, tensor_parallel_size=torch.cuda.device_count(), **config.get("model_args", {}))
     sampling_params = SamplingParams(**config.get("generation_args", {}))
 
     # Group by schema class
@@ -242,24 +242,24 @@ def default_completion(model_name: str, config: dict, batched_input: list) -> li
 
     return results
 
-def generate_responses(model_name, config, final_dataset, output_path, flush_size):
+def generate_responses(model_id, config, final_dataset, output_path, flush_size):
     if flush_size <= 0:
-        if 'gpt' in model_name or 'deepseek' in model_name:
-            results = openai_completion(model_name, config, final_dataset)
-        elif 'gemini' in model_name:
-            results = gemini_completion(model_name, config, final_dataset)
+        if 'gpt' in model_id or 'deepseek' in model_id:
+            results = openai_completion(model_id, config, final_dataset)
+        elif 'gemini' in model_id:
+            results = gemini_completion(model_id, config, final_dataset)
         else:
-            results = default_completion(model_name, config, final_dataset)
+            results = default_completion(model_id, config, final_dataset)
         write_results(results=results, output_path=output_path)
     else:
         for start_idx in tqdm(range(0, len(final_dataset), flush_size)):
             batched_question_data = final_dataset.select(range(start_idx, min(start_idx + flush_size, len(final_dataset))))
-            if 'gpt' in model_name or 'deepseek' in model_name:
-                batched_results = openai_completion(model_name, config, batched_question_data)
-            elif 'gemini' in model_name:
-                batched_results = gemini_completion(model_name, config, batched_question_data)
+            if 'gpt' in model_id or 'deepseek' in model_id:
+                batched_results = openai_completion(model_id, config, batched_question_data)
+            elif 'gemini' in model_id:
+                batched_results = gemini_completion(model_id, config, batched_question_data)
             else:
-                batched_results = default_completion(model_name, config, batched_question_data)
+                batched_results = default_completion(model_id, config, batched_question_data)
             write_results(results=batched_results, output_path=output_path)
             
     return results
