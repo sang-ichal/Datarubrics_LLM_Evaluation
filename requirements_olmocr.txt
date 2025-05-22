@@ -1,0 +1,8 @@
+olmocr==0.1.69
+vllm>=0.8.4
+huggingface_hub[hf_ext]
+transformers>=4.47.0
+PyMuPDF
+openai
+pandas
+
