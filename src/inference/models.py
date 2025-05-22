@@ -201,13 +201,14 @@ def default_completion(model_id: str, config: dict, batched_input: list) -> list
         TOKENIZER = AutoTokenizer.from_pretrained(model_id, token=os.getenv('HF_TOKEN'))
     
     if MODEL is None:
-        MODEL = models.vllm(model_id=model_id, tensor_parallel_size=torch.cuda.device_count(), **config.get("model_args", {}))
+        parallel_size = torch.cuda.device_count() if "tensor_parallel_size" not in config else config.get("tensor_parallel_size")
+        MODEL = models.vllm(model_name=model_id, tensor_parallel_size=parallel_size, **config.get("model_args", {}))
     sampling_params = SamplingParams(**config.get("generation_args", {}))
 
     # Group by schema class
     schema_groups = defaultdict(list)
     for idx, item in enumerate(batched_input):
-        schema_class = type(item["schema"])  # group by schema class
+        schema_class = item["schema"]["name"]  # group by schema class
         schema_groups[schema_class].append((idx, item))  # keep index for reordering
         
      # Response placeholder
@@ -222,7 +223,7 @@ def default_completion(model_id: str, config: dict, batched_input: list) -> list
                                           tokenize=False)[0]
             for item in items
         ]
-        generator = generate.json(MODEL, schema=items[0]["schema"].get('schema'))  # use any schema instance from group
+        generator = generate.json(MODEL, json.dumps(items[0]["schema"].get('schema')))  # use any schema instance from group
         outputs = generator(prompts, sampling_params=sampling_params)
         if not isinstance(outputs, list):
             outputs = [outputs]
@@ -253,7 +254,7 @@ def generate_responses(model_id, config, final_dataset, output_path, flush_size)
         write_results(results=results, output_path=output_path)
     else:
         for start_idx in tqdm(range(0, len(final_dataset), flush_size)):
-            batched_question_data = final_dataset.select(range(start_idx, min(start_idx + flush_size, len(final_dataset))))
+            batched_question_data = final_dataset[start_idx: start_idx + flush_size]
             if 'gpt' in model_id or 'deepseek' in model_id:
                 batched_results = openai_completion(model_id, config, batched_question_data)
             elif 'gemini' in model_id:
@@ -261,5 +262,3 @@ def generate_responses(model_id, config, final_dataset, output_path, flush_size)
             else:
                 batched_results = default_completion(model_id, config, batched_question_data)
             write_results(results=batched_results, output_path=output_path)
-            
-    return results

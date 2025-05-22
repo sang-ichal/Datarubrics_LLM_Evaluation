@@ -1,8 +1,5 @@
-from typing import Type, Literal, Any, Dict
-from enum import Enum
-from pydantic import BaseModel, ConfigDict, Field
-import os
-import json
+from typing import Dict
+from pydantic import BaseModel
 import outlines
 
 from .utils import *
@@ -225,11 +222,13 @@ UTILITY_NON_HUMAN_LANG_RUBRIC = Rubric(
 UTILITY_DOCUMENTATION_RUBRIC = Rubric(
     metric_name="Documentation",
     metric_description="This metric evaluates the transparency and completeness of the dataset creation documentation, which is crucial for reproducibility, ethical assessment, and downstream usability.",
+    options={}
 )
 
 UTILITY_REPRODUCIBILITY_RUBRIC = Rubric(
     metric_name="Reproducibility",
     metric_description="This metric pertains to whether the code used for constructing the dataset is made publicly available or not for reproducibility.",
+    options={}
 )
 
 @outlines.prompt

@@ -2,6 +2,7 @@ import os
 import logging
 import json
 import glob
+from tqdm import tqdm
 
 from .constants import *
 from .utils import *
@@ -55,22 +56,14 @@ def extract_natural_text_simple(line):
     else:
         return after.rstrip("}")  # fallback if no quote
 
-def format_data(data):
-    return {
-        "ID": data["id"],
-        "question": data["question"],
-        "correct_answers": data["answer"],
-        "msg": [{"role": "user", "content": data["prompt"]}],
-    }
-
 def get_existing_question_ids(output_path):
         """Read the output file and return a set of existing IDs."""
         existing_ids = set()
-        if  os.path.exists(output_path):
+        if os.path.exists(output_path):
             with open(os.path.join(ROOT_DIR, output_path), 'r') as f:
                 cur_json = json.load(f)
                 for obj in cur_json:
-                    existing_ids.add(obj['ID'])
+                    existing_ids.add(obj['id'])
         return existing_ids
 
 def create_dataset(input_folder, output_path, debug=False):
@@ -79,7 +72,9 @@ def create_dataset(input_folder, output_path, debug=False):
     input_list = []
     
     all_jsonl_files = glob.glob(os.path.join(input_folder, "*.jsonl"))
-    for jsonl_file in all_jsonl_files:
+    
+    logging.info("Reading over the files!")
+    for jsonl_file in tqdm(all_jsonl_files):
         content_list = []
         with open(jsonl_file, 'r', encoding='utf-8') as f:
             for line in f.readlines():
@@ -108,9 +103,9 @@ def create_dataset(input_folder, output_path, debug=False):
         for rubric_index in range(len(RUBRIC_SCHEMA_INDICES)):
             rubric_pydantic, rubric_schema_path = RUBRIC_SCHEMA_INDICES[rubric_index]
             with open(rubric_schema_path, 'r', encoding='utf-8') as f:
-                schema_format = json.load(rubric_schema_path)
+                schema_format = json.load(f)
             
-            if hasattr(rubric_pydantic, 'options'):
+            if len(rubric_pydantic.options) != 0:
                 input_list.append({
                     'id': f"{paper_id}-rubric-{rubric_index}",
                     'msg': [{"role": "user", "content": construct_judge_prompt(content,
