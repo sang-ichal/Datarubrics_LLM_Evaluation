@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import List, Dict
 from pydantic import BaseModel
 import outlines
 
@@ -232,6 +232,28 @@ UTILITY_REPRODUCIBILITY_RUBRIC = Rubric(
 )
 
 @outlines.prompt
+def construct_sources_prompt(paper_text: str, format: str):
+    """
+    ### INSTRUCTION
+    List all of data source entries from only the **new dataset** introduced in the paper, each with one modality and a multi-label origin classification.
+
+    Please follow these rules:
+    - **Only assess new datasets** that are introduced by the authors. Do **not** evaluate any pre-existing datasets mentioned in the paper.
+    - Base your judgments **strictly on the content of the paper**. Do **not** infer or speculate beyond what is explicitly stated.
+    - Provide clear references and reasoning for each modality and the origin of the data.
+    
+    ### PAPER
+    {{ paper_text }}
+
+    ### RESPONSE FORMAT
+    Return a JSON response in the following format:
+    
+    {{ format }}
+    
+    ### RESPONSE
+    """
+
+@outlines.prompt
 def construct_judge_prompt(paper_text: str, rubric: Rubric, format: str):
     """
     ### INSTRUCTION
@@ -240,14 +262,14 @@ def construct_judge_prompt(paper_text: str, rubric: Rubric, format: str):
     Please follow these rules:
     - **Only assess new datasets** that are introduced by the authors. Do **not** evaluate any pre-existing datasets mentioned in the paper.
     - Base your judgments **strictly on the content of the paper**. Do **not** infer or speculate beyond what is explicitly stated.
-    - Use the rubric definitions to guide your labeling. Provide clear references and reasoning wherever applicable.
+    - {{ rubric.metric_description }}. Provide clear references and reasoning wherever applicable.
     
     ### PAPER
     {{ paper_text }}
 
     ### RUBRIC
     Metric: {{ rubric.metric_name }}
-    Description: {{ rubric.metric_description }}
+    Description: 
 
     Options:
     {% for key, value in rubric.options.items() %}
@@ -279,6 +301,48 @@ def construct_judge_nooption_prompt(paper_text: str, rubric: Rubric, format: str
     ### RUBRIC
     Metric: {{ rubric.metric_name }}
     Description: {{ rubric.metric_description }}
+
+    ### RESPONSE FORMAT
+    Return a JSON response in the following format:
+    
+    {{ format }}
+    
+    ### RESPONSE
+    """
+    
+@outlines.prompt
+def construct_judge_combine_all_prompt(paper_text: str, rubric_with_options: List[Rubric],
+                                       rubric_no_options: List[Rubric], format: str):
+    """
+    ### INSTRUCTION
+    Carefully evaluate the quality and characteristics of the **new datasets** introduced in the paper using the multiple rubrics provided below.
+
+    Please follow these rules:
+    - **Only assess new datasets** that are introduced by the authors. Do **not** evaluate any pre-existing datasets mentioned in the paper.
+    - Base your judgments **strictly on the content of the paper**. Do **not** infer or speculate beyond what is explicitly stated.
+    - There are {{ rubric_with_options | length + rubric_no_options | length }} rubrics to assess. Use each of the rubric definition to guide your labeling. Provide clear references and reasoning wherever applicable.
+    
+    ### PAPER
+    {{ paper_text }}
+    
+    {% set total = rubric_with_options | length %}
+    {% for rubric in rubric_with_options %}
+    ### RUBRIC {{ loop.index }}
+    Metric: {{ rubric.metric_name }}
+    Description: {{ rubric.metric_description }}
+    
+    Options:
+    {% for key, value in rubric.options.items() %}
+    {{ key }}: {{ value }}
+    {% endfor %}
+
+    {% endfor %}
+    {% for rubric in rubric_no_options %}
+    ### RUBRIC {{ total + loop.index }}
+    Metric: {{ rubric.metric_name }}
+    Description: {{ rubric.metric_description }}
+
+    {% endfor %}
 
     ### RESPONSE FORMAT
     Return a JSON response in the following format:

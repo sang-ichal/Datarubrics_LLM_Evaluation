@@ -19,9 +19,11 @@ def main():
                         help='Provide the name of the output file.')
     parser.add_argument('--flush_size', type=int, default=-1,
                         help='When to flush the results out.')
+    parser.add_argument("--combine_prompts", action="store_true", dest="combine_prompts",
+                        help=f"Whether to combine prompts or not")
     parser.add_argument("--debug", action="store_true", dest="debug",
                         help=f"Debug with {DEBUG_COUNT} samples")
-    parser.set_defaults(debug=False)
+    parser.set_defaults(combine_prompts=False, debug=False)
     args = parser.parse_args()
 
     # Check config path
@@ -51,7 +53,7 @@ def main():
     output_path = os.path.join(ROOT_DIR, args.output_file)
     os.makedirs(os.path.abspath(os.path.dirname(output_path)), exist_ok=True)
     final_dataset = create_dataset(input_folder=input_folder, output_path=output_path,
-                                   debug=args.debug)
+                                   combine_prompts=args.combine_prompts, debug=args.debug)
     generate_responses(model_id=model_id, config=config,
                        final_dataset=final_dataset,
                        output_path=output_path, flush_size=args.flush_size,)

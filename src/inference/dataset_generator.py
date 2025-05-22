@@ -8,24 +8,38 @@ from .constants import *
 from .utils import *
 from .templates import *
 
+# RUBRIC_SCHEMA_INDICES = {
+#     0: (SOURCE_TEXT_RUBRIC, os.path.join(SCHEMA_DIR, "source_text.json")),
+#     1: (SOURCE_IMAGE_RUBRIC, os.path.join(SCHEMA_DIR, "source_image.json")),
+#     2: (SOURCE_VIDEO_RUBRIC, os.path.join(SCHEMA_DIR, "source_video.json")),
+#     3: (SOURCE_AUDIO_RUBRIC, os.path.join(SCHEMA_DIR, "source_audio.json")),
+#     4: (SOURCE_GRAPH_RUBRIC, os.path.join(SCHEMA_DIR, "source_graph.json")),
+#     5: (SOURCE_TABULAR_RUBRIC, os.path.join(SCHEMA_DIR, "source_tabular.json")),
+#     6: (SOURCE_TIME_OR_SIGNAL_RUBRIC, os.path.join(SCHEMA_DIR, "source_time_signal.json")),
+#     7: (ANNOTATIONS_HUMAN_ANNOT_GUIDELINES_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_human_annot_guidelines.json")),
+#     8: (ANNOTATIONS_MODEL_ANNOT_GUIDELINES_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_model_annot_guidelines.json")),
+#     9: (ANNOTATIONS_QUALITY_ASSURANCE_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_quality_assurance.json")),
+#     10: (ANNOTATIONS_DATA_ANNOT_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_data_annot.json")),
+#     11: (UTILITY_DATA_NOVELTY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_data_novelty.json")),
+#     12: (UTILITY_TASK_UTILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_task_utility.json")),
+#     13: (UTILITY_HUMAN_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_human_lang.json")),
+#     14: (UTILITY_NON_HUMAN_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_non_human_lang.json")), 
+#     15: (UTILITY_DOCUMENTATION_RUBRIC, os.path.join(SCHEMA_DIR, "utility_documentation.json")),
+#     16: (UTILITY_REPRODUCIBILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_reproducibility.json")),
+# }
+
 RUBRIC_SCHEMA_INDICES = {
-    0: (SOURCE_TEXT_RUBRIC, os.path.join(SCHEMA_DIR, "source_text.json")),
-    1: (SOURCE_IMAGE_RUBRIC, os.path.join(SCHEMA_DIR, "source_image.json")),
-    2: (SOURCE_VIDEO_RUBRIC, os.path.join(SCHEMA_DIR, "source_video.json")),
-    3: (SOURCE_AUDIO_RUBRIC, os.path.join(SCHEMA_DIR, "source_audio.json")),
-    4: (SOURCE_GRAPH_RUBRIC, os.path.join(SCHEMA_DIR, "source_graph.json")),
-    5: (SOURCE_TABULAR_RUBRIC, os.path.join(SCHEMA_DIR, "source_tabular.json")),
-    6: (SOURCE_TIME_OR_SIGNAL_RUBRIC, os.path.join(SCHEMA_DIR, "source_time_signal.json")),
-    7: (ANNOTATIONS_HUMAN_ANNOT_GUIDELINES_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_human_annot_guidelines.json")),
-    8: (ANNOTATIONS_MODEL_ANNOT_GUIDELINES_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_model_annot_guidelines.json")),
-    9: (ANNOTATIONS_QUALITY_ASSURANCE_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_quality_assurance.json")),
-    10: (ANNOTATIONS_DATA_ANNOT_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_data_annot.json")),
-    11: (UTILITY_DATA_NOVELTY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_data_novelty.json")),
-    12: (UTILITY_TASK_UTILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_task_utility.json")),
-    13: (UTILITY_HUMAN_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_human_lang.json")),
-    14: (UTILITY_NON_HUMAN_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_non_human_lang.json")), 
-    15: (UTILITY_DOCUMENTATION_RUBRIC, os.path.join(SCHEMA_DIR, "utility_documentation.json")),
-    16: (UTILITY_REPRODUCIBILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_reproducibility.json")),
+    0: (None, os.path.join(SCHEMA_DIR, "sources.json")),
+    1: (ANNOTATIONS_HUMAN_ANNOT_GUIDELINES_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_human_annot_guidelines.json")),
+    2: (ANNOTATIONS_MODEL_ANNOT_GUIDELINES_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_model_annot_guidelines.json")),
+    3: (ANNOTATIONS_QUALITY_ASSURANCE_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_quality_assurance.json")),
+    4: (ANNOTATIONS_DATA_ANNOT_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_data_annot.json")),
+    5: (UTILITY_DATA_NOVELTY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_data_novelty.json")),
+    6: (UTILITY_TASK_UTILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_task_utility.json")),
+    7: (UTILITY_HUMAN_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_human_lang.json")),
+    8: (UTILITY_NON_HUMAN_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_non_human_lang.json")), 
+    9: (UTILITY_DOCUMENTATION_RUBRIC, os.path.join(SCHEMA_DIR, "utility_documentation.json")),
+    10: (UTILITY_REPRODUCIBILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_reproducibility.json")),
 }
 
 def extract_natural_text_simple(line):
@@ -66,7 +80,7 @@ def get_existing_question_ids(output_path):
                     existing_ids.add(obj['id'])
         return existing_ids
 
-def create_dataset(input_folder, output_path, debug=False):
+def create_dataset(input_folder, output_path, combine_prompts=False, debug=False):
     existing_question_ids = get_existing_question_ids(output_path)
     
     input_list = []
@@ -99,28 +113,75 @@ def create_dataset(input_folder, output_path, debug=False):
             
         content = content.strip()
 
-        # Iterate over the rubric and use that content along with {paper_id}-{rubric_index} as the new id
-        for rubric_index in range(len(RUBRIC_SCHEMA_INDICES)):
-            rubric_pydantic, rubric_schema_path = RUBRIC_SCHEMA_INDICES[rubric_index]
+        if combine_prompts:
+            # Combine all rubrics in one prompt
+            rubric_with_options = []
+            rubric_no_options = []
+            schema_dicts = {}
+            for rubric_index in range(len(RUBRIC_SCHEMA_INDICES)):
+                rubric_pydantic, rubric_schema_path = RUBRIC_SCHEMA_INDICES[rubric_index]
+                with open(rubric_schema_path, 'r', encoding='utf-8') as f:
+                    schema_format = json.load(f)
+                    
+                schema_name = schema_format['name']
+                if len(rubric_pydantic.options) != 0:
+                    rubric_with_options.append(rubric_pydantic)
+                    key_name = schema_format['schema']['required'][0]
+                    schema_dicts[schema_name] = schema_format['schema']['properties'][key_name]
+                else:
+                    rubric_no_options.append(rubric_pydantic)
+                    schema_dicts[schema_name] = schema_format['schema']['properties']
+            
+            combined_schema = {
+                "name": "all_rubrics",
+                "schema": {
+                    "type": "object",
+                    "properties": schema_dicts,
+                    "required": list(schema_dicts.keys()),
+                    "additionalProperties": False  
+                },
+                "strict": True
+            }
+            prompt = construct_judge_combine_all_prompt(content, rubric_with_options,
+                                                        rubric_no_options, json.dumps(combined_schema, indent=2))
+            input_list.append({
+                    'id': f"{paper_id}",
+                    'msg': [{"role": "user", "content": prompt}],
+                    'schema': combined_schema,
+                })
+        else:
+            rubric_pydantic, rubric_schema_path = RUBRIC_SCHEMA_INDICES[0]
             with open(rubric_schema_path, 'r', encoding='utf-8') as f:
                 schema_format = json.load(f)
+            input_list.append({
+                'id': f"{paper_id}-rubric-0",
+                'msg': [{"role": "user", "content": construct_sources_prompt(content,
+                                                                            json.dumps(schema_format, indent=2))}],
+                'schema': schema_format,
+            })
             
-            if len(rubric_pydantic.options) != 0:
-                input_list.append({
-                    'id': f"{paper_id}-rubric-{rubric_index}",
-                    'msg': [{"role": "user", "content": construct_judge_prompt(content,
-                                                                               rubric_pydantic,
-                                                                               schema_format)}],
-                    'schema': schema_format,
-                })
-            else:
-                input_list.append({
-                    'id': f"{paper_id}-rubric-{rubric_index}",
-                    'msg': [{"role": "user", "content": construct_judge_nooption_prompt(content,
-                                                                                        rubric_pydantic,
-                                                                                        schema_format)}],
-                    'schema': schema_format,
-                })
+            # Iterate over the rubric and use that content along with {paper_id}-{rubric_index} as the new id
+            for rubric_index in range(1, len(RUBRIC_SCHEMA_INDICES)):
+                rubric_pydantic, rubric_schema_path = RUBRIC_SCHEMA_INDICES[rubric_index]
+                with open(rubric_schema_path, 'r', encoding='utf-8') as f:
+                    schema_format = json.load(f)
+                
+                if len(rubric_pydantic.options) != 0:
+                    input_list.append({
+                        'id': f"{paper_id}-rubric-{rubric_index}",
+                        'msg': [{"role": "user", "content": construct_judge_prompt(content,
+                                                                                rubric_pydantic,
+                                                                                json.dumps(schema_format, indent=2))}],
+                        'schema': schema_format,
+                    })
+                else:
+                    input_list.append({
+                        'id': f"{paper_id}-rubric-{rubric_index}",
+                        'msg': [{"role": "user", "content": construct_judge_nooption_prompt(content,
+                                                                                            rubric_pydantic,
+                                                                                            json.dumps(schema_format, indent=2))}],
+                        'schema': schema_format,
+                    })
         
     # Process data
     final_dataset_list = []
