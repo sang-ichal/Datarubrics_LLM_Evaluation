@@ -1,0 +1,1502 @@
+[
+  {
+    "id": "01I55gys19-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 11820,
+      "completion_tokens": 131,
+      "total_tokens": 11951
+    },
+    "response": [
+      {
+        "Has Documentation": false,
+        "reference": "",
+        "reasoning": "The paper does not introduce any entirely new datasets created by the authors. Instead, it uses existing public datasets such as ImageNet1K, CalTech101, CIFAR100, and others by creating subsets for the Few-Class Regime through sampling existing classes. The process of generating few-class subsets is described as extracting subsets of classes from original full datasets via configuration files without duplicating data points (Section 3.2). Since no novel datasets are created, but rather subsets of existing datasets are used, the paper does not document a dataset creation process for any new datasets."
+      }
+    ]
+  },
+  {
+    "id": "0SMhqvgHST-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 29159,
+      "completion_tokens": 98,
+      "total_tokens": 29257
+    },
+    "response": [
+      {
+        "Has Documentation": false,
+        "reference": "N/A",
+        "reasoning": "The paper discusses the use and selection of numerous existing datasets across multiple domains and modalities for their benchmark pool. However, it does not introduce any new datasets created by the authors. Therefore, there is no dataset creation process documented to evaluate. The paper focuses on methodology (EEVEE) for selecting optimal benchmark subsets and on building a benchmarking framework (GATE) rather than on releasing new datasets."
+      }
+    ]
+  },
+  {
+    "id": "2HzZIDo48o-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 19644,
+      "completion_tokens": 182,
+      "total_tokens": 19826
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.1, Section 3.2, Appendix A, Appendix D",
+        "reasoning": "The paper introduces a new dataset construction process as part of the Symbolic Behaviour Benchmark (S2B) built using the Symbolic Continuous Stimulus (SCS) representation and Meta-Referential Games framework. The detailed data generation and sampling procedures are explicitly described in Section 3.1 and 3.2, including the semantic structure sampling, stimulus generation via Gaussian kernels, and meta-learning episode design. Further algorithmic details are provided in Appendix A, including the dataset preparation steps, target stimulus sampling, and training-testing splits. Appendix D contains numerical evidence and experiments related to the SCS representation and dataset properties. This comprehensive documentation covers the synthetic dataset creation process adequately for reproducibility and understanding, fulfilling the documentation criteria for new datasets introduced in the paper."
+      }
+    ]
+  },
+  {
+    "id": "2myGfVgfva-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 15512,
+      "completion_tokens": 152,
+      "total_tokens": 15664
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 MiraData Dataset (Sections 3.1 to 3.4)",
+        "reasoning": "The paper thoroughly documents the creation process of the new dataset MiraData, including detailed descriptions of the data collection sources (Section 3.1), video splitting and stitching methods (Section 3.2), video selection and filtering criteria (Section 3.3), and the captioning and annotation approach (Section 3.4). The paper outlines the rationale behind each step, the specific techniques and tools used (e.g., vision language models, optical flow algorithms), and quantitative statistics about the dataset. This comprehensive documentation ensures reproducibility and transparency regarding the dataset construction."
+      }
+    ]
+  },
+  {
+    "id": "4S8agvKjle-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 33912,
+      "completion_tokens": 135,
+      "total_tokens": 34047
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3, 3.1, 3.2, Appendix J and K",
+        "reasoning": "The paper explicitly introduces the new benchmark AGENTBOARD with its 9 unique task environments, detailing each environment's characteristics, adaptations, and annotation processes, particularly for subgoal annotation and progress rate metrics in Sections 3, 3.1, and 3.2. Moreover, Appendix J describes the manual annotation verification and quality control procedures, and Appendix K provides comprehensive descriptions of each environment and task adaptations. This detailed documentation ensures reproducibility and transparency of the dataset creation process for the new datasets introduced by the authors."
+      }
+    ]
+  },
+  {
+    "id": "5WFzk0H27p-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 15634,
+      "completion_tokens": 159,
+      "total_tokens": 15793
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 2 The dataset and Appendix A Datasheet for the Tournesol dataset",
+        "reasoning": "The paper provides thorough documentation on the dataset creation process, including detailed descriptions of raw data collection via the Tournesol platform (Section 2.1), data processing methods (Section 2.2), privacy considerations (Section 2.3), data collection context (Section 2.4), and includes a comprehensive datasheet in the appendix that covers motivation, composition, collection process, preprocessing, uses, distribution, and maintenance of the dataset. The documentation also includes screenshots of the comparison interface and description of participant recruitment and ethical considerations. Overall, the dataset creation process is transparently and comprehensively documented."
+      }
+    ]
+  },
+  {
+    "id": "5c1hh8AeHv-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 100690,
+      "completion_tokens": 196,
+      "total_tokens": 100886
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 2.2 and Appendices C to G (Detailed Task and Dataset Descriptions), Data Sheet Section H",
+        "reasoning": "The paper provides thorough documentation on the dataset creation process. Section 2.2 describes the design principles of the benchmark and details the 32 tasks aligned to trustworthy aspects, indicating how datasets were curated including adapted existing datasets and newly created ones (through data synthesis and manual collection). Appendices C to G give comprehensive details about each task's setting, dataset composition, data sources, prompt designs, and evaluation metrics, covering truthfulness, safety, robustness, fairness, and privacy. Additionally, the Data Sheet in Section H explicitly addresses motivations, data collection, composition, preprocessing, usage, licensing, ethical considerations, and maintenance, including details on human-related and privacy-sensitive data. These collectively provide complete transparency and reproducibility information for the new datasets introduced by the authors."
+      }
+    ]
+  },
+  {
+    "id": "67N3FWoDtU-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 15417,
+      "completion_tokens": 204,
+      "total_tokens": 15621
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3, Section A.3 (Annotation Guidelines), and Supplementary Material",
+        "reasoning": "The paper introduces the Chronicling Germany dataset of 581 annotated historical newspaper pages. Section 3 provides detailed descriptions of the dataset composition, annotation classes, polygon regions, and the annotation process involving history students with 1,500 hours spent. The paper further elaborates on layout and text regions, including the categorization of various classes (paragraph, heading, header, caption, inverted-text, etc.). Annotation guidelines aligned with OCR-D standards are discussed in detail in Supplementary Section A.3, covering transcription rules, region types, and subtypes. Additionally, the paper includes information about the text line annotations, text transcription procedures, and baseline detection. References to the dataset and code availability online with documentation are provided, supporting reproducibility and transparency. This comprehensive documentation offers clear, structured insights needed to understand and reproduce the dataset creation process."
+      }
+    ]
+  },
+  {
+    "id": "6cCFK69vJI-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 20173,
+      "completion_tokens": 145,
+      "total_tokens": 20318
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.1 Collection Process",
+        "reasoning": "The paper provides a detailed description of the BTS dataset collection process in Section 3.1. It specifies that the data is collected via CSIRO\u2019s Data Clearing House platform by connecting to Building Management Systems (BMS), using MQTTS for data upload. The construction of the semantic model via Brick schema, anonymization steps, and data extraction period are explained. Additionally, the paper mentions that no equipment installation was conducted by the authors, and the efforts required to create the Brick semantic model per building are described. This level of detail supports transparency and reproducibility of the dataset creation."
+      }
+    ]
+  },
+  {
+    "id": "7TCK0aBL1C-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 15180,
+      "completion_tokens": 192,
+      "total_tokens": 15372
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 2.2, 2.3, 4, and Appendix A.1-A.4",
+        "reasoning": "The paper provides detailed documentation about the IaC-Eval dataset creation process. Section 2.2 describes the dataset characteristics, including the number of scenarios, coverage of AWS services, difficulty levels, and data format. Section 2.3 details the infrastructure intent specifications used for evaluation, highlighting the complexity and annotation efforts. Section 4 discusses the data collection and annotation process, mentioning the team's expertise, sources used (official AWS and IaC documentation, public repositories, StackOverflow/Reddit posts), correctness verification, and maintenance plans. Furthermore, Appendix A.1-A.4 provides dataset URLs, data format, maintenance commitments, and specifics on difficulty levels. Overall, these descriptions provide transparent and comprehensive information about dataset creation, annotation, and maintenance, facilitating reproducibility and ethical considerations."
+      }
+    ]
+  },
+  {
+    "id": "9tVn4f8aJO-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 39958,
+      "completion_tokens": 133,
+      "total_tokens": 40091
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Appendix A.1, A.2",
+        "reasoning": "The paper explicitly provides detailed descriptions for all 30 datasets used in the HEMM benchmark in Appendix A.1, including information about dataset splits, prompts, access restrictions, licenses, and ethical considerations. Additionally, Appendix A.2 details the process of dataset categorization across multiple dimensions, including human annotation, automatic annotation with GPT-4V verification, and expert final checking. This comprehensive documentation ensures transparency and reproducibility regarding the dataset usage and characteristics, indicating that the dataset creation and curation processes are well documented in the paper."
+      }
+    ]
+  },
+  {
+    "id": "AdpSHMOujG-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 15663,
+      "completion_tokens": 280,
+      "total_tokens": 15943
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3, 3.1, 3.2, 4, 4.1, and Appendices A, C, E, H, I",
+        "reasoning": "The paper introduces new datasets: the synthetic MatSeg datasets (2D and 3D scenes), the zero-shot material state segmentation benchmark with 1220 real-world images, and a large repository of over 300,000 extracted textures and SVBRDF/PBR materials. The data creation process is comprehensively documented. Section 3 details the unsupervised extraction of image-based maps and infusion into synthetic scenes, describing how materials are mapped in 2D and 3D. Section 3.2 explains the unsupervised texture and PBR material extraction. Section 4 describes the benchmark dataset collection, diverse domains, and the unique point-based annotation strategy used to capture complex, gradual and scattered material states. Section 4.1 defines the evaluation methodology. Appendices A, C, E, H, and I provide further detailed documentation, including dataset access, generation code, hardware used, asset sources and licenses, 3D scene building methods, and annotation protocols. The inclusion of training details, code availability, and ethical considerations further ensure reproducibility and transparency, confirming the dataset creation processes are well documented."
+      }
+    ]
+  },
+  {
+    "id": "BZe6dmDk5K-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 32923,
+      "completion_tokens": 230,
+      "total_tokens": 33153
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 (Dataset Acquisition), Section 3.3 (Subjective Action Quality Assessment), Section 3.4 (Dataset Statistics and Analysis), Appendix B (More Details of GAIA Dataset)",
+        "reasoning": "The paper provides a detailed description of the creation process of the new GAIA dataset. Section 3 details the prompt sources, the selected text-to-video models (18 T2V models), the novel causal reasoning-based annotation strategy (action syllogism), and the recruitment and screening of 54 participants who conducted a large-scale subjective evaluation with 971,244 ratings across 9,180 videos. Quality control measures are also described with inter-annotator agreement statistics. Further statistical analysis of the dataset is included in Section 3.4. Appendix B elaborates on text-to-video model details, action categories, and provides examples visualizing the dataset diversity. Ethical considerations and participant compensation are discussed in Appendix A.2. Thus, the dataset creation process is transparently and comprehensively documented, supporting reproducibility, ethical evaluation, and downstream use."
+      }
+    ]
+  },
+  {
+    "id": "D1MOK2t2t2-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 10526,
+      "completion_tokens": 135,
+      "total_tokens": 10661
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 and Appendices B, C, and D",
+        "reasoning": "The paper introduces and documents the BASALT Evaluation and Demonstrations Dataset (BEDD) extensively in Section 3, detailing the composition of the Demonstrations Dataset and the Evaluation Dataset with specific statistics on video counts, hours, data size, success rates, and structure of evaluation data. The authors also mention a full datasheet for the dataset in Appendix B and provide more details about the datasets in Appendices C and D. Additionally, ethical considerations and human evaluation procedures are discussed, indicating comprehensive documentation of dataset creation processes necessary for reproducibility and ethical assessment."
+      }
+    ]
+  },
+  {
+    "id": "DFr5hteojx-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 91468,
+      "completion_tokens": 160,
+      "total_tokens": 91628
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 2 and Appendices A-D",
+        "reasoning": "The PRISM dataset, a new dataset introduced by the authors, is comprehensively documented throughout the paper, especially in Section 2 where the dataset design, survey, conversational data collection, participant sampling, and model inclusion are detailed. The paper also includes an extensive supplementary material with data statements (Appendix B), data clauses (Appendix C), informed consent forms (Appendix D), metadata processing (Appendix E), participant demographics (Appendix G), geographies (Appendix H), and codebooks (Appendix V). This level of documentation covers dataset creation, ethical considerations, recruitment, data structure, attributes, and processing, satisfying requirements for reproducibility, ethical assessment, and usability."
+      }
+    ]
+  },
+  {
+    "id": "DJVyRhT8nP-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 26307,
+      "completion_tokens": 230,
+      "total_tokens": 26537
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 2.1, 2.2, and Appendices B.1-B.5, C.1",
+        "reasoning": "The paper introduces two new datasets: the Human Activity and Pose Simulation (HAPS) dataset used within the HA3D simulator, and the Human-Aware Room-to-Room (HA-R2R) dataset extending the existing R2R dataset with human activity descriptions. The creation process of the HAPS dataset is documented in detail in Section 2.1 and Appendix B.1, including activity descriptions generation, human surveys for quality control, motion model generation via Motion Diffusion Model and SMPL, and annotation tools. The HA-R2R dataset construction is described in Section 2.2 and Appendix C.1, detailing the mapping of R2R paths, manual human activity annotation, and GPT-4-based instruction generation with human validation. Further technical details on rendering, simulation, annotation tools, and statistics are thoroughly provided in Appendices B and C. This comprehensive coverage constitutes clear and complete documentation of the dataset creation processes enabling reproducibility and assessment."
+      }
+    ]
+  },
+  {
+    "id": "DjCSjizgsH-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 15127,
+      "completion_tokens": 211,
+      "total_tokens": 15338
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 2 (Sim2Real-Fire Dataset), subsections 2.1 (Data Modalities of Environmental Information), 2.2 (Simulation Data), and 2.3 (Real-world Data)",
+        "reasoning": "The paper thoroughly documents the creation of the new Sim2Real-Fire dataset. Section 2 details the dataset composition, including 1M simulated and 1K real-world wildfire scenarios, with comprehensive descriptions of the five data modalities (topography, vegetation, fuel, weather, satellite images). Subsections 2.2 and 2.3 explain how the simulation data was generated using multiple wildfire simulators with parameter jittering for diversity, and how real-world data was collected, filtered, and meticulously annotated by human annotators with cross-checking protocols to ensure annotation quality. Additional details on spatial and temporal alignment, data sources, and annotation tools are provided. This level of detail supports reproducibility, ethical assessment, and downstream usability."
+      }
+    ]
+  },
+  {
+    "id": "E18kRXTGmV-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 19423,
+      "completion_tokens": 165,
+      "total_tokens": 19588
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 2 (CVQA Data Collection), Section 2.1 (Dataset Collection Design), Section 2.2 (Annotation Process), Appendix A (Annotation Guidelines), Appendix B (Annotation Platform)",
+        "reasoning": "The paper provides a comprehensive and detailed description of the dataset creation process in Section 2 and its subsections, including detailed instructions on country-language pair subsets, annotator selection and demographics, question categories, and the annotation process with guidelines for image selection, question creation, and validation. Furthermore, the paper includes extensive annotation guidelines in Appendix A, illustrating categories, examples of good and bad questions, and image sourcing instructions. The annotation platform interface and validation steps are described in Appendix B. This thorough documentation ensures transparency and reproducibility for the CVQA dataset creation process."
+      }
+    ]
+  },
+  {
+    "id": "EADRzNJFn1-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 27447,
+      "completion_tokens": 124,
+      "total_tokens": 27571
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 4 and Appendices C and E",
+        "reasoning": "The paper introduces eight novel datasets and provides detailed descriptions for each in Section 4, including data sources, domain context, and dataset statistics. Appendix E details the data collection and cleaning procedures with corresponding mining scripts available on GitHub, ensuring transparency and reproducibility. Additionally, Appendix C provides dataset documentation, download links, licensing information, and a maintenance plan. The inclusion of datasheets for datasets in Appendix I further enhances documentation quality. Therefore, the dataset creation process is well documented within the paper and supplementary material."
+      }
+    ]
+  },
+  {
+    "id": "FXTeJvHE0k-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 14201,
+      "completion_tokens": 105,
+      "total_tokens": 14306
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.1",
+        "reasoning": "The paper explicitly documents the process of creating the new dataset splits named 'navtrain' and 'navtest' in Section 3.1, detailing the source dataset (OpenScene), input modalities, the data filtering strategy to select challenging scenes, the criteria used for filtering, and the resulting dataset sizes and storage requirements. This thorough description provides transparency and enables reproducibility of the dataset creation process."
+      }
+    ]
+  },
+  {
+    "id": "GHlJM45fWY-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 19722,
+      "completion_tokens": 165,
+      "total_tokens": 19887
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 'GeoPlant Dataset', Section 3.1 'Species Observation Data', Section 3.2 'Environmental Predictor Data', Section 3.3 'Satellite Images', Datasheet",
+        "reasoning": "The paper provides a thorough and detailed description of the new GeoPlant dataset, including the sources and nature of the Presence-Only and Presence-Absence data, the spatial and temporal scope, associated environmental rasters, satellite imagery, and time series data. It elaborates on preprocessing steps, data splits, and the handling of biases and limitations. Additionally, a comprehensive Datasheet is included, outlining motivation, composition, collection process, preprocessing, usage, distribution, and maintenance of the dataset, supporting high transparency and reproducibility."
+      }
+    ]
+  },
+  {
+    "id": "HB5q6pC5eb-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 22232,
+      "completion_tokens": 181,
+      "total_tokens": 22413
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.1, Appendix B.1 and B.2",
+        "reasoning": "The paper introduces a new toolkit, PertEval, which generates perturbed test samples from existing static benchmarks rather than creating a brand new dataset from raw data collection. However, it documents in detail the dataset creation process involving knowledge-invariant perturbations applied to existing multiple-choice test questions, including content-level paraphrasing and various format-level refactorings. Section 3.1 describes the types of perturbations, the algorithms, prompt templates (Appendix B.1), and examples of perturbations (Appendix B.2). These provide a comprehensive account of how the perturbed datasets are constructed on the fly from static benchmarks, facilitating reproducibility and understanding of the data generation process. Therefore, the process of creating the perturbed datasets is fully documented in the paper."
+      }
+    ]
+  },
+  {
+    "id": "IZtX4RNBeH-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 12271,
+      "completion_tokens": 196,
+      "total_tokens": 12467
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.2 Building CVRR-ES Benchmark",
+        "reasoning": "The paper provides a detailed and transparent description of the dataset creation process for the CVRR-ES benchmark in Section 3.2. It outlines the four stages: data collection and annotation, question-answer generation, QA pairs filtration, and evaluation procedure. The authors specify the sources of videos (public academic datasets and internet), the number of videos (214) and QA pairs (2400), the involvement of human annotators with annotation guidelines, the use of GPT-3.5 for generating QA pairs along with manual filtration to ensure quality, and the use of LLMs for evaluation. Additionally, Appendix C provides further annotation details and quality assessments, including human expert validation of QA pairs. They also discuss dataset licensing and ethical considerations in the checklist. This comprehensive documentation ensures reproducibility, ethical compliance, and downstream usability."
+      }
+    ]
+  },
+  {
+    "id": "JU0QvhhfVp-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 12840,
+      "completion_tokens": 144,
+      "total_tokens": 12984
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3: The MOTIVE dataset (3.1 Morphological profiles extraction, 3.2 Annotation collection, 3.3 Graph construction, 3.4 Data splitting, 3.5 Negative sampling algorithm)",
+        "reasoning": "The paper provides detailed descriptions of the dataset creation process including feature extraction from JUMP Cell Painting data with explicit preprocessing steps, annotation aggregation from seven public databases with ID mapping, graph construction methodology integrating multiple edge types, comprehensive data splitting strategies addressing random and cold start splits, and a custom negative sampling algorithm designed to prevent data leakage. These thorough explanations cover data sources, preprocessing, integration, and splitting, facilitating reproducibility and transparency."
+      }
+    ]
+  },
+  {
+    "id": "KZlJF8kguO-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 22678,
+      "completion_tokens": 170,
+      "total_tokens": 22848
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3, A.1, A.2, A.3, A.4, and A.5; Appendix D; and the C Data documentation section",
+        "reasoning": "The paper provides detailed documentation on dataset creation across multiple sections: Section 3 describes participant information, stimuli, and data acquisition; Appendices A.1 to A.5 detail audio transcription and alignment, feature annotation, task and stimuli, data acquisition and signal processing, and electrode localization; Section D discusses responsibility, licensing, and hosting plan; and the C Data documentation part outlines released assets and data format. Ethical considerations and IRB approvals are mentioned in Section 3 and the checklist. These comprehensive descriptions allow for reproducibility and understanding of dataset construction, confirming that the dataset creation process is well documented in the paper."
+      }
+    ]
+  },
+  {
+    "id": "L5aY1mWvXQ-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 12925,
+      "completion_tokens": 142,
+      "total_tokens": 13067
+    },
+    "response": [
+      {
+        "Has Documentation": false,
+        "reference": "Section 4 (Experiment)",
+        "reasoning": "The paper does not introduce any new datasets created by the authors. Instead, it uses existing well-known datasets such as wikipedia, reddit, and uci, which are sourced from prior works and publicly available. The authors generate temporally distorted versions of the test splits of these existing datasets using their proposed distortion techniques, but these are transformations of existing data rather than entirely new datasets. Furthermore, the paper explicitly states in the Broader Impact section that it does not present novel datasets but rather techniques to generate distorted versions of any temporal graph dataset. Therefore, there is no dedicated documentation of new dataset creation processes in the paper."
+      }
+    ]
+  },
+  {
+    "id": "LdRZ9SFBku-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 24250,
+      "completion_tokens": 127,
+      "total_tokens": 24377
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.2 'Dataset Collection' and Appendix A 'Addition Statement for Our New Dataset'",
+        "reasoning": "The paper provides a thorough description of the new dataset collection process in Section 3.2, detailing how data were collected from public international news sources via the Wikipedia API and a manual crawler system, including hierarchical event annotations and data cleaning methods. Furthermore, Appendix A offers detailed dataset documentation, intended use, licensing, hosting information, and maintenance plans, enhancing transparency and reproducibility. This comprehensive documentation satisfies the criterion of detailed dataset creation reporting necessary for reproducibility and ethical assessment."
+      }
+    ]
+  },
+  {
+    "id": "LdxNWDNvC3-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 19329,
+      "completion_tokens": 163,
+      "total_tokens": 19492
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3 and 4.1, Appendix G (Dataset Datasheet)",
+        "reasoning": "The paper extensively documents the dataset creation process. Section 3 describes the automatic data engine pipeline including synthetic airfoil generation via CST-assisted methods and generative models, aerodynamic and geometric annotation stages, and low-quality airfoil filtering. Section 4.1 details the dataset composition and statistics, including sources like UIUC, NACA, manually designed supercritical airfoils, and synthesized airfoils, with detailed annotation of geometric and aerodynamic properties. Appendix G provides a comprehensive datasheet discussing dataset purpose, composition, collection process, preprocessing, uses, distribution, and maintenance. This thorough documentation supports reproducibility, ethical assessment, and usability."
+      }
+    ]
+  },
+  {
+    "id": "M32Ldpp4Oy-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 31307,
+      "completion_tokens": 201,
+      "total_tokens": 31508
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3 (LogiCity Simulator), 4 (LogiCity Tasks), 5 (Experiments), and Appendices A and B",
+        "reasoning": "The paper introduces the new LogiCity dataset created via a configurable urban simulation environment grounded on first-order logic. Sections 3 and 4 extensively describe the dataset generation process, including configurations of concepts, predicates, rules, agent sets, simulation steps, and rendering with generative models. Section 5 details dataset splits, task formulations, metrics, and baseline experiments. Appendices A and B provide further detailed baseline configurations, full lists of predicates and rules, modes, dataset sizes, and simulation procedures. The paper also discusses data composition, agent configurations, and details to ensure reproducibility. Overall, there is comprehensive and transparent documentation of the dataset creation process for both major tasks (Safe Path Following and Visual Action Prediction). This level of detail supports reproducibility, ethical considerations, and practical downstream use."
+      }
+    ]
+  },
+  {
+    "id": "MU2s9wwWLo-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 25478,
+      "completion_tokens": 183,
+      "total_tokens": 25661
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 2 (ConceptMix), Section 2.2 (Selecting Visual Concepts), Section 2.3 (Compositional Prompt Generation), Section C (Benchmark Details)",
+        "reasoning": "The paper introduces ConceptMix, a new compositional image generation benchmark dataset. The process of dataset creation is extensively documented: Section 2 describes the dataset design including eight categories of visual concepts and the difficulty parameter k; Section 2.2 discusses how concepts were selected and filtered; Section 2.3 provides a detailed four-step pipeline for compositional prompt generation using GPT-4o including concept sampling, binding, prompt generation, and prompt validation; Appendix C gives comprehensive benchmark details such as concept values, prompt generation instructions, prompt rejection mechanisms, and question generation template. This thorough documentation enables reproducibility, ethical assessment, and downstream usability."
+      }
+    ]
+  },
+  {
+    "id": "Mbd3QxXjq5-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 26048,
+      "completion_tokens": 188,
+      "total_tokens": 26236
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 2 (Training Data Synthesis), Section 2.2 (Prompting), Section 2.3 (Post-processing), Section 2.4 (Data Selection), Appendix B (Miscellaneous)",
+        "reasoning": "The paper thoroughly documents the process of creating the OpenMathInstruct-1 dataset, including the overall solution synthesis pipeline (Section 2.1), multiple prompting strategies (Section 2.2), post-processing steps to ensure syntactic correctness (Section 2.3), and data selection strategies (Section 2.4). It provides detailed descriptions of the code-interpreter format, sampling parameters, masking techniques for text solutions, and explicit instructions used for few-shot prompting. Furthermore, several examples and statistics of the dataset are given in the appendix, supporting transparency and reproducibility. Therefore, the dataset creation process is well documented."
+      }
+    ]
+  },
+  {
+    "id": "OL2JQoO0kq-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 21115,
+      "completion_tokens": 211,
+      "total_tokens": 21326
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3.1 and 3.2; Appendix A.1 and A.2",
+        "reasoning": "The paper introduces two new datasets: QUILT and QUILT-1M. Section 3.1 provides a detailed description of the curation pipeline for QUILT from YouTube videos, including data sources, filtering process, image and text extraction methods, denoising processes with LLMs and domain knowledge bases, and alignment strategies. Section 3.2 details the construction of QUILT-1M by combining QUILT with other histopathology data sources such as PubMed Open Access, LAION, and Twitter, along with summary statistics and data characteristics. Additionally, Appendix A.1 and A.2 further elaborate on the curation process, support models, and ontology databases used. This extensive documentation covers data collection, filtering, cleaning, and alignment algorithms, ensuring transparency and reproducibility for these newly introduced datasets."
+      }
+    ]
+  },
+  {
+    "id": "OTjTKFk7gb-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 20663,
+      "completion_tokens": 184,
+      "total_tokens": 20847
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3.1, 4, Appendix B, C, D, H",
+        "reasoning": "The paper documents the creation process of the new dataset generated from the AuctionNet environment in detail. Section 3.1 describes the ad opportunity generation module using deep generative networks, including latent diffusion and value prediction models. Section 4 verifies the similarity of generated data to real-world data and introduces the pre-generated dataset, specifying its size and composition. Appendix B provides a comprehensive datasheet covering motivation, composition, collection process, distribution, maintenance, and ethical considerations. Appendix C details the dataset format with example data samples, and Appendix D explains the structure of generated features. Appendix H further elaborates on the deep generative network architectures and training details. Thus, the dataset creation process is transparently and comprehensively documented in multiple sections and appendices, satisfying documentation standards."
+      }
+    ]
+  },
+  {
+    "id": "PcbSZwVVc5-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 19607,
+      "completion_tokens": 161,
+      "total_tokens": 19768
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 (DreamCatcher Dataset), subsections 3.1 (Dataset Collection), 3.2 (Annotation and Statistics), 3.3 (Ethics and Accessibility), Appendix A (Experiment Detail), particularly A.1 to A.4",
+        "reasoning": "The paper provides a comprehensive and detailed description of the dataset creation process. Section 3 fully elaborates on hardware modifications, participant recruitment, experiment protocols, data alignment, annotation procedure, dataset statistics, and ethical considerations including IRB approval and privacy measures. Appendices provide further details on hardware specifics, participant information, protocol instructions, and annotation details. This level of documentation ensures transparency, reproducibility, ethical compliance, and usability for downstream tasks."
+      }
+    ]
+  },
+  {
+    "id": "QIJQ1qCGqV-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 12907,
+      "completion_tokens": 181,
+      "total_tokens": 13088
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 (The BlindWays Dataset), including subsections 3.1 Overview, 3.2 Data Collection Procedure, and 3.3 Data Annotation Pipeline",
+        "reasoning": "The paper provides detailed documentation of the creation of the BlindWays dataset, which is a new multimodal 3D human motion dataset featuring blind pedestrians. Section 3 provides comprehensive details including participant demographics, data collection scenarios, equipment used (Xsens IMU sensors, GoPro cameras), synchronization method, data recording procedure, safety measures, annotation procedures with annotator training, annotation interface, types of annotations (high-level and low-level text descriptions), and quality assurance steps. Additionally, ethical considerations, participant consent, and IRB approval are mentioned. This thorough documentation enables reproducibility, ethical evaluation, and downstream usability, thus fulfilling the criteria for well-documented dataset creation."
+      }
+    ]
+  },
+  {
+    "id": "Qf8uzIT1OK-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 36232,
+      "completion_tokens": 105,
+      "total_tokens": 36337
+    },
+    "response": [
+      {
+        "Has Documentation": false,
+        "reference": "None (the paper discusses ethical considerations and recommendations broadly but does not introduce or detail any new datasets)",
+        "reasoning": "The paper focuses on providing proactive, domain-specific ethical considerations and recommendations for the curation of human-centric computer vision datasets for fairness and robustness evaluations. It references existing datasets and literature extensively but does not introduce any new dataset created by the authors themselves. There is no description of a dataset creation process by the authors in the paper, hence no dataset documentation to evaluate."
+      }
+    ]
+  },
+  {
+    "id": "QpF3DFP3Td-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 18191,
+      "completion_tokens": 183,
+      "total_tokens": 18374
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3.1 and 3.2, Appendix A.7",
+        "reasoning": "The paper provides thorough documentation of the new Archaeoscape dataset. Section 3.1 details dataset characteristics, including the data splits, annotation strategy, data format, classes, and misuse prevention strategies. Section 3.2 describes the acquisition and preprocessing of the ALS and orthophotography data, including specific equipment, flying parameters, and processing software used. The annotation process is explained as an iterative manual annotation with field verification by expert archaeologists over a long timeframe (1993-2024). Furthermore, Appendix A.7 features a detailed datasheet with comprehensive answers about motivation, composition, collection process, preprocessing, distribution, maintenance, and ethical considerations. These extensive descriptions demonstrate transparent and complete documentation enabling reproducibility and ethical assessment."
+      }
+    ]
+  },
+  {
+    "id": "R4rNYJ2slJ-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 15672,
+      "completion_tokens": 174,
+      "total_tokens": 15846
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 (Data Collection and Annotation), Section A.1 (Datasheets), and Section A.2 (Dataset Annotation Documentation)",
+        "reasoning": "The paper provides detailed and comprehensive documentation about the OpenSatMap dataset creation process. Section 3 thoroughly describes the data collection methodologies including geographic diversity considerations and image resolution (3.1), annotation procedures with instance-level and attribute labeling (3.2), and dataset statistics (3.3). The supplementary materials (Section A.1) provide a detailed datasheet covering motivation, composition, collection process, preprocessing/labeling, intended uses, distribution, and maintenance. Section A.2 elaborates the annotation rules and attribute definitions with examples. The extensive documentation ensures transparency, reproducibility, and a thorough understanding of the dataset for users."
+      }
+    ]
+  },
+  {
+    "id": "ScPgzCZ6Lo-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 34042,
+      "completion_tokens": 153,
+      "total_tokens": 34195
+    },
+    "response": [
+      {
+        "Has Documentation": false,
+        "reference": "Section 2.1 and Appendix A.1",
+        "reasoning": "The paper does not introduce any new datasets; rather, it uses and benchmarks existing publicly available datasets such as Cora, Citeseer, ogbn-arxiv, Flickr, Reddit, ACM, DBLP, NCI1, DD, ogbg-molbace, ogbg-molbbbp, and ogbg-molhiv. Section 2.1 and Appendix A.1 describe these datasets and their statistics, but no dataset creation process is documented as these datasets are sourced from prior works. The paper focuses on benchmarking graph condensation methods, without contribution of novel dataset creation or curation."
+      }
+    ]
+  },
+  {
+    "id": "USUkwg5pW6-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 22492,
+      "completion_tokens": 151,
+      "total_tokens": 22643
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3 Automated Scribble Generation, 4 Automatic Scribble Datasets, and Appendix B Dataset Datasheet",
+        "reasoning": "The paper provides a detailed description of the dataset creation process including the design objectives and a step-by-step explanation of the automatic scribble generation algorithm in Section 3. It then describes the resulting new datasets (s4Pascal, s4Cityscapes, s4KITTI360, s4ADE20K) in Section 4. Furthermore, the supplementary material includes a comprehensive dataset datasheet (Appendix B) covering motivation, composition, collection process, preprocessing, uses, distribution, and maintenance. This all ensures transparency and completeness needed for reproducibility and ethical assessment."
+      }
+    ]
+  },
+  {
+    "id": "UYgE9IfQIV-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 28537,
+      "completion_tokens": 181,
+      "total_tokens": 28718
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 4.1, Appendix E.1",
+        "reasoning": "The paper introduces new synthetic environments for data center control, which simulate workloads, data center operations, and battery usage. The workload component relies on open-source traces from Alibaba and Google data centers, and the paper explains how users can add new workload traces to the environment's data folder or specify paths in configuration files. Detailed descriptions of the workload data format, including example CSV structures and trace characteristics, are provided in Section 4.1 and Appendix E.1. Additionally, the paper describes in detail the data center and battery environments, but the primary dataset component (workload traces) has explicit documentation, including sources, locations, formats, and customization methods, allowing reproducibility and extension by users. Therefore, the dataset creation and sourcing process is well documented within the paper and supplemental sections cited."
+      }
+    ]
+  },
+  {
+    "id": "VH1vxapUTs-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 15687,
+      "completion_tokens": 200,
+      "total_tokens": 15887
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3: Mesogeos Datacube",
+        "reasoning": "The paper provides a detailed description of the new Mesogeos dataset creation process in Section 3. It elaborates on the dataset structure as a spatio-temporal datacube, the variables included, the spatial and temporal resolution, and the coverage period. The data sources for meteorology, vegetation, human activity, topography, burned areas, and fire ignitions are explicitly listed. The data harmonization procedure, including spatial and temporal interpolation, coordinate transformations, and chunking strategy, is well detailed. The method to refine ignition dates by cross-referencing EFFIS burned area data with MODIS active fire detections is also clearly explained. Additionally, the authors provide information about data processing pipelines, storage, and access, and note that all code and the datasets are publicly available. This level of documentation supports reproducibility and downstream usability."
+      }
+    ]
+  },
+  {
+    "id": "VSJotgbPHF-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 11292,
+      "completion_tokens": 186,
+      "total_tokens": 11478
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 2, 3, 3.1, 3.2, 3.3, 3.4, and 4",
+        "reasoning": "The paper extensively documents the creation of the new OpenAssistant Conversations dataset, which is introduced by the authors. Section 2 describes the data format in detail, explaining the conversation tree structure and annotations. Section 3 and subsections provide an in-depth explanation of the data collection pipeline, including the task types for contributors, the message tree state machine management process, contributor guidelines to ensure quality and safety, and quality control and content moderation methods. Section 4 details the dataset composition, including statistics about message counts, languages, quality ratings, and contributor distribution. Together, these sections provide transparent and comprehensive information about dataset creation enabling reproducibility, ethical assessment, and understanding of dataset usability."
+      }
+    ]
+  },
+  {
+    "id": "VXohja0vrQ-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 17321,
+      "completion_tokens": 188,
+      "total_tokens": 17509
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 2.2 Dataset Instance Collection",
+        "reasoning": "The paper provides a detailed description of the dataset creation process in Section 2.2. It describes a three-step pipeline for collecting patient notes and answers for 55 different medical calculation tasks: (1) note collection and attribute extraction from a large collection of over 180k public patient notes using GPT-3.5 and GPT-4, (2) data verification and enrichment by a medically trained individual to ensure correctness of extracted attributes, and (3) answer and explanation generation with implemented templates for step-by-step calculation explanations. The dataset consists of 1047 manually reviewed instances with patient notes, questions, ground truth answers, and explanations. The paper further describes characteristics, verification process, and synthesis for calculators without eligible notes. This process is comprehensively documented, ensuring transparency and reproducibility."
+      }
+    ]
+  },
+  {
+    "id": "WUWHVN4gxk-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 17833,
+      "completion_tokens": 129,
+      "total_tokens": 17962
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 4.1 and Appendix G",
+        "reasoning": "The paper explicitly provides detailed documentation of the new dataset created from the competition in Section 4.1, describing the dataset structure including the defenses and chats splits, data attributes, and availability. It also includes dataset examples and schema in Appendix G, with discussion of the dataset contents, usage, and limitations. Additionally, a data card following a standard format is included, describing data ownership, risk mitigation, typical data points, and maintenance plans. These comprehensive details demonstrate thorough documentation of the dataset creation process."
+      }
+    ]
+  },
+  {
+    "id": "WVQ4Clw1VD-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 10524,
+      "completion_tokens": 201,
+      "total_tokens": 10725
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 (MedTrinity-25M Dataset) and Section 3.2 (Data Construction Pipeline)",
+        "reasoning": "The paper provides comprehensive documentation of the dataset creation process for MedTrinity-25M. Section 3 details the dataset composition including image-ROI-description triplets, the data sources (over 90 online resources), modalities, diseases covered, and types of annotations. Section 3.2 thoroughly describes the automated pipeline for dataset construction, covering metadata integration to generate coarse captions, ROI locating using expert grounding models, medical knowledge retrieval from corpora such as PubMed, and the generation of multigranular textual descriptions via prompting MLLMs. The documentation includes the rationale behind each step, examples, and the use of advanced models like GPT-4V and LLaVA-Med++ for annotation generation. Additionally, the paper references supplementary materials for further details, indicating transparency and completeness."
+      }
+    ]
+  },
+  {
+    "id": "XBcStBjBIE-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 28870,
+      "completion_tokens": 219,
+      "total_tokens": 29089
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3.1, 4, Appendix C (including C.1 Data Preprocessing and C.2 Time-Aware Annotation), and Section F Ethics Statement",
+        "reasoning": "The paper introduces two new datasets: ChronoMagic-Bench and ChronoMagic-Pro. Both dataset creation processes are thoroughly documented. ChronoMagic-Bench construction is detailed in Section 3.1 (Prompt Construction) including search term database creation, video crawling, and captioning with GPT-4o. ChronoMagic-Pro's construction is elaborated in Section 4 and Appendix C, covering video collection, filtering using metadata, semantic splitting with OpenCV and ImageBind, and detailed captioning through ShareGPT4Video, an open-source alternative to GPT-4V. The paper also provides detailed statistics and analysis of both datasets. Ethical considerations, licensing, data sourcing, consent, and privacy protection are comprehensively discussed in Section F. This extensive documentation ensures transparency, reproducibility, ethical assessment, and downstream usability."
+      }
+    ]
+  },
+  {
+    "id": "ZDvXY56DeP-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 17913,
+      "completion_tokens": 138,
+      "total_tokens": 18051
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 2.1 and 2.2",
+        "reasoning": "The paper introduces the OPEN RL BENCHMARK (ORLB) as a new dataset consisting of a large collection of tracked RL experiments (nearly 25,000 runs). Sections 2.1 and 2.2 explicitly describe the dataset's content, including the libraries, environments, and metrics recorded, as well as the detailed documentation about experiment reproducibility. Each experiment includes complete configurations, pinned dependency versions, commands, and random seeds, ensuring precise reproducibility. This detailed description of dataset creation and metadata provides clear and comprehensive documentation necessary for reproducibility and downstream usability."
+      }
+    ]
+  },
+  {
+    "id": "aTXhTD44nF-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 22533,
+      "completion_tokens": 166,
+      "total_tokens": 22699
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 (USDC Dataset Curation), particularly subsections 3.1 (Collection of Reddit Conversation Threads) and 3.2 (Obtaining LLM Annotations)",
+        "reasoning": "The paper provides a detailed and transparent description of the dataset creation process for USDC. It describes the initial data crawl, filtering criteria, how conversations were selected, the JSON representation of conversations for annotation, the use of GPT-4 and Mistral Large LLMs for automatic annotations including zero/one/few-shot settings, and the majority voting scheme used to finalize labels. Additionally, examples of prompts and sample JSON outputs are provided in the appendix, further enhancing reproducibility and usability. This comprehensive documentation ensures clarity on the dataset construction methodology, making the documentation sufficient and complete."
+      }
+    ]
+  },
+  {
+    "id": "aXeiCbMFFJ-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 21134,
+      "completion_tokens": 153,
+      "total_tokens": 21287
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 (Visual CoT Dataset) and Section 3.1 (Data Generation)",
+        "reasoning": "The paper thoroughly documents the creation of the new Visual CoT dataset in Section 3 and its subsections. The authors describe the overall composition of the dataset, its diverse domains, and the source datasets used. Section 3.1 provides detailed explanation on the data generation methodology, including the use of GPT-4 and OCR tools for annotation, domain-specific strategies, and integration of reasoning steps. Additional supporting details about the dataset and annotations are found in the Appendix, as noted in the paper. This documentation is comprehensive and provides transparency required for reproducibility and ethical assessment."
+      }
+    ]
+  },
+  {
+    "id": "abXaOcvujs-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 13943,
+      "completion_tokens": 138,
+      "total_tokens": 14081
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 ('Construction Methodology')",
+        "reasoning": "The paper provides a detailed description of the dataset creation process in Section 3 titled 'Construction Methodology.' It explains how the Wikidata JSON dump is pre-processed and loaded, how individual tables and coherent multi-table relational databases are built using semantic similarity and foreign key relationships, and how table and column names are improved using GPT-4 paraphrasing. Additionally, Section 3.4 discusses parameters and customization options for dataset generation. This thorough documentation of the dataset construction method enables reproducibility and transparency, fulfilling the criteria for having sufficient documentation."
+      }
+    ]
+  },
+  {
+    "id": "aiGN4UnNM7-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 15197,
+      "completion_tokens": 192,
+      "total_tokens": 15389
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 4 (TTC Dataset), including 4.1 Data Collection and 4.2 Annotation, and Appendix",
+        "reasoning": "The paper comprehensively documents the creation of the new large-scale TTC dataset introduced by the authors. It details the data collection process from real scenes including sensor setup and data filtering criteria (Section 4.1), the method used for generating ground-truth TTC annotations combining 2D and 3D detections with LiDAR and Radar data, including velocity estimation and manual verification (Section 4.2). It further explains the augmentation of rare scenarios using Neural Radiance Fields (NeRF) with scripts for scene rendering (Section 4.1 and Appendix). Additional materials provide sensor specifications, dataset statistics, and NeRF scripts that contribute to thorough documentation. This level of detail supports reproducibility, ethical review, and downstream use, satisfying the rubric's criteria for documentation."
+      }
+    ]
+  },
+  {
+    "id": "b6IBmU1uzw-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 29794,
+      "completion_tokens": 169,
+      "total_tokens": 29963
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 2 CARES Datasets, Section C Construction Process of QA Pairs",
+        "reasoning": "The paper provides a detailed documentation of the new dataset construction for CARES. It specifies the sources of data, including seven open-source datasets, and explains the careful selection, transformation, and augmentation processes to create question-answer pairs in both closed-ended and open-ended formats. The construction process for QA pairs is elaborated in Section C, detailing how closed-ended questions are generated from classification datasets and how open-ended QA pairs are generated from medical reports using GPT-4, along with post-processing steps for quality assurance. Additionally, detailed statistics, question templates, and strategies to prevent data leakage are provided. Thus, the dataset creation process is transparently and comprehensively documented."
+      }
+    ]
+  },
+  {
+    "id": "bAaM8cKoMl-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 27770,
+      "completion_tokens": 164,
+      "total_tokens": 27934
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 2, 4, Appendix A and C",
+        "reasoning": "The paper provides detailed documentation on the creation and characteristics of the new datasets introduced. Section 2 offers a broad description of the 30 psychological datasets grouped into categories like Low and Mid-Level Vision, Visual Illusions, and Shape and Object Recognition. Section 4 explains the code base and resources, including parameterization and dataset generation scripts. Appendix A details the dataset specifications such as image size, data augmentation (or lack thereof), sample sizes, and procedural generation. Appendix C gives extensive psychological significance, methodology, parameters, and visual examples for each dataset. This comprehensive documentation supports reproducibility, ethical assessment, and usability, fulfilling the criteria for complete dataset creation documentation."
+      }
+    ]
+  },
+  {
+    "id": "cLga8GStdk-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 14056,
+      "completion_tokens": 159,
+      "total_tokens": 14215
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3.1 and 3.2",
+        "reasoning": "The paper provides detailed documentation of the dataset creation process for the LINGOLY benchmark, which consists of puzzles from the UK Linguistics Olympiad. Section 3.1 describes the format and selection criteria for the puzzles, including permissions from authors, inclusion/exclusion criteria, and adaptations made for machine readability. Section 3.2 details the data collection process, including converting PDFs to text, manual parsing into a standardized format, error corrections, validation procedures, and availability of parsing code for reproducibility. The authors also discuss ethical considerations regarding language community permissions in Section 3 and Section 6.2. This level of detail ensures transparency and supports reproducibility and ethical assessment."
+      }
+    ]
+  },
+  {
+    "id": "cR3T1ZYN8I-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 34436,
+      "completion_tokens": 67,
+      "total_tokens": 34503
+    },
+    "response": [
+      {
+        "Has Documentation": false,
+        "reference": "N/A",
+        "reasoning": "The paper evaluates existing datasets in the face forgery detection domain but does not introduce any new datasets created by the authors. It uses publicly available datasets for evaluation and compares models on them. Therefore, there is no dataset creation or construction process documented in this paper."
+      }
+    ]
+  },
+  {
+    "id": "cu8FfaYriU-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 27410,
+      "completion_tokens": 70,
+      "total_tokens": 27480
+    },
+    "response": [
+      {
+        "Has Documentation": false,
+        "reference": "N/A",
+        "reasoning": "The paper does not introduce any new datasets created by the authors. Instead, it presents a taxonomy of challenges to curating fair datasets based on interviews with dataset curators. The focus is on analyzing and synthesizing challenges and recommendations rather than documenting any specific new dataset creation process."
+      }
+    ]
+  },
+  {
+    "id": "cy8mq7QYae-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 80017,
+      "completion_tokens": 185,
+      "total_tokens": 80202
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3, including subsections 3.1 Chart Curation, 3.2 Question Construction, and Appendix R",
+        "reasoning": "The paper provides detailed documentation of the new dataset CharXiv introduced by the authors. In Section 3.1, the chart selection process is described thoroughly, including using pretrained SigLIP embeddings to select candidates, manual annotation by graduate students to ensure charts are representative and diverse, and removal of charts that are blurry or unlabeled. Section 3.2 details the construction of questions into descriptive and reasoning types, their curation by human experts, and validation steps. Additionally, screenshots of the labeling and annotation interfaces are provided in Appendix R. The paper also includes quality assurance methods such as manual verification and clear data splits. This comprehensive documentation ensures transparency and reproducibility of the dataset creation process."
+      }
+    ]
+  },
+  {
+    "id": "d1Pup4gkWf-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 12681,
+      "completion_tokens": 125,
+      "total_tokens": 12806
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 4.3 'Acquiring Human Demonstration From Videos'",
+        "reasoning": "The paper details a pipeline for acquiring human demonstration data from videos, specifically utilizing TRAM for 3D motion reconstruction from videos and PHC for physics-based motion tracking to ensure plausible motions. It explains the use of SMPL parameters estimation, the correction process for physical plausibility, and notes further details and ablations are provided in the supplement. This documentation provides clear information on the dataset creation process for their new human demonstration data used for motion priors."
+      }
+    ]
+  },
+  {
+    "id": "dVaWCDMBof-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 21626,
+      "completion_tokens": 179,
+      "total_tokens": 21805
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.2 (COMMONPOOL generation) and Section 4.1 (Filtering baselines), with additional details in Appendices D, E, F, G, and H",
+        "reasoning": "The paper introduces COMMONPOOL, a new candidate pool of 12.8 billion image-text pairs. It thoroughly documents the dataset creation process including URL extraction from Common Crawl, downloading, NSFW filtering, evaluation set deduplication, face detection and blurring for privacy, and provision of metadata. The process is detailed in Section 3.2 and further elaborated upon in multiple appendices. Additionally, the paper presents various filtering baselines used to curate datasets from COMMONPOOL, described in Section 4.1, along with their evaluation. This comprehensive documentation facilitates reproducibility, ethical assessment, and downstream usability, demonstrating transparency in dataset creation."
+      }
+    ]
+  },
+  {
+    "id": "g7OX2sOJtn-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 45093,
+      "completion_tokens": 142,
+      "total_tokens": 45235
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 4, Appendix B",
+        "reasoning": "The paper introduces the LeanDojo Benchmark dataset constructed from Lean's mathlib. Section 4 details the data extraction process including file dependencies, abstract syntax trees, states, tactics, and premise information, obtained by modifying Lean's elaborator for accurate recording. Furthermore, it explains the construction of data splits (random and novel_premises) designed to test generalization beyond memorization. Appendix B provides comprehensive dataset format descriptions, datasheet information covering motivation, composition, collection process, uses, distribution, and maintenance, as well as licensing details. These extensive descriptions demonstrate transparent and complete documentation of the dataset creation process."
+      }
+    ]
+  },
+  {
+    "id": "gg3POFjqq8-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 10808,
+      "completion_tokens": 137,
+      "total_tokens": 10945
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 4 (The Benchmarking Dataset)",
+        "reasoning": "The paper introduces a new benchmark dataset for robustness evaluation involving 14 diverse nuisance shifts at six severity levels as well as an annotated dataset for out-of-class (OOC) filtering strategy evaluation. Section 4 details the dataset collection and labeling process, including the strategy for generating images via diffusion models, the selection of classes and nuisance shifts, manual annotation procedures by human annotators, and the filtering methodology developed to remove OOC samples. This comprehensive description provides transparency on the dataset creation process, including quality control and annotation details, ensuring reproducibility and supporting ethical assessment and downstream use."
+      }
+    ]
+  },
+  {
+    "id": "h8LuywKj6N-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 43853,
+      "completion_tokens": 166,
+      "total_tokens": 44019
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 2.2 and Section B.3",
+        "reasoning": "The paper provides a detailed and transparent description of the dataset creation process for GUI-WORLD. In Section 2.2, the authors explain the video collection methods from student workers and YouTube tutorial videos, the segmentation into sub-videos, and the manual annotation of keyframes and operations, including mouse and keyboard actions. Appendix B.3 elaborates on the human keyframe annotation process, annotators' backgrounds, the software used for annotation, and the human-LLM collaboration for refining annotations and generating diverse QA pairs. This comprehensive documentation covers data sources, annotation protocols, quality control measures, and human verification, enabling reproducibility and ethical assessment. Therefore, the dataset creation process is well documented in the paper."
+      }
+    ]
+  },
+  {
+    "id": "hcOq2buakM-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 32834,
+      "completion_tokens": 109,
+      "total_tokens": 32943
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 4.3 Benchmark Documentation and Appendix K: Full Assessment Criteria",
+        "reasoning": "The paper explicitly describes that their assessment framework evaluates the documentation of benchmarks as a key lifecycle stage, with detailed criteria including the benchmark construction process, data sources and collection methods, data preprocessing, annotation procedures, and evaluation metrics documentation. Additionally, in Appendix K, the paper provides extensive descriptions of the documentation criteria used to evaluate benchmarks. Therefore, the dataset creation process documentation is present and carefully considered within their assessment framework."
+      }
+    ]
+  },
+  {
+    "id": "iSwK1YqO7v-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 97054,
+      "completion_tokens": 182,
+      "total_tokens": 97236
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3, M, L, and Q; Appendices M.1 to M.4, L.1 to L.5, Q.1 to Q.5",
+        "reasoning": "The paper provides comprehensive documentation of the dataset creation process. Section 3 and Appendix M detail the dataset annotation and benchmark implementations, specifying task selections, annotation methods for goals, trajectories, and transition models in both BEHAVIOR and VirtualHome domains. Appendix L includes dataset structure, statistics, distribution, complexity analysis, and task lists, giving clear data insights. Appendix Q outlines dataset hosting, licensing, code availability, and maintenance plans. The documentation includes descriptions of annotation procedures, quality verification with human evaluation, comparison and selection rationale of simulators, and task categorizations, ensuring transparency and reproducibility of the dataset creation process."
+      }
+    ]
+  },
+  {
+    "id": "iTUlYblV0K-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 19292,
+      "completion_tokens": 163,
+      "total_tokens": 19455
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 4 and Extended Remastering (Section C)",
+        "reasoning": "The paper introduces MQuAKE-REMASTERED as a fixed and improved version of the original MQuAKE dataset. The authors provide detailed descriptions of the types of errors found in the original dataset (Section 3) and explain their approaches to fixing them (Section 4.1), including manual corrections for conflicting edits, missing information, and duplicated cases. They also describe a dynamic masking API to handle contamination without sacrificing dataset size (Section 4.2). Additional details and a specialized subset suitable for parameter-based methods are described in the Extended Remastering section (Section C.1). Overall, the dataset creation and modification process is transparently and comprehensively documented in the paper."
+      }
+    ]
+  },
+  {
+    "id": "iwC19lVBoq-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 12663,
+      "completion_tokens": 159,
+      "total_tokens": 12822
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.1 Dataset Construction Pipeline, Appendix B Dataset Composition and Download URL, Ethical Impact Section D, and other relevant sections",
+        "reasoning": "The paper provides a detailed and transparent description of the dataset creation pipeline in Section 3.1, covering data collection, audio-visual correspondence filtering, voice-over filtering, and sample recycling with sound separation. Additionally, Appendix B offers dataset composition details, samples, download URL, and licensing information. Section D discusses ethical considerations related to the dataset. The inclusion of statistics on filtering stages (Table 2), verification experiments (Section 3.3), and dataset issues (Limitation Section C) further supports the completeness and reproducibility of the dataset creation process."
+      }
+    ]
+  },
+  {
+    "id": "j2wasUypqN-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 18897,
+      "completion_tokens": 188,
+      "total_tokens": 19085
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.2 and Appendix A",
+        "reasoning": "The paper introduces new datasets in the form of testsuites, specifically: Synthetic, Noisy-Synthetic, and Protein-Docking, collectively referred to as the MetaBox testsuite (Section 3.2). The creation and characteristics of these datasets are described in detail within Section 3.2, including their origins (e.g., COCO platform for Synthetic and Noisy-Synthetic, Protein-Docking benchmark version 4.0 for Protein-Docking), their types, number of instances, noise models, and dimensionalities. Furthermore, Appendix A provides comprehensive descriptions and specifications of these datasets, including tables listing functions and instance summaries (A.1, A.2, A.3). This level of detail documents the dataset creation process sufficiently to enable reproducibility and understanding of their scope and features, thus fulfilling the documentation criteria."
+      }
+    ]
+  },
+  {
+    "id": "jSKtxmxc0M-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 19160,
+      "completion_tokens": 130,
+      "total_tokens": 19290
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.1 Data Construction, Appendix A.1 Data Collection Settings",
+        "reasoning": "The paper provides detailed documentation of the dataset creation process. Section 3.1 describes the data sources, the manual selection of instructional videos from YouTube, the simulator-based recording of user actions, manual annotations of subtasks and element identification, and cross-validation of annotations. Appendix A.1 further elaborates on recording tools, annotation interface, action narration definitions, and principles for video selection, ensuring transparency and reproducibility. This comprehensive description fulfills the criterion for dataset documentation."
+      }
+    ]
+  },
+  {
+    "id": "jbrMS0DNaD-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 14862,
+      "completion_tokens": 212,
+      "total_tokens": 15074
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.1 and 3.2 (The INQUIRE Benchmark, The iNaturalist 2024 Dataset, and Query and Image Collection Process) and Appendix H",
+        "reasoning": "The paper explicitly introduces and documents the creation of a new dataset, iNaturalist 2024 (iNat24), a five million image dataset sampled from iNaturalist, with detailed information about its collection period, number of species classes, and its relation to the previous iNat21 dataset. The query collection process is thoroughly described, including expert interviews and literature review, the criteria for query selection, and the annotation process involving comprehensive labeling by trained annotators. The paper also discusses how the annotation was conducted, including strategies to narrow down image labeling using species labels or CLIP retrievals to ensure comprehensive positive matching. Moreover, the paper references an appendix (Appendix H) for additional details on sampling and labeling. This level of detail provides transparency and completeness sufficient for reproducibility and ethical assessment of the new dataset creation."
+      }
+    ]
+  },
+  {
+    "id": "kaHpo8OZw2-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 103621,
+      "completion_tokens": 406,
+      "total_tokens": 104027
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 2, 3, C.1-C.3, D.1, E.1-E.2, F.1-F.3, G, H.1-H.3, I.1-I.5, J.1-J.4 and Appendix P.2",
+        "reasoning": "The paper provides detailed descriptions of the dataset creation process across multiple sections. For toxicity evaluation, it explains the usage of REALTOXICITYPROMPTS and the generation of 1.2k challenging toxic user prompts by GPT models (Sections 2 and C.1-C.3). For stereotype bias, it details the designed user prompts with stereotypes over 24 demographic groups and 16 topics, with templates and demographic groups listed and discussed (Section 3 and D.1). For adversarial robustness, it uses the existing AdvGLUE dataset and extends it by generating AdvGLUE++ adversarial texts with specific attack methods on open-source models (Section 4 and E.1-E.2). For out-of-distribution robustness, it creates OOD data via style transformations, recent event QA, and OOD in-context demonstrations, described thoroughly (Section 5 and F). For adversarial demonstration robustness, specific demonstrations with counterfactuals, spurious correlations, and backdoors are designed and their generation methods described (Section 6 and G). For privacy evaluation, it uses the Enron Email dataset and constructs prompts for private information extraction, with detailed setups (Section 7 and H). Machine ethics evaluations use ETHICS and Jiminy Cricket datasets with prompt design explained (Section 8 and I). Fairness evaluations transform the Adult dataset into prompts with sensitive attribute controls, all described in detail (Section 9 and J). The dataset composition, collection, preprocessing, and labeling are explicitly mentioned in Appendix P.2. Overall, the paper provides extensive and detailed documentation for each new dataset or prompt set it created, enabling reproducibility and ethical assessment."
+      }
+    ]
+  },
+  {
+    "id": "l985bXCatk-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 13984,
+      "completion_tokens": 223,
+      "total_tokens": 14207
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 (Dataset), Section 3.1 (Construction), Section 3.2 (Composition), and Appendix A.3-A.5",
+        "reasoning": "The paper provides a detailed and transparent description of the creation of the LRVS-Fashion dataset. Section 3 outlines the dataset's composition, including the number of products and images. Section 3.1 details the image collection process from LAION-5B, domain selection, product identifier extraction via regular expressions, and generation of synthetic metadata such as complexity labels, product categories, and captions using active learning and pretrained models like BLIP-2. Dataset splitting into training, validation, test sets, and the inclusion of distractors are also described. Section 3.2 gives error rates and quality considerations for labels and synthetic captions. The process includes deduplication using Locality Sensitive Hashing and CLIP embeddings to reduce false negatives. Appendix sections provide extra metadata information, privacy, bias considerations, and a datasheet, further supporting transparency and reproducibility."
+      }
+    ]
+  },
+  {
+    "id": "lnnNPiZtzR-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 11091,
+      "completion_tokens": 109,
+      "total_tokens": 11200
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 2 and 2.1 primarily",
+        "reasoning": "The paper provides a comprehensive description of the new dataset FungiTastic, detailing its data origins (Atlas of Danish Fungi), total images and observations, metadata types, modalities, and temporal splits. It further specifies data acquisition years, metadata attributes, satellite data processing, segmentation mask generation, and the reasoning behind class splits (known, unknown, few-shot). This level of detail ensures transparency and reproducibility in dataset creation and usage."
+      }
+    ]
+  },
+  {
+    "id": "loJM1acwzf-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 28323,
+      "completion_tokens": 180,
+      "total_tokens": 28503
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3.1, 3.2, and 3.3, and Appendices A.1 to A.8",
+        "reasoning": "The paper provides a detailed documentation of the dataset creation process for the new questions and documents introduced. It explains the document collection strategy including selection from existing datasets and new collections (Section 3.1 and Appendices A.1 and A.2). The question and answer annotation workflow, including standards, annotator qualifications, revision of existing questions, and addition of new questions, is described thoroughly in Section 3.2. Quality control procedures including semi-automatic reviewing and cross-checking are explained in Section 3.3. Appendices provide further elaboration including potential bias, detailed guidelines, sample questions, GUI screenshots, and annotation cost estimations. This comprehensive documentation supports reproducibility and transparency."
+      }
+    ]
+  },
+  {
+    "id": "mDRmX8IlBI-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 15433,
+      "completion_tokens": 124,
+      "total_tokens": 15557
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 (The MMWorld Benchmark)",
+        "reasoning": "The paper provides detailed documentation of the creation process for the new MMWorld datasets. Section 3 describes the dataset construction principles, manual and automated data collection pipelines, video selection criteria across seven disciplines, question annotation methodology, and the synthetic dataset generation process. These details cover video sourcing, labeling guidelines, multi-faceted question design, synthetic QA generation using GPT-4V, human evaluation steps for quality assurance, and statistics on dataset composition. This extensive information enables reproducibility and supports understanding of the dataset's characteristics."
+      }
+    ]
+  },
+  {
+    "id": "mEJgnZZyfv-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 15556,
+      "completion_tokens": 118,
+      "total_tokens": 15674
+    },
+    "response": [
+      {
+        "Has Documentation": false,
+        "reference": "",
+        "reasoning": "The paper does not introduce any new datasets. Instead, it only uses existing open-source datasets for benchmarking and evaluation, such as CIFAR-10/100, Tiny-ImageNet, FashionMNIST, ImageNet-1K, CUB-200-2011, FGVC-Aircraft, iNaturalist2017/2018, and Places205. The paper provides descriptions and statistics of these datasets but does not describe any process of creating new datasets. Therefore, no dataset creation process is documented."
+      }
+    ]
+  },
+  {
+    "id": "mlhFJE7PKo-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 38534,
+      "completion_tokens": 249,
+      "total_tokens": 38783
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3 (HEST-1k Dataset), 3.1-3.4, 4 (HEST-Library), F.3 (Data collection process), and F.4 (Data preprocessing)",
+        "reasoning": "The paper extensively documents the dataset creation process for the new dataset HEST-1k introduced by the authors. Section 3 describes the dataset composition, including the curation from multiple public and internal cohorts, and the modalities included (spatial transcriptomics data paired with histology images). Subsections 3.1 to 3.4 detail metadata gathering, histology image processing, nuclear segmentation and classification, and gene expression data processing, respectively. Section 4 elaborates on the development of HEST-Library, which facilitates handling, conversion, alignment, and batch effect mitigation for the dataset. The appendix sections F.3 and F.4 provide further detailed information on data collection and preprocessing protocols, ensuring reproducibility. Additionally, extensive tables enumerate all data sources with sample counts and data characteristics, while alignment and normalization pipelines are described. Overall, the documentation is thorough, transparent, and detailed, enabling reproducibility and ethical assessment."
+      }
+    ]
+  },
+  {
+    "id": "moMoWj7jLm-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 22736,
+      "completion_tokens": 129,
+      "total_tokens": 22865
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3: Dataset Construction; Appendix A (Dataset Card); Appendix C.1 Dataset Construction",
+        "reasoning": "The paper provides a thorough documentation of the dataset creation process in Section 3, detailing data provenance, preprocessing, formula normalization (including use of LLMs for annotation assistance), formula database construction with merging steps, and manual review. Additionally, the Dataset Card in Appendix A offers comprehensive metadata about collection, annotation, composition, and maintenance. Appendix C.1 further provides examples and prompts used for normalization and merging. This level of detail supports transparency and reproducibility of the dataset creation process."
+      }
+    ]
+  },
+  {
+    "id": "nrEqH502eC-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 78110,
+      "completion_tokens": 163,
+      "total_tokens": 78273
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 Construction of BLEND, Appendix B Construction Details of BLEND, Appendix A.1 Accessibility, Usage, License, and Maintenance",
+        "reasoning": "The paper provides extensive documentation of the dataset creation process for BLEnD. Section 3 describes language selection, question collection and filtering, annotator recruitment and answer annotation procedures, as well as answer aggregation steps. The appendices offer additional details including annotator demographics, ethical considerations (Appendix B.2), detailed question construction and annotation guidelines (Appendix B.4 and B.5), and information on dataset accessibility, usage, license, and maintenance (Appendix A.1). This comprehensive coverage demonstrates transparency and completeness sufficient for reproducibility, ethical assessment, and downstream usability, fulfilling the documentation criteria."
+      }
+    ]
+  },
+  {
+    "id": "p8eUitex7p-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 18873,
+      "completion_tokens": 220,
+      "total_tokens": 19093
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.1, Appendix A, Section A.1 to A.4, Section C",
+        "reasoning": "The paper thoroughly documents the creation process of the new ImageNet3D dataset. Section 3.1 provides an overview of dataset construction, detailing the image source selection, 2D bounding box annotations via a machine-assisted approach with human refinement, collection and alignment of 3D CAD models, and the recruitment and training of annotators for 6D pose, scene density, and object visual quality annotation. Appendix A includes detailed annotator guidelines and training procedures; Section A.1 describes the category selection criteria with clear rationale; Section A.3 explains the generation of natural captions with 3D information using a GPT-assisted method; and Section A.4 covers ethical review and Institutional Review Board approvals. Additionally, Section C addresses dataset release details, licensing, risks, and provides links to annotation guidelines and tutorials. This comprehensive documentation enables reproducibility and ethical assessment, fulfilling the rubric's requirements."
+      }
+    ]
+  },
+  {
+    "id": "pUcTrjRLOM-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 33376,
+      "completion_tokens": 213,
+      "total_tokens": 33589
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 2 (The UltraMedical Dataset), Section 2.1 (Instruction Composition), Section 2.2 (Data Annotation), Section 2.3 (Dataset Statistics), Appendix C (Dataset Details), Appendix D (Dataset Analysis), Appendix E (UltraMedical Examples)",
+        "reasoning": "The paper provides comprehensive documentation about the creation of the UltraMedical dataset, detailing the combination of manual and synthetic prompts, sources of data, principles used in data composition including diversity and complexity (Sections 2, 2.1). It describes the annotation process for completions and preferences, including the annotation tools and human expert review (Section 2.2). Dataset statistics reflecting the size, composition, and annotation coverage are reported (Section 2.3). Additional detailed descriptions, analysis on instruction types, complexity evolution, decontamination, and example data samples are included in Appendices C through E. Clear prompt designs and annotation policies are also described, supporting dataset reproducibility and transparency."
+      }
+    ]
+  },
+  {
+    "id": "pYNl76onJL-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 18633,
+      "completion_tokens": 123,
+      "total_tokens": 18756
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 'Curating VidProM' and Section E 'Data Sheet for VidProM'",
+        "reasoning": "The paper provides a detailed description of the dataset creation process in Section 3, including data source acquisition from Pika Discord channels, prompt extraction and embedding, NSFW probability assignment, and video generation using four diffusion models with reported computational resources. Additionally, Section E contains a comprehensive data sheet detailing dataset purpose, composition, collection procedures, licensing, preprocessing, and maintenance. This extensive documentation ensures transparency and reproducibility of the VidProM dataset creation."
+      }
+    ]
+  },
+  {
+    "id": "qmvtDIfbmS-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 26779,
+      "completion_tokens": 187,
+      "total_tokens": 26966
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3: WhodunitBench: Construction, Section 3.1: Constructing Arena, Section 3.2: Constructing Chain of Evaluation (CoE) Dataset, Section A.2.1: Dataset Collection and Access, Section A.3: Dataset Documentation",
+        "reasoning": "The paper clearly states that the dataset (WhodunitBench) is newly introduced by the authors. It provides a comprehensive description of the dataset construction process, including script collection by murder mystery experts, criteria for selection, data quality control, annotation of multiple-choice and open-ended questions, and detailed review processes. Further, the Appendix provides extensive dataset documentation following standard frameworks, including motivation, composition, collection methods, annotation details, dataset preprocessing and cleaning, ethical considerations, and maintenance plans. This thorough documentation ensures transparency and reproducibility of the dataset creation."
+      }
+    ]
+  },
+  {
+    "id": "r8PnfcWQol-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 30300,
+      "completion_tokens": 175,
+      "total_tokens": 30475
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 4 and Appendix D",
+        "reasoning": "The paper introduces a new dataset called EFO_k-CQA and provides a comprehensive framework for its creation and evaluation. Section 4 describes the framework for dataset generation, including enumeration of abstract query graphs (Section 4.1), grounding of abstract query graphs (Section 4.2), answer computation (Section 4.3), integration with learning-based models (Section 4.4), and evaluation protocols (Section 4.5). Additionally, Appendix D offers detailed explanations on the construction process of the dataset, including enumeration algorithms, grounding strategies, comparison with previous benchmarks, dataset statistics, and sampling techniques. This combination of sections provides transparent and thorough documentation of the dataset creation process, enabling reproducibility and understanding of its design decisions."
+      }
+    ]
+  },
+  {
+    "id": "rdv2Fr6JTC-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 20524,
+      "completion_tokens": 132,
+      "total_tokens": 20656
+    },
+    "response": [
+      {
+        "Has Documentation": false,
+        "reference": "Section 4 and Appendix G",
+        "reasoning": "The paper utilizes six real-world benchmark datasets (Cora, Citeseer, Pubmed, Amazon-Photo, Amazon-Computer, Coauthor-Physics) for evaluation, all of which are existing datasets cited from previous works. The paper does not introduce or create any new datasets, nor does it provide any documentation or description of the process for creating new datasets. Section 4 and Appendix G.2 describe the statistics and splits of these existing datasets, but no novel dataset is introduced or documented. Therefore, there is no dataset creation process documented in the paper."
+      }
+    ]
+  },
+  {
+    "id": "rovpCs3ZEO-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 23478,
+      "completion_tokens": 202,
+      "total_tokens": 23680
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 4 (The FEDMEKI Dataset Suite), Appendix E (Datasheet for Datasets), Sections F through M (Detailed Task Descriptions and Preprocessing)",
+        "reasoning": "The paper curates a new federated multi-site, multi-modal, multi-task dataset composed of multiple existing public medical datasets combined to create specific training and validation tasks. Section 4 thoroughly describes the dataset split, the nature of tasks, and modalities involved. Appendix E provides a detailed datasheet covering motivation, composition, collection process, preprocessing, uses, distribution, and maintenance of the dataset. Additionally, Sections F through M provide comprehensive descriptions for each training and validation task, including data sources, licenses, ethical considerations, access methods, preprocessing steps, and sample data presentations. The authors also provide code and instructions for data preprocessing accessible via a public repository, enhancing transparency and reproducibility. Therefore, the dataset creation process is well documented within the paper."
+      }
+    ]
+  },
+  {
+    "id": "s1K5Z5QPog-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 12082,
+      "completion_tokens": 249,
+      "total_tokens": 12331
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3, subsection 3.1 Observations and subsection 3.2 Simulations",
+        "reasoning": "The paper provides detailed documentation for the new dataset named ChaosBench, introduced by the authors as a benchmark for subseasonal-to-seasonal climate prediction. In Section 3.1, the authors describe the construction of the dataset, including the combination of multiple global reanalysis products: ERA5 (surface-atmosphere), ORAS5 (sea-ice/ocean), and LRA5 (land), with specifics on variables included, temporal coverage (over 45 years), spatial resolution, and processing steps (e.g., selecting hourly data at 00 UTC, replicating monthly data for daily usage). In Section 3.2, they explain the integration of physics-based forecast simulations from several national weather agencies, specifying models, ensemble sizes, lead times, and variables available. This documentation is thorough, covering data sources, variable selection, temporal and spatial considerations, and aligns with the dataset creation process rather than pre-existing datasets. Thus, the dataset creation process is well-documented, meeting transparency and completeness standards necessary for reproducibility and usability."
+      }
+    ]
+  },
+  {
+    "id": "t9aThFL1lE-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 29106,
+      "completion_tokens": 181,
+      "total_tokens": 29287
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3, Appendix A (A.1 to A.7), and Appendix B (B.1 to B.3)",
+        "reasoning": "The creation process of the new dataset UNLEARNCANVAS is thoroughly documented throughout the paper. Section 3 provides a high-level construction overview involving seed image collection and stylization. Appendix A offers a detailed datasheet for the dataset covering motivation, composition, collection and labeling process, usage, distribution, maintenance, and author statements. Appendix B supplies further reproducibility details including classifier and model fine-tuning procedures and implementation details of unlearning methods. The documentation includes clear sources for seed images (Pexels), stylistic transformation methods (Fotor), dataset structure, labeling, ethical considerations, open-source license, and instructions for usage, enabling reproducibility and ethical evaluation."
+      }
+    ]
+  },
+  {
+    "id": "tPsw4NeLZx-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 20483,
+      "completion_tokens": 137,
+      "total_tokens": 20620
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 (3.1 Recording Setup and Workflow, 3.2 Data Processing and Augmentation, 3.3 Data Statistics)",
+        "reasoning": "The paper thoroughly documents the creation process of the MM-WLAuslan dataset in Section 3, detailing the recording setup with multiple RGB-D cameras and green screen environment, the diverse signer recruitment with experts and volunteers, the interactive recording interface, data processing including background removal and cropping, and data augmentation to simulate real-world scenarios. Additionally, comprehensive statistics about vocabulary selection, signer demographics, video counts, and dataset splits are provided, ensuring transparency and facilitating reproducibility and ethical assessment."
+      }
+    ]
+  },
+  {
+    "id": "tWvVtOW0qg-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 14771,
+      "completion_tokens": 112,
+      "total_tokens": 14883
+    },
+    "response": [
+      {
+        "Has Documentation": false,
+        "reference": "Appendix A: Datasets",
+        "reasoning": "The paper uses multiple existing datasets: standard computer vision datasets (e.g., ImageNet, MNIST variants, MedMNIST datasets) and their variants to benchmark proposed federated data measurements. The paper does not introduce any new datasets. In Appendix A, the paper lists all datasets used but does not describe any new dataset creation process. Therefore, since no new datasets are introduced by the authors, the documentation of dataset creation for new datasets is not applicable and absent."
+      }
+    ]
+  },
+  {
+    "id": "vyraA7xt4c-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 19588,
+      "completion_tokens": 192,
+      "total_tokens": 19780
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 2 (Mercury Datasets) and Appendix A.1 to A.14",
+        "reasoning": "The paper explicitly describes the process of collecting public programming tasks from LeetCode, applying specific filters (number of solutions, restricted data structures, unique outputs) to distill high-quality tasks into the Mercury dataset, separated into evaluation and training splits. It further details the data schema, components like task descriptions, test case generators, solutions, and prompts, as well as difficulty stratification inherited from LeetCode. The test case generator creation and validation process is also described. Additionally, the appendix sections provide extended details on dataset nutrition labels, customized data structures, sandbox details for evaluation, DPO experiment details, external libraries used, prompt templates, legal compliance, and dataset metadata. This thorough documentation supports reproducibility, ethical assessment, and downstream usability of the Mercury dataset."
+      }
+    ]
+  },
+  {
+    "id": "wOmtZ5FgMH-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 32128,
+      "completion_tokens": 130,
+      "total_tokens": 32258
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Sections 3.2 and A.3 in the appendix",
+        "reasoning": "The paper provides detailed documentation of the dataset creation process, including the selection of unlearning targets from a public 'Most Famous All-time People Rank', linking to Wikipedia for knowledge sources, and the use of GPT-4 for generating query-answer probes. The process includes filtering and manual verification steps to ensure quality. Detailed examples, prompt templates, dataset statistics, and the overall workflow are provided in Section 3.2 and elaborated in Appendix A.3, ensuring transparency and reproducibility."
+      }
+    ]
+  },
+  {
+    "id": "wmO7z57wNK-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 16186,
+      "completion_tokens": 95,
+      "total_tokens": 16281
+    },
+    "response": [
+      {
+        "Has Documentation": false,
+        "reference": "N/A",
+        "reasoning": "The paper does not introduce or create any new datasets; rather, it uses a collection of existing public datasets (e.g., MMLU, ARC, Hellaswag, PIQA, WinoGrande, QNLI, MNLI, WikiText2) for evaluation purposes. There is no discussion or description of a new dataset creation process, so documentation of new dataset creation does not apply."
+      }
+    ]
+  },
+  {
+    "id": "x8RgF2xQTj-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 39797,
+      "completion_tokens": 125,
+      "total_tokens": 39922
+    },
+    "response": [
+      {
+        "Has Documentation": false,
+        "reference": "N/A",
+        "reasoning": "The paper does not introduce any new datasets; it evaluates uncertainty quantification methods using existing datasets such as ImageNet-1k and CIFAR-10, which are publicly known and previously established. The paper explicitly states that it uses ImageNet-ReaL and CIFAR-10H for aleatoric uncertainty ground truths, both of which are pre-existing datasets. There is no indication or section in the paper describing the creation or documentation of new datasets. Therefore, there is no dataset creation process to document."
+      }
+    ]
+  },
+  {
+    "id": "y09S5rdaWY-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 18935,
+      "completion_tokens": 128,
+      "total_tokens": 19063
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.1 and 3.2, Appendix A",
+        "reasoning": "The paper provides a detailed description of the dataset creation process, including the data collection agent (Think2Drive expert model) in Section 3.1, the sensor setup, annotations, scenario diversity, and data partitioning in Section 3.2. Appendix A further elaborates on data collection details, annotation methodology, object classes, coordinate system, map information, and data compression techniques. This thorough documentation supports reproducibility, ethical considerations, and usability for downstream tasks."
+      }
+    ]
+  },
+  {
+    "id": "y10DM6R2r3-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 26633,
+      "completion_tokens": 138,
+      "total_tokens": 26771
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.2 and Appendix A.1",
+        "reasoning": "The paper thoroughly documents the dataset creation process in Section 3.2, outlining the initial filtering of the original MMLU dataset, integration of questions from various sources (STEM Website, TheoremQA, SciBench), option augmentation using GPT-4-Turbo to expand choices from four to ten, and a two-phase expert review process to ensure question correctness and distractor validity. Appendix A.1 provides detailed statistics, examples of LLM prompts used for dataset construction, and data distribution details. This comprehensive description demonstrates transparent and complete documentation facilitating reproducibility and ethical considerations."
+      }
+    ]
+  },
+  {
+    "id": "yS1dUkQFnu-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 16448,
+      "completion_tokens": 135,
+      "total_tokens": 16583
+    },
+    "response": [
+      {
+        "Has Documentation": false,
+        "reference": "Section 3",
+        "reasoning": "The paper presents a benchmark called V-PETL Bench which uses 30 datasets for evaluation, including existing datasets such as CUB-200-2011, NABirds, Kinetics-400, MS COCO, ADE20K, and Pascal VOC among others. The paper explicitly states these datasets were selected from pre-existing publicly available datasets and provides details about their characteristics. However, the authors do not introduce or create any new dataset themselves in this paper, nor do they document any new dataset creation process. Therefore, no documentation for new dataset creation is present in the paper."
+      }
+    ]
+  },
+  {
+    "id": "yUEBXN3cvX-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 19509,
+      "completion_tokens": 156,
+      "total_tokens": 19665
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3.1 Data collection and Appendix B.1 Data collection details",
+        "reasoning": "The paper provides thorough documentation of the ANDROIDCONTROL dataset creation process. In Section 3.1, it describes the data collection methodology involving crowdsourcing over a year with detailed instructions, the types of task instructions collected, the diversity of apps used, and the setup for annotators using physical Android phones controlled via web apps. Appendix B.1 further elaborates on the procedures for data collection, annotator compensation, consent, and training. The dataset format and metadata details are also provided in Appendix B.2 and B.3. This comprehensive description includes ethical considerations, dataset structure, and collection protocols, enabling reproducibility and ethical understanding."
+      }
+    ]
+  },
+  {
+    "id": "z64azPC6Nl-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 17048,
+      "completion_tokens": 125,
+      "total_tokens": 17173
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 and Appendix A (specifically A.1 and A.2)",
+        "reasoning": "The paper thoroughly documents the dataset creation process, including detailed descriptions of song and singer selection, recording procedures, annotation methods (phoneme-level alignments, technique and style labeling), and music score composition. Section 3 outlines the dataset description and creation pipeline, while Appendix A provides comprehensive additional details, including recording specifics, annotation protocols and tools used, quality checks, and cost information. Hence, the documentation is transparent and complete, supporting reproducibility, ethical considerations, and usability."
+      }
+    ]
+  },
+  {
+    "id": "zogaeVpbaE-rubric-9",
+    "token_usage": {
+      "prompt_tokens": 20333,
+      "completion_tokens": 188,
+      "total_tokens": 20521
+    },
+    "response": [
+      {
+        "Has Documentation": true,
+        "reference": "Section 3 (DEVBENCH description), specifically subsections 3.1 Tasks and Appendix A.1 Additional task details",
+        "reasoning": "The paper introduces DEVBENCH as a new multimodal benchmark composed of seven tasks with human data from children and adults. Section 3 provides detailed descriptions of each task, including the original data sources, task design, participant demographics, and how the stimuli were used or adapted (e.g., replacements for unshareable images). Appendix A.1 further gives detailed methodological descriptions of the source datasets and experimental setups. Moreover, the authors provide access to all code and data via an open GitHub repository, and they specify data licenses and anonymization procedures (Section 3 and Section 4). These elements constitute comprehensive and transparent documentation of the dataset creation and compilation process, enabling reproducibility and ethical compliance."
+      }
+    ]
+  }
+]
