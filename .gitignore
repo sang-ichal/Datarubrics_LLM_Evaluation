@@ -1,3 +1,5 @@
+src/analysis/*.png
+
 # Python specific
 __pycache__/
 *.py[cod]
