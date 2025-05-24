@@ -1,12 +1,92 @@
 {
-    "name": "non_human_language_coverage",
+    "name": "utility_lang",
     "schema": {
       "type": "object",
       "properties": {
-        "non_human_language_coverage": {
+        "lang": {
           "type": "object",
-          "description": "Identifies and categorizes any non-human languages represented in the dataset.",
+          "description": "This metric categorizes the linguistic scope of the dataset, indicating how many and which types of languages are included.",
           "properties": {
+            "Multilingual": {
+              "type": "object",
+              "description": "The dataset contains content with more than two human languages.",
+              "properties": {
+                "is_applicable": {
+                  "type": "boolean",
+                  "description": "Set to true if this applies to the dataset. If true, reference and reasoning must be provided."
+                },
+                "reference": {
+                  "type": "string",
+                  "description": "Location in the paper where this is stated (e.g., 'Section 2.1')."
+                },
+                "reasoning": {
+                  "type": "string",
+                  "description": "Explanation based on the paper content justifying why the data is considered multilingual along with the list of languages used."
+                }
+              },
+              "required": ["is_applicable", "reference", "reasoning"],
+              "additionalProperties": false
+            },
+            "Bilingual": {
+              "type": "object",
+              "description": "The dataset contains content with exactly two human languages.",
+              "properties": {
+                "is_applicable": {
+                  "type": "boolean",
+                  "description": "Set to true if this applies to the dataset. If true, reference and reasoning must be provided."
+                },
+                "reference": {
+                  "type": "string",
+                  "description": "Location in the paper where this is stated (e.g., 'Section 2.2')."
+                },
+                "reasoning": {
+                  "type": "string",
+                  "description": "Explanation based on the paper content justifying why the data is considered bilingual and mention the two langauges."
+                }
+              },
+              "required": ["is_applicable", "reference", "reasoning"],
+              "additionalProperties": false
+            },
+            "Monolingual (English)": {
+              "type": "object",
+              "description": "The dataset contains only English content.",
+              "properties": {
+                "is_applicable": {
+                  "type": "boolean",
+                  "description": "Set to true if this applies to the dataset. If true, reference and reasoning must be provided."
+                },
+                "reference": {
+                  "type": "string",
+                  "description": "Location in the paper where this is stated (e.g., 'Section 3.1')."
+                },
+                "reasoning": {
+                  "type": "string",
+                  "description": "Explanation based on the paper content justifying why the data is considered monolingual (English)."
+                }
+              },
+              "required": ["is_applicable", "reference", "reasoning"],
+              "additionalProperties": false
+            },
+            "Monolingual (Non-English)": {
+              "type": "object",
+              "description": "The dataset contains content with exactly one language that is non-English.",
+              "properties": {
+                "is_applicable": {
+                  "type": "boolean",
+                  "description": "Set to true if this applies to the dataset. If true, reference and reasoning must be provided."
+                },
+                "reference": {
+                  "type": "string",
+                  "description": "Location in the paper where this is stated (e.g., 'Section 3.2')."
+                },
+                "reasoning": {
+                  "type": "string",
+                  "description": "Explanation based on the paper content justifying why the data is considered monolingual (non-English) and mention the langauge."
+                }
+              },
+              "required": ["is_applicable", "reference", "reasoning"],
+              "additionalProperties": false
+            },
             "Code / Programming Language": {
               "type": "object",
               "description": "The dataset includes programming or structured code-related content (e.g., Python, HTML, SQL, bytecode).",
@@ -89,31 +169,35 @@
             },
             "Unknown": {
               "type": "object",
-              "description": "The presence or type of non-human language in the dataset is not specified.",
+              "description": "The language(s) used in the dataset are not specified or documented.",
               "properties": {
                 "is_applicable": {
                   "type": "boolean",
-                  "description": "Set to true if the non-human language(s) are not clearly documented. Cannot be true if any other label is true."
+                  "description": "Set to true if this applies to the dataset. If true, reference and reasoning must be provided."
+                },
+                "reference": {
+                  "type": "string",
+                  "description": "Location in the paper where this is stated (e.g., 'Section 3.2')."
                 },
                 "reasoning": {
                   "type": "string",
-                  "description": "Justification for why the non-human language(s) used in the dataset are considered unknown."
+                  "description": "Explanation based on the paper content justifying why the language of dataset is considered unknown."
                 }
               },
-              "required": ["is_applicable", "reasoning"],
+              "required": ["is_applicable", "reference", "reasoning"],
               "additionalProperties": false
             },
             "N/A": {
               "type": "object",
-              "description": "The dataset does not contain any non-human language content.",
+              "description": "The dataset does not contain any human language.",
               "properties": {
                 "is_applicable": {
                   "type": "boolean",
-                  "description": "Set to true if no non-human language is present. Cannot be true if any other label is true."
+                  "description": "Set to true only if the dataset does not contain any human language."
                 },
                 "reasoning": {
                   "type": "string",
-                  "description": "Justification from the paper showing that no non-human language is used."
+                  "description": "Explanation based on the paper content justifying why the data does not contain any human language."
                 }
               },
               "required": ["is_applicable", "reasoning"],
@@ -121,6 +205,10 @@
             }
           },
           "required": [
+            "Multilingual",
+            "Bilingual",
+            "Monolingual (English)",
+            "Monolingual (Non-English)",
             "Code / Programming Language",
             "Mathematical and Logical Notation",
             "Biological and Non-Human Communication Systems",
@@ -131,7 +219,7 @@
           "additionalProperties": false
         }
       },
-      "required": ["non_human_language_coverage"],
+      "required": ["lang"],
       "additionalProperties": false
     },
     "strict": true

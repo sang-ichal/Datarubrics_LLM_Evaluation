@@ -1,5 +1,5 @@
 {
-    "name": "annotations_model_annot_guidelines",
+    "name": "annotations_annot_guidelines",
     "schema": {
       "type": "array",
       "properties": {
