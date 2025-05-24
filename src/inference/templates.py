@@ -111,7 +111,7 @@ ANNOTATIONS_HUMAN_ANNOT_GUIDELINES_RUBRIC = Rubric(
 
 ANNOTATIONS_MODEL_ANNOT_GUIDELINES_RUBRIC = Rubric(
     metric_name="Model-based Annotations Guidelines",
-    metric_description="This metric evaluates the presence and quality of model-based annotation guidelines provided for data labeling. It focuses on whether clear scoring rubrics and examples are included, particularly for subjective annotation tasks, which is essential for ensuring consistency and reproducibility. This metric allows multiple labels, except for 'N/A', which must be used as single, exclusive labels. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
+    metric_description="This metric evaluates the presence and quality of human or model-based annotation guidelines provided for data labeling. It focuses on whether clear scoring rubrics and examples are included, particularly for subjective annotation tasks, which is essential for ensuring consistency and reproducibility. This metric allows multiple labels, except for 'N/A', which must be used as single, exclusive labels. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
     options={
         "Has Instructions": "Model annotation guidelines include detailed instructions.",
         "Has Rubrics": "Model annotation guidelines include detailed rubrics.",
@@ -219,15 +219,9 @@ UTILITY_NON_HUMAN_LANG_RUBRIC = Rubric(
     }
 )
 
-UTILITY_DOCUMENTATION_RUBRIC = Rubric(
-    metric_name="Documentation",
-    metric_description="This metric evaluates the transparency and completeness of the dataset creation documentation, which is crucial for reproducibility, ethical assessment, and downstream usability.",
-    options={}
-)
-
 UTILITY_REPRODUCIBILITY_RUBRIC = Rubric(
     metric_name="Reproducibility",
-    metric_description="This metric pertains to whether the code used for constructing the dataset is made publicly available or not for reproducibility.",
+    metric_description="This metric pertains to whether the code used for constructing the dataset is made publicly available or not for reproducibility and evaluates the transparency and completeness of the dataset creation documentation, which is crucial for reproducibility, ethical assessment, and downstream usability..",
     options={}
 )
 

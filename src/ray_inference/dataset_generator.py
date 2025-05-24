@@ -30,16 +30,13 @@ from .templates import *
 
 RUBRIC_SCHEMA_INDICES = {
     0: (None, os.path.join(SCHEMA_DIR, "sources.json")),
-    1: (ANNOTATIONS_HUMAN_ANNOT_GUIDELINES_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_human_annot_guidelines.json")),
-    2: (ANNOTATIONS_MODEL_ANNOT_GUIDELINES_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_model_annot_guidelines.json")),
-    3: (ANNOTATIONS_QUALITY_ASSURANCE_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_quality_assurance.json")),
-    4: (ANNOTATIONS_DATA_ANNOT_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_data_annot.json")),
-    5: (UTILITY_DATA_NOVELTY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_data_novelty.json")),
-    6: (UTILITY_TASK_UTILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_task_utility.json")),
-    7: (UTILITY_HUMAN_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_human_lang.json")),
-    8: (UTILITY_NON_HUMAN_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_non_human_lang.json")), 
-    9: (UTILITY_DOCUMENTATION_RUBRIC, os.path.join(SCHEMA_DIR, "utility_documentation.json")),
-    10: (UTILITY_REPRODUCIBILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_reproducibility.json")),
+    1: (None, os.path.join(SCHEMA_DIR, "annotations_annot_guidelines.json")),
+    2: (ANNOTATIONS_QUALITY_ASSURANCE_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_quality_assurance.json")),
+    3: (ANNOTATIONS_DATA_ANNOT_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_data_annot.json")),
+    4: (UTILITY_DATA_NOVELTY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_data_novelty.json")),
+    5: (UTILITY_TASK_UTILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_task_utility.json")),
+    6: (UTILITY_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_lang.json")),
+    7: (UTILITY_REPRODUCIBILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_reproducibility.json")),
 }
 
 def extract_natural_text_simple(line):

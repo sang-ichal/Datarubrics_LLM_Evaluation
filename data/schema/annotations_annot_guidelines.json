@@ -1,0 +1,102 @@
+{
+    "name": "annotations_annot_guidelines",
+    "schema": {
+      "type": "array",
+      "description": "The metrics evaluates the presence and quality of annotation guidelines provided for data labeling. It focuses on whether clear scoring rubrics and examples are included, particularly for subjective annotation tasks, which is essential for ensuring consistency and reproducibility. This metric allows multiple labels, except for 'N/A', which must be used as single, exclusive labels. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
+      "items": {
+        "Modality": {
+          "type": "string",
+          "description": "The annotation method presents (e.g., 'human', 'model) based on the enum.",
+          "enum": ["human annotation", "model annotation"]
+        },
+        "model_annot_guidelines": {
+          "type": "object",
+          "description": "A breakdown of the presence and quality of model annotation guidelines provided for data labeling. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
+          "properties": {
+            "Has Instructions": {
+              "type": "object",
+              "description": "Model annotation guidelines include detailed instructions.",
+              "properties": {
+                "is_applicable": {
+                  "type": "boolean",
+                  "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
+                },
+                "reference": {
+                  "type": "string",
+                  "description": "The location in the paper where these instructions are described (e.g., 'Section 4.1')."
+                },
+                "reasoning": {
+                  "type": "string",
+                  "description": "Justification based on the paper content explaining why the model annotation guidelines include detailed instructions."
+                }
+              },
+              "required": ["is_applicable", "reference", "reasoning"],
+              "additionalProperties": false
+            },
+            "Has Rubrics": {
+              "type": "object",
+              "description": "Model annotation guidelines include detailed rubrics.",
+              "properties": {
+                "is_applicable": {
+                  "type": "boolean",
+                  "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
+                },
+                "reference": {
+                  "type": "string",
+                  "description": "The location in the paper where the rubrics are described (e.g., 'Section 4.2')."
+                },
+                "reasoning": {
+                  "type": "string",
+                  "description": "Justification based on the paper content explaining why the model annotation guidelines include scoring rubrics."
+                }
+              },
+              "required": ["is_applicable", "reference", "reasoning"],
+              "additionalProperties": false
+            },
+            "Has Examples": {
+              "type": "object",
+              "description": "Model annotation guidelines include clear examples.",
+              "properties": {
+                "is_applicable": {
+                  "type": "boolean",
+                  "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
+                },
+                "reference": {
+                  "type": "string",
+                  "description": "The location in the paper where examples are shown (e.g., 'Appendix B')."
+                },
+                "reasoning": {
+                  "type": "string",
+                  "description": "Justification based on the paper content explaining why the model annotation guidelines have some examples."
+                }
+              },
+              "required": ["is_applicable", "reference", "reasoning"],
+              "additionalProperties": false
+            },
+            "N/A": {
+              "type": "object",
+              "description": "No model annotation guidelines are provided.",
+              "properties": {
+                "is_applicable": {
+                  "type": "boolean",
+                  "description": "Set to true if the dataset has no model annotation guidelines. If true, reasoning must be provided."
+                },
+                "reasoning": {
+                  "type": "string",
+                  "description": "Justification based on the paper content explaining why no guidelines are considered present."
+                }
+              },
+              "required": ["is_applicable", "reasoning"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["Has Instructions", "Has Rubrics", "Has Examples", "N/A"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["model_annot_guidelines"],
+      "additionalProperties": false
+    },
+    "strict": true
+  }
+  

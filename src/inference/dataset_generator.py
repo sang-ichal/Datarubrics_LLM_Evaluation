@@ -38,8 +38,7 @@ RUBRIC_SCHEMA_INDICES = {
     6: (UTILITY_TASK_UTILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_task_utility.json")),
     7: (UTILITY_HUMAN_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_human_lang.json")),
     8: (UTILITY_NON_HUMAN_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_non_human_lang.json")), 
-    9: (UTILITY_DOCUMENTATION_RUBRIC, os.path.join(SCHEMA_DIR, "utility_documentation.json")),
-    10: (UTILITY_REPRODUCIBILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_reproducibility.json")),
+    9: (UTILITY_REPRODUCIBILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_reproducibility.json")),
 }
 
 def extract_natural_text_simple(line):
