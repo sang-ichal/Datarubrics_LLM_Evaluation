@@ -30,8 +30,6 @@ from .templates import *
 
 RUBRIC_SCHEMA_INDICES = {
     0: (None, os.path.join(SCHEMA_DIR, "sources.json")),
-    # 1: (ANNOTATIONS_HUMAN_ANNOT_GUIDELINES_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_human_annot_guidelines.json")),
-    # 2: (ANNOTATIONS_MODEL_ANNOT_GUIDELINES_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_model_annot_guidelines.json")),
     1: (None, os.path.join(SCHEMA_DIR, "annotations_annot_guidelines.json")),
     2: (ANNOTATIONS_QUALITY_ASSURANCE_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_quality_assurance.json")),
     3: (ANNOTATIONS_DATA_ANNOT_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_data_annot.json")),
