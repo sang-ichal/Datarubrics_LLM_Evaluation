@@ -1,8 +1,13 @@
 {
     "name": "annotations_model_annot_guidelines",
     "schema": {
-      "type": "object",
+      "type": "array",
       "properties": {
+        "Modality": {
+          "type": "string",
+          "description": "The annotation method presents (e.g., 'human', 'model) based on the enum.",
+          "enum": ["human annotation", "model annotation"]
+        },
         "model_annot_guidelines": {
           "type": "object",
           "description": "A breakdown of the presence and quality of model annotation guidelines provided for data labeling. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
