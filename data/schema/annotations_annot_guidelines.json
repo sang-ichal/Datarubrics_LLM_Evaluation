@@ -2,7 +2,8 @@
     "name": "annotations_annot_guidelines",
     "schema": {
       "type": "array",
-      "properties": {
+      "description": "The metrics evaluates the presence and quality of annotation guidelines provided for data labeling. It focuses on whether clear scoring rubrics and examples are included, particularly for subjective annotation tasks, which is essential for ensuring consistency and reproducibility. This metric allows multiple labels, except for 'N/A', which must be used as single, exclusive labels. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
+      "items": {
         "Modality": {
           "type": "string",
           "description": "The annotation method presents (e.g., 'human', 'model) based on the enum.",
