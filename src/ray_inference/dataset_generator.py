@@ -100,7 +100,12 @@ def create_dataset(input_folder, output_path,
         # Combine content of the paper into one
         content = ""
         for page_extract in content_list:
-            content_line = page_extract['content'][0]
+            if isinstance(list, page_extract['content']):
+                content_line = page_extract['content'][0]
+            elif isinstance(str, page_extract['content']):
+                content_line = page_extract['content']
+            else:
+                raise ValueError("Seems like `page_extract['content']` is neither string or list, unexpected error!")
             try:
                 natural_text = json.loads(content_line)['natural_text']
             except Exception as e:

@@ -102,7 +102,12 @@ def create_dataset(input_folder, output_path,
         # Combine content of the paper into one
         content = ""
         for page_extract in content_list:
-            content_line = page_extract['content'][0]
+            if isinstance(list, page_extract['content']):
+                content_line = page_extract['content'][0]
+            elif isinstance(str, page_extract['content']):
+                content_line = page_extract['content']
+            else:
+                raise ValueError("Seems like `page_extract['content']` is neither string or list, unexpected error!")
             try:
                 natural_text = json.loads(content_line)['natural_text']
             except Exception as e:
@@ -127,7 +132,7 @@ def create_dataset(input_folder, output_path,
                 schema_name = schema_format['name']
                 if len(rubric_pydantic.options) != 0:
                     rubric_with_options.append(rubric_pydantic)
-                    key_name = schema_format['schema']['required'][0]
+                    key_name = schema_format['schema']['required']
                     schema_dicts[schema_name] = schema_format['schema']['properties'][key_name]
                 else:
                     rubric_no_options.append(rubric_pydantic)
