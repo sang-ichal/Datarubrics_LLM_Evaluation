@@ -3,47 +3,57 @@
     "schema": {
         "type": "object",
         "properties": {
-            "code": {
+            "reproducibility": {
                 "type": "object",
-                "description": "Identifies whether the paper includes a link to the code associated with the dataset.",
+                "description": "This metric pertains to whether the code used for constructing the dataset is made publicly available or not for reproducibility and evaluates the transparency and completeness of the dataset creation documentation, which is crucial for reproducibility, ethical assessment, and downstream usability.",
                 "properties": {
-                    "Has Code": {
-                        "type": "boolean",
-                        "description": "Set to true if all code related to data collection, preprocessing, and generation is publicly available in an accessible repository (e.g., GitHub)."
+                    "code": {
+                        "type": "object",
+                        "description": "Identifies whether the paper includes a link to the code associated with the dataset.",
+                        "properties": {
+                            "Has Code": {
+                                "type": "boolean",
+                                "description": "Set to true if all code related to data collection, preprocessing, and generation is publicly available in an accessible repository (e.g., GitHub)."
+                            },
+                            "reference": {
+                                "type": "string",
+                                "description": "The location in the paper where the code is described (e.g., 'Section 4.1')."
+                            },
+                            "reasoning": {
+                                "type": "string",
+                                "description": "Justification based on the paper content explaining why the code is said to be available or not in the paper."
+                            }
+                        },
+                        "required": ["Has Code", "reference", "reasoning"],
+                        "additionalProperties": false
                     },
-                    "reference": {
-                        "type": "string",
-                        "description": "The location in the paper where the code is described (e.g., 'Section 4.1')."
-                    },
-                    "reasoning": {
-                        "type": "string",
-                        "description": "Justification based on the paper content explaining why the code is said to be available or not in the paper."
+                    "documentation": {
+                        "type": "object",
+                        "description": "Determines whether the paper provides documentation on the dataset creation process.",
+                        "properties": {
+                            "Has Documentation": {
+                                "type": "boolean",
+                                "description": "Set to true if the dataset creation process is documented in the paper."
+                            },
+                            "reference": {
+                                "type": "string",
+                                "description": "Where in the paper the process is described (e.g., 'Section 4.1')."
+                            },
+                            "reasoning": {
+                                "type": "string",
+                                "description": "Justification based on paper content for the documentation status."
+                            }
+                        },
+                        "required": ["Has Documentation", "reference", "reasoning"],
+                        "additionalProperties": false
                     }
                 },
-                "required": ["Has Code", "reference", "reasoning"],
-                "additionalProperties": false
-            },
-            "documentation": {
-                "type": "object",
-                "description": "Determines whether the paper provides documentation on the dataset creation process.",
-                "properties":{
-                    "Has Documentation": {
-                        "type": "boolean",
-                        "description": "Set to true if the dataset creation process is documented in the paper."
-                    },
-                    "reference": {
-                        "type": "string",
-                        "description": "Where in the paper the process is described (e.g., 'Section 4.1')."
-                    },
-                    "reasoning": {
-                        "type": "string",
-                        "description": "Justification based on paper content for the documentation status."
-                    }
-                },
-                "required": ["Has Documentation", "reference", "reasoning"],
+                "required": ["code", "documentation"],
                 "additionalProperties": false
             }
-        }
+        },
+        "required": ["reproducibility"],
+        "additionalProperties": false
     },
     "strict": true
 }

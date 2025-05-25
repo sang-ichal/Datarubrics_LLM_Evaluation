@@ -1,109 +1,116 @@
 {
   "name": "annotations_data_annotations",
   "schema": {
-    "type": "array",
-    "description": "List of annotators along with the data annotation guideline evaluations.",
-    "items": {
-      "type": "object",
-      "description": "Each entry assesses who performed the annotation (human or model), along with the presence and quality of annotation guidelines such as instructions, rubrics, and examples. If all of 'Has Instructions', 'Has Rubrics', and 'Has Examples' are false, then the annotation is considered to have no guidelines.",
-      "properties": {
-        "Subject Annotators": {
+    "type": "object",
+    "properties": {
+      "data_annotations": {
+        "type": "array",
+        "description": "List of annotators along with the data annotation guideline evaluations.",
+        "items": {
           "type": "object",
-          "description": "Describes who performed the annotations. Choose exactly one from a predefined list.",
+          "description": "Each entry assesses who performed the annotation (human or model), along with the presence and quality of annotation guidelines such as instructions, rubrics, and examples.",
           "properties": {
-            "category": {
-              "type": "string",
-              "description": "Who performed the annotation. Some definitions: \n- Expert: A subject-matter expert or someone from the task's target demographic. \n- AI Model: An annotation process using LLM or other learned model.\n- Automatic Process: A deterministic or simulated method (e.g., rule-based, physics simulation) that is not an AI model.",
-              "enum": [
-                "Single Human Expert",
-                "Multiple Human Experts",
-                "Single Human Non-Expert",
-                "Multiple Human Non-Experts",
-                "AI Model",
-                "Automatic Process"
-              ]
+            "Subject Annotators": {
+              "type": "object",
+              "description": "Describes who performed the annotations. Choose exactly one from a predefined list.",
+              "properties": {
+                "category": {
+                  "type": "string",
+                  "description": "Who performed the annotation. Some definitions: \n- Expert: A subject-matter expert or someone from the task's target demographic. \n- AI Model: An annotation process using LLM or other learned model.\n- Automatic Process: A deterministic or simulated method (e.g., rule-based, physics simulation) that is not an AI model.",
+                  "enum": [
+                    "Single Human Expert",
+                    "Multiple Human Experts",
+                    "Single Human Non-Expert",
+                    "Multiple Human Non-Experts",
+                    "AI Model",
+                    "Automatic Process"
+                  ]
+                },
+                "reference": {
+                  "type": "string",
+                  "description": "The location in the paper where this information is discussed (e.g., 'Section 3.1', 'Appendix B')."
+                },
+                "reasoning": {
+                  "type": "string",
+                  "description": "Explanation supporting the selected category based on the paper content."
+                }
+              },
+              "required": ["category", "reference", "reasoning"],
+              "additionalProperties": false  
             },
-            "reference": {
-              "type": "string",
-              "description": "The location in the paper where this information is discussed (e.g., 'Section 3.1', 'Appendix B')."
+            "Has Instructions": {
+              "type": "object",
+              "description": "Indicates whether detailed annotation instructions are provided in the annotation guidelines for the 'Subject' mentioned earlier.",
+              "properties": {
+                "is_applicable": {
+                  "type": "boolean",
+                  "description": "Set to true if instructions are provided in the annotation guidelines for the 'Subject' mentioned earlier."
+                },
+                "reference": {
+                  "type": "string",
+                  "description": "The location in the paper where this is described (e.g., 'Section 3.1')."
+                },
+                "reasoning": {
+                  "type": "string",
+                  "description": "Justification from the paper content supporting the inclusion of instructions."
+                }
+              },
+              "required": ["is_applicable", "reference", "reasoning"],
+              "additionalProperties": false
             },
-            "reasoning": {
-              "type": "string",
-              "description": "Explanation supporting the selected category based on the paper content."
+            "Has Rubrics": {
+              "type": "object",
+              "description": "Indicates whether scoring rubrics are provided in the annotation guidelines for the 'Subject' mentioned earlier.",
+              "properties": {
+                "is_applicable": {
+                  "type": "boolean",
+                  "description": "Set to true if rubrics are provided in the annotation guidelines for the 'Subject' mentioned earlier."
+                },
+                "reference": {
+                  "type": "string",
+                  "description": "The location in the paper where this is described (e.g., 'Section 3.1')."
+                },
+                "reasoning": {
+                  "type": "string",
+                  "description": "Justification from the paper content supporting rubric usage."
+                }
+              },
+              "required": ["is_applicable", "reference", "reasoning"],
+              "additionalProperties": false
+            },
+            "Has Examples": {
+              "type": "object",
+              "description": "Indicates whether annotation examples are provided in the annotation guidelines for the 'Subject' mentioned earlier.",
+              "properties": {
+                "is_applicable": {
+                  "type": "boolean",
+                  "description": "Set to true if examples are provided in the annotation guidelines for the 'Subject' mentioned earlier."
+                },
+                "reference": {
+                  "type": "string",
+                  "description": "The location in the paper where this is described (e.g., 'Appendix B')."
+                },
+                "reasoning": {
+                  "type": "string",
+                  "description": "Justification from the paper content supporting the inclusion of examples."
+                }
+              },
+              "required": ["is_applicable", "reference", "reasoning"],
+              "additionalProperties": false
             }
           },
-          "required": ["category", "reference", "reasoning"],
-          "additionalProperties": false  
-        },
-        "Has Instructions": {
-          "type": "object",
-          "description": "Indicates whether detailed annotation instructions are provided in the annotation guidelines for the 'Subject' mentioned earlier.",
-          "properties": {
-            "is_applicable": {
-              "type": "boolean",
-              "description": "Set to true if instructions are provided in the annotation guidelines for the 'Subject' mentioned earlier."
-            },
-            "reference": {
-              "type": "string",
-              "description": "The location in the paper where this is described (e.g., 'Section 3.1')."
-            },
-            "reasoning": {
-              "type": "string",
-              "description": "Justification from the paper content supporting the inclusion of instructions."
-            }
-          },
-          "required": ["is_applicable", "reference", "reasoning"],
-          "additionalProperties": false
-        },
-        "Has Rubrics": {
-          "type": "object",
-          "description": "Indicates whether scoring rubrics are provided in the annotation guidelines for the 'Subject' mentioned earlier.",
-          "properties": {
-            "is_applicable": {
-              "type": "boolean",
-              "description": "Set to true if rubrics are provided in the annotation guidelines for the 'Subject' mentioned earlier."
-            },
-            "reference": {
-              "type": "string",
-              "description": "The location in the paper where this is described (e.g., 'Section 3.1')."
-            },
-            "reasoning": {
-              "type": "string",
-              "description": "Justification from the paper content supporting rubric usage."
-            }
-          },
-          "required": ["is_applicable", "reference", "reasoning"],
-          "additionalProperties": false
-        },
-        "Has Examples": {
-          "type": "object",
-          "description": "Indicates whether annotation examples are provided in the annotation guidelines for the 'Subject' mentioned earlier.",
-          "properties": {
-            "is_applicable": {
-              "type": "boolean",
-              "description": "Set to true if examples are provided in the annotation guidelines for the 'Subject' mentioned earlier."
-            },
-            "reference": {
-              "type": "string",
-              "description": "The location in the paper where this is described (e.g., 'Appendix B')."
-            },
-            "reasoning": {
-              "type": "string",
-              "description": "Justification from the paper content supporting the inclusion of examples."
-            }
-          },
-          "required": ["is_applicable", "reference", "reasoning"],
+          "required": [
+            "Subject Annotators",
+            "Has Instructions",
+            "Has Rubrics",
+            "Has Examples"
+          ],
           "additionalProperties": false
         }
-      },
-      "required": [
-        "Subject Annotators",
-        "Has Instructions",
-        "Has Rubrics",
-        "Has Examples"
-      ],
-      "additionalProperties": false
-    }
+      }
+    },
+    "required": ["data_annotations"],
+    "additionalProperties": false
   },
   "strict": true
 }

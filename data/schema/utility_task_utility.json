@@ -2,175 +2,182 @@
   "name": "utility_task_utility",
   "schema": {
     "type": "object",
-    "description": "This metric identifies how the dataset is used within the machine learning pipeline. Understanding its utility helps clarify the dataset's purpose, relevance, and integration into model development or evaluation workflows.",
     "properties": {
-      "Pre-Training": {
+      "task_utility": {
         "type": "object",
-        "description": "The dataset is used exclusively for pre-training large models on general patterns, typically in an unsupervised or self-supervised manner.",
+        "description": "This metric identifies how the dataset is used within the machine learning pipeline. Understanding its utility helps clarify the dataset's purpose, relevance, and integration into model development or evaluation workflows.",
         "properties": {
-          "is_applicable": {
-            "type": "boolean",
-            "description": "Set to true if the dataset is used for pre-training. If true, reference and reasoning must be provided."
+          "Pre-Training": {
+            "type": "object",
+            "description": "The dataset is used exclusively for pre-training large models on general patterns, typically in an unsupervised or self-supervised manner.",
+            "properties": {
+              "is_applicable": {
+                "type": "boolean",
+                "description": "Set to true if the dataset is used for pre-training. If true, reference and reasoning must be provided."
+              },
+              "reference": {
+                "type": "string",
+                "description": "Location in the paper where this usage is described (e.g., 'Section 2.1')."
+              },
+              "reasoning": {
+                "type": "string",
+                "description": "Justification from the paper explaining why the dataset is used for pre-training."
+              }
+            },
+            "required": ["is_applicable", "reference", "reasoning"],
+            "additionalProperties": false
           },
-          "reference": {
-            "type": "string",
-            "description": "Location in the paper where this usage is described (e.g., 'Section 2.1')."
+          "Training (From Scratch)": {
+            "type": "object",
+            "description": "The dataset is used to train a model from randomly initialized parameters (i.e., not pre-trained).",
+            "properties": {
+              "is_applicable": {
+                "type": "boolean",
+                "description": "Set to true if the dataset is used for training from scratch. If true, reference and reasoning must be provided."
+              },
+              "reference": {
+                "type": "string",
+                "description": "Location in the paper where this usage is described (e.g., 'Section 2.1')."
+              },
+              "reasoning": {
+                "type": "string",
+                "description": "Justification from the paper explaining why the dataset is used for training from scratch."
+              }
+            },
+            "required": ["is_applicable", "reference", "reasoning"],
+            "additionalProperties": false
           },
-          "reasoning": {
-            "type": "string",
-            "description": "Justification from the paper explaining why the dataset is used for pre-training."
+          "Post-Training (Supervised Fine-tuning)": {
+            "type": "object",
+            "description": "The dataset is used to fine-tune a pre-trained model using supervised learning methods.",
+            "properties": {
+              "is_applicable": {
+                "type": "boolean",
+                "description": "Set to true if the dataset is used for supervised fine-tuning. If true, reference and reasoning must be provided."
+              },
+              "reference": {
+                "type": "string",
+                "description": "Location in the paper where this usage is described (e.g., 'Section 3.1')."
+              },
+              "reasoning": {
+                "type": "string",
+                "description": "Justification from the paper explaining why the dataset is used for supervised fine-tuning."
+              }
+            },
+            "required": ["is_applicable", "reference", "reasoning"],
+            "additionalProperties": false
+          },
+          "Post-Training (RL-based Methods)": {
+            "type": "object",
+            "description": "The dataset is used for reinforcement learning post-training techniques such as RLHF.",
+            "properties": {
+              "is_applicable": {
+                "type": "boolean",
+                "description": "Set to true if the dataset is used in RL-based post-training. If true, reference and reasoning must be provided."
+              },
+              "reference": {
+                "type": "string",
+                "description": "Location in the paper where this usage is described (e.g., 'Section 3.3')."
+              },
+              "reasoning": {
+                "type": "string",
+                "description": "Justification from the paper explaining why the dataset is used in RL-based methods."
+              }
+            },
+            "required": ["is_applicable", "reference", "reasoning"],
+            "additionalProperties": false
+          },
+          "Evaluation": {
+            "type": "object",
+            "description": "The dataset is used exclusively for evaluation, benchmarking, or performance measurement.",
+            "properties": {
+              "is_applicable": {
+                "type": "boolean",
+                "description": "Set to true if the dataset is used for evaluation. If true, reference and reasoning must be provided."
+              },
+              "reference": {
+                "type": "string",
+                "description": "Location in the paper where this usage is described (e.g., 'Section 4.1')."
+              },
+              "reasoning": {
+                "type": "string",
+                "description": "Justification from the paper explaining why the dataset is used for evaluation."
+              }
+            },
+            "required": ["is_applicable", "reference", "reasoning"],
+            "additionalProperties": false
+          },
+          "Analysis": {
+            "type": "object",
+            "description": "The dataset is used primarily for analyzing trends, patterns, or characteristics rather than training or evaluation.",
+            "properties": {
+              "is_applicable": {
+                "type": "boolean",
+                "description": "Set to true if the dataset is used for analysis. If true, reference and reasoning must be provided."
+              },
+              "reference": {
+                "type": "string",
+                "description": "Location in the paper where this usage is described (e.g., 'Section 5.1')."
+              },
+              "reasoning": {
+                "type": "string",
+                "description": "Justification from the paper explaining why the dataset is used for analysis."
+              }
+            },
+            "required": ["is_applicable", "reference", "reasoning"],
+            "additionalProperties": false
+          },
+          "Knowledge Base": {
+            "type": "object",
+            "description": "The dataset serves as a knowledge base to augment models (e.g., through retrieval-augmented generation).",
+            "properties": {
+              "is_applicable": {
+                "type": "boolean",
+                "description": "Set to true if the dataset is used as a knowledge base. If true, reference and reasoning must be provided."
+              },
+              "reference": {
+                "type": "string",
+                "description": "Location in the paper where this usage is described (e.g., 'Section 6.1')."
+              },
+              "reasoning": {
+                "type": "string",
+                "description": "Justification from the paper explaining why the dataset is considered a knowledge base."
+              }
+            },
+            "required": ["is_applicable", "reference", "reasoning"],
+            "additionalProperties": false
+          },
+          "N/A": {
+            "type": "object",
+            "description": "No practical usage of the dataset is described or demonstrated in the paper.",
+            "properties": {
+              "is_applicable": {
+                "type": "boolean",
+                "description": "Set to true only if no other categories apply and there is no documented usage."
+              },
+              "reasoning": {
+                "type": "string",
+                "description": "Explanation justifying why no documented utility is found in the paper."
+              }
+            },
+            "required": ["is_applicable", "reasoning"],
+            "additionalProperties": false
           }
         },
-        "required": ["is_applicable", "reference", "reasoning"],
-        "additionalProperties": false
-      },
-      "Training (From Scratch)": {
-        "type": "object",
-        "description": "The dataset is used to train a model from randomly initialized parameters (i.e., not pre-trained).",
-        "properties": {
-          "is_applicable": {
-            "type": "boolean",
-            "description": "Set to true if the dataset is used for training from scratch. If true, reference and reasoning must be provided."
-          },
-          "reference": {
-            "type": "string",
-            "description": "Location in the paper where this usage is described (e.g., 'Section 2.1')."
-          },
-          "reasoning": {
-            "type": "string",
-            "description": "Justification from the paper explaining why the dataset is used for training from scratch."
-          }
-        },
-        "required": ["is_applicable", "reference", "reasoning"],
-        "additionalProperties": false
-      },
-      "Post-Training (Supervised Fine-tuning)": {
-        "type": "object",
-        "description": "The dataset is used to fine-tune a pre-trained model using supervised learning methods.",
-        "properties": {
-          "is_applicable": {
-            "type": "boolean",
-            "description": "Set to true if the dataset is used for supervised fine-tuning. If true, reference and reasoning must be provided."
-          },
-          "reference": {
-            "type": "string",
-            "description": "Location in the paper where this usage is described (e.g., 'Section 3.1')."
-          },
-          "reasoning": {
-            "type": "string",
-            "description": "Justification from the paper explaining why the dataset is used for supervised fine-tuning."
-          }
-        },
-        "required": ["is_applicable", "reference", "reasoning"],
-        "additionalProperties": false
-      },
-      "Post-Training (RL-based Methods)": {
-        "type": "object",
-        "description": "The dataset is used for reinforcement learning post-training techniques such as RLHF.",
-        "properties": {
-          "is_applicable": {
-            "type": "boolean",
-            "description": "Set to true if the dataset is used in RL-based post-training. If true, reference and reasoning must be provided."
-          },
-          "reference": {
-            "type": "string",
-            "description": "Location in the paper where this usage is described (e.g., 'Section 3.3')."
-          },
-          "reasoning": {
-            "type": "string",
-            "description": "Justification from the paper explaining why the dataset is used in RL-based methods."
-          }
-        },
-        "required": ["is_applicable", "reference", "reasoning"],
-        "additionalProperties": false
-      },
-      "Evaluation": {
-        "type": "object",
-        "description": "The dataset is used exclusively for evaluation, benchmarking, or performance measurement.",
-        "properties": {
-          "is_applicable": {
-            "type": "boolean",
-            "description": "Set to true if the dataset is used for evaluation. If true, reference and reasoning must be provided."
-          },
-          "reference": {
-            "type": "string",
-            "description": "Location in the paper where this usage is described (e.g., 'Section 4.1')."
-          },
-          "reasoning": {
-            "type": "string",
-            "description": "Justification from the paper explaining why the dataset is used for evaluation."
-          }
-        },
-        "required": ["is_applicable", "reference", "reasoning"],
-        "additionalProperties": false
-      },
-      "Analysis": {
-        "type": "object",
-        "description": "The dataset is used primarily for analyzing trends, patterns, or characteristics rather than training or evaluation.",
-        "properties": {
-          "is_applicable": {
-            "type": "boolean",
-            "description": "Set to true if the dataset is used for analysis. If true, reference and reasoning must be provided."
-          },
-          "reference": {
-            "type": "string",
-            "description": "Location in the paper where this usage is described (e.g., 'Section 5.1')."
-          },
-          "reasoning": {
-            "type": "string",
-            "description": "Justification from the paper explaining why the dataset is used for analysis."
-          }
-        },
-        "required": ["is_applicable", "reference", "reasoning"],
-        "additionalProperties": false
-      },
-      "Knowledge Base": {
-        "type": "object",
-        "description": "The dataset serves as a knowledge base to augment models (e.g., through retrieval-augmented generation).",
-        "properties": {
-          "is_applicable": {
-            "type": "boolean",
-            "description": "Set to true if the dataset is used as a knowledge base. If true, reference and reasoning must be provided."
-          },
-          "reference": {
-            "type": "string",
-            "description": "Location in the paper where this usage is described (e.g., 'Section 6.1')."
-          },
-          "reasoning": {
-            "type": "string",
-            "description": "Justification from the paper explaining why the dataset is considered a knowledge base."
-          }
-        },
-        "required": ["is_applicable", "reference", "reasoning"],
-        "additionalProperties": false
-      },
-      "N/A": {
-        "type": "object",
-        "description": "No practical usage of the dataset is described or demonstrated in the paper.",
-        "properties": {
-          "is_applicable": {
-            "type": "boolean",
-            "description": "Set to true only if no other categories apply and there is no documented usage."
-          },
-          "reasoning": {
-            "type": "string",
-            "description": "Explanation justifying why no documented utility is found in the paper."
-          }
-        },
-        "required": ["is_applicable", "reasoning"],
+        "required": [
+          "Pre-Training",
+          "Training (From Scratch)",
+          "Post-Training (Supervised Fine-tuning)",
+          "Post-Training (RL-based Methods)",
+          "Evaluation",
+          "Analysis",
+          "Knowledge Base",
+          "N/A"
+        ],
         "additionalProperties": false
       }
     },
-    "required": [
-      "Pre-Training",
-      "Training (From Scratch)",
-      "Post-Training (Supervised Fine-tuning)",
-      "Post-Training (RL-based Methods)",
-      "Evaluation",
-      "Analysis",
-      "Knowledge Base",
-      "N/A"
-    ],
+    "required": ["task_utility"],
     "additionalProperties": false
   },
   "strict": true
