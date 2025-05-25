@@ -84,26 +84,6 @@
         "required": ["is_applicable", "reference", "reasoning"],
         "additionalProperties": false
       },
-      "Automatic Verification": {
-        "type": "object",
-        "description": "Quality assurance is conducted through the automated verification of code or formulas using algorithmic or rule-based techniques.",
-        "properties": {
-          "is_applicable": {
-            "type": "boolean",
-            "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
-          },
-          "reference": {
-            "type": "string",
-            "description": "The location in the paper where this is described (e.g., 'Section 3.5')."
-          },
-          "reasoning": {
-            "type": "string",
-            "description": "Justification based on the paper content explaining why the QA is considered automated verification."
-          }
-        },
-        "required": ["is_applicable", "reference", "reasoning"],
-        "additionalProperties": false
-      },
       "AI Model": {
         "type": "object",
         "description": "Quality assurance is performed by an AI model as a judge.",
@@ -119,6 +99,26 @@
           "reasoning": {
             "type": "string",
             "description": "Justification based on the paper content explaining why an AI model was used for QA."
+          }
+        },
+        "required": ["is_applicable", "reference", "reasoning"],
+        "additionalProperties": false
+      },
+      "Automatic Process": {
+        "type": "object",
+        "description": "Quality assurance is conducted through the automated verification of code or formulas using algorithmic or rule-based techniques.",
+        "properties": {
+          "is_applicable": {
+            "type": "boolean",
+            "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
+          },
+          "reference": {
+            "type": "string",
+            "description": "The location in the paper where this is described (e.g., 'Section 3.5')."
+          },
+          "reasoning": {
+            "type": "string",
+            "description": "Justification based on the paper content explaining why the QA is considered automated verification."
           }
         },
         "required": ["is_applicable", "reference", "reasoning"],
@@ -146,8 +146,8 @@
       "Multiple Human Experts",
       "Single Human Non-Expert",
       "Multiple Human Non-Experts",
-      "Automatic Verification",
       "AI Model",
+      "Automatic Process",
       "N/A"
     ],
     "additionalProperties": false
