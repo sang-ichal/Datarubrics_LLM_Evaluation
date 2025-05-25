@@ -120,26 +120,6 @@ ANNOTATIONS_MODEL_ANNOT_GUIDELINES_RUBRIC = Rubric(
     }
 )
 
-ANNOTATIONS_QUALITY_ASSURANCE_RUBRIC = Rubric(
-    metric_name="Quality Assurance",
-    metric_description="""
-        This metric assesses the rigor and reliability of the quality assurance (QA) process used to validate dataset annotations or content. It captures whether QA was performed by experts, non-experts, machines, or not at all, and whether the process is transparently reported. This helps determine the overall trustworthiness and consistency of the data.
-        Multiple labels are allowed, except for mutually exclusive categories. Specifically:
-            - 'Single Human Expert' and 'Multiple Human Experts' cannot be both true.
-            - 'Single Human Non-Expert' and 'Multiple Human Non-Experts' cannot be both true.
-            - 'N/A' is a single-label option and cannot be combined with others.
-        Each label indicates whether it applies to the dataset, with supporting evidence from the paper.""",
-    options={
-        "Single Human Expert": "Quality assurance is conducted by a single human annotator who is either a subject matter expert or a member of the target demographic. If there is no information about the annotator, then the annotator is not an expert.",
-        "Multiple Human Experts": "Quality assurance is performed by multiple human annotators with subject matter expertise or belonging to the target demographic. If there is no information about the annotators, then the annotators are not experts.",
-        "Single Human Non-Expert": "Quality assurance is conducted by a single human annotator without subject matter expertise.",
-        "Multiple Human Non-Experts": "Quality assurance is conducted by multiple human annotators who do not possess subject matter expertise.",
-        "Automatic Verification": "Quality assurance is conducted through the automated verification of code or formulas using algorithmic or rule-based techniques.",
-        "AI Model": "Quality assurance is performed by an AI model as a judge.",
-        "N/A": "No quality assurance process is applied, or none is documented."
-    }
-)
-
 ANNOTATIONS_DATA_ANNOT_RUBRIC = Rubric(
     metric_name="Data Annotation",
     metric_description="""
@@ -158,6 +138,26 @@ ANNOTATIONS_DATA_ANNOT_RUBRIC = Rubric(
         "AI Model without Verification": "Data annotation is performed by an AI model without any verification of its quality.",
         "Automatic": "Data annotation is automatically done by a simulation or automatic process that is not an AI model.",
         "N/A": "No data annotation is applied, or none is documented."
+    }
+)
+
+ANNOTATIONS_QUALITY_ASSURANCE_RUBRIC = Rubric(
+    metric_name="Quality Assurance",
+    metric_description="""
+        This metric assesses the rigor and reliability of the quality assurance (QA) process used to validate dataset annotations or content. It captures whether QA was performed by experts, non-experts, machines, or not at all, and whether the process is transparently reported. This helps determine the overall trustworthiness and consistency of the data.
+        Multiple labels are allowed, except for mutually exclusive categories. Specifically:
+            - 'Single Human Expert' and 'Multiple Human Experts' cannot be both true.
+            - 'Single Human Non-Expert' and 'Multiple Human Non-Experts' cannot be both true.
+            - 'N/A' is a single-label option and cannot be combined with others.
+        Each label indicates whether it applies to the dataset, with supporting evidence from the paper.""",
+    options={
+        "Single Human Expert": "Quality assurance is conducted by a single human annotator who is either a subject matter expert or a member of the target demographic. If there is no information about the annotator, then the annotator is not an expert.",
+        "Multiple Human Experts": "Quality assurance is performed by multiple human annotators with subject matter expertise or belonging to the target demographic. If there is no information about the annotators, then the annotators are not experts.",
+        "Single Human Non-Expert": "Quality assurance is conducted by a single human annotator without subject matter expertise.",
+        "Multiple Human Non-Experts": "Quality assurance is conducted by multiple human annotators who do not possess subject matter expertise.",
+        "Automatic Verification": "Quality assurance is conducted through the automated verification of code or formulas using algorithmic or rule-based techniques.",
+        "AI Model": "Quality assurance is performed by an AI model as a judge.",
+        "N/A": "No quality assurance process is applied, or none is documented."
     }
 )
 
@@ -183,45 +183,36 @@ UTILITY_TASK_UTILITY_RUBRIC = Rubric(
     metric_name="Task Utility",
     metric_description="This metric identifies how the dataset is used within the machine learning pipeline. Understanding its utility helps clarify the dataset's purpose, relevance, and integration into model development or evaluation workflows. Multiple labels may be selected, except for 'N/A', which is exclusive and cannot be combined with other options. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
     options={
-        "Pre-Training": "The dataset is used exclusively for pre-training large models on general patterns, typically in an unsupervised or self-supervised manner.",
-        "Post-Training (Supervised Fine-tuning)": "The dataset is used to fine-tune a pre-trained model using supervised learning methods.",
-        "Post-Training (RL-based Methods)": "The dataset is used for reinforcement learning post-training techniques such as RLHF.",
-        "Evaluation": "The dataset is used exclusively for evaluation, benchmarking, or performance measurement.",
-        "Analysis": "The dataset is used primarily for analyzing trends, patterns, or characteristics rather than training or evaluation.",
-        "Knowledge Base": "The dataset serves as a knowledge base to augment models (e.g., through retrieval-augmented generation).",
-        "N/A": "No practical usage of the dataset is described or demonstrated in the paper."
+        "Pre-Training": "The proposed dataset in the paper is used exclusively for pre-training large models on general patterns, typically in an unsupervised or self-supervised manner.",
+        "Post-Training (Supervised Fine-tuning)": "The proposed dataset in the paperis used to fine-tune a pre-trained model using supervised learning methods.",
+        "Post-Training (RL-based Methods)": "The proposed dataset in the paper is used for reinforcement learning post-training techniques such as RLHF.",
+        "Evaluation": "The proposed dataset in the paper is used exclusively for evaluation, benchmarking, or performance measurement.",
+        "Analysis": "The proposed dataset in the paper is used primarily for analyzing trends, patterns, or characteristics rather than training or evaluation.",
+        "Knowledge Base": "The proposed dataset in the paper serves as a knowledge base to augment models (e.g., through retrieval-augmented generation).",
+        "N/A": "No practical usage of The proposed dataset in the paper is described or demonstrated in the paper."
     }
 )
 
-UTILITY_HUMAN_LANG_RUBRIC = Rubric(
+UTILITY_LANG_RUBRIC = Rubric(
     metric_name="Human Language Coverage",
-    metric_description="This metric categorizes the linguistic scope of the dataset, indicating how many and which types of languages are included. This helps assess the dataset's applicability to multilingual or language-specific research. This metric only allows single label. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
+    metric_description="This metric categorizes the linguistic scope of the dataset, indicating how many and which types of languages are included. This helps assess the dataset's applicability to multilingual or language-specific research. This metric allows multiple labels, except for 'Unknown Origin' and 'N/A', which must be used as single, exclusive labels. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
     options={
-        "Multilingual": "The dataset contains content with more than two human languages.",
-        "Bilingual": "The dataset contains content with exactly two human languages.",
-        "Monolingual (English)": "The dataset contains only English content.",
-        "Monolingual (Non-English)": "The dataset contains content with exactly one language that is non-English.",
-        "Unknown": "The language(s) used in the dataset are not specified or documented.",
-        "N/A": "The dataset does not contain any human language."
-    }
-)
-
-UTILITY_NON_HUMAN_LANG_RUBRIC = Rubric(
-    metric_name="Non-Human Language Coverage",
-    metric_description="This metric identifies and categorizes any non-human languages represented in the dataset. This metric allows multiple labels, except for 'Unknown Origin' and 'N/A', which must be used as single, exclusive labels. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
-    options={
-        "Code / Programming Language": "The dataset includes programming or structured code-related content (e.g., Python, HTML, SQL, bytecode).",
-        "Mathematical and Logical Notation": "The dataset contains mathematical or formal logical expressions or symbolic representations.",
-        "Biological and Non-Human Communication Systems": "The dataset includes biological sequences or non-human communication (e.g., DNA, animal signals, chemical signaling).",
-        "Constructed Language": "The dataset includes fictional or artificially created languages such as Klingon or Esperanto.",
-        "Unknown": "The presence or type of non-human language in the dataset is not specified.",
-        "N/A": "The dataset does not contain any non-human language content."
+        "Multilingual": "The proposed dataset in the paper contains entries with more than two human languages.",
+        "Bilingual": "The proposed dataset in the paper contains entries with exactly two human languages.",
+        "Monolingual (English)": "The proposed dataset in the paper contains entries with only English content.",
+        "Monolingual (Non-English)": "The proposed dataset in the paper contains entries with exactly one language that is non-English.",
+        "Code / Programming Language": "The proposed dataset in the paper contains entries with programming or structured code-related content (e.g., Python, HTML, SQL, bytecode).",
+        "Mathematical and Logical Notation": "The proposed dataset in the paper contains entries with mathematical or formal logical expressions or symbolic representations.",
+        "Biological and Non-Human Communication Systems": "The proposed dataset in the paper contains entries with biological sequences or non-human communication (e.g., DNA, animal signals, chemical signaling).",
+        "Constructed Language": "The proposed dataset in the paper contains entries with fictional or artificially created languages such as Klingon or Esperanto.",
+        "Unknown": "The proposed dataset in the paper contains entries with language(s) listed previously but the language(s) are not specified or documented.",
+        "N/A": "The proposed dataset in the paper does not contain entries with any languages."
     }
 )
 
 UTILITY_REPRODUCIBILITY_RUBRIC = Rubric(
     metric_name="Reproducibility",
-    metric_description="This metric pertains to whether the code used for constructing the dataset is made publicly available or not for reproducibility and evaluates the transparency and completeness of the dataset creation documentation, which is crucial for reproducibility, ethical assessment, and downstream usability..",
+    metric_description="This metric pertains to whether the code used for constructing the dataset is made publicly available or not for reproducibility and evaluates the transparency and completeness of the dataset creation documentation, which is crucial for reproducibility, ethical assessment, and downstream usability.",
     options={}
 )
 
@@ -235,6 +226,32 @@ def construct_sources_prompt(paper_text: str, format: str):
     - **Only assess new datasets** that are introduced by the authors. Do **not** evaluate any pre-existing datasets mentioned in the paper.
     - Base your judgments **strictly on the content of the paper**. Do **not** infer or speculate beyond what is explicitly stated.
     - Provide clear references and reasoning for each modality and the origin of the data.
+    
+    ### PAPER
+    {{ paper_text }}
+
+    ### RESPONSE FORMAT
+    Return a JSON response in the following format:
+    
+    {{ format }}
+    
+    ### RESPONSE
+    """
+    
+@outlines.prompt
+def construct_data_annotations_prompt(paper_text: str, format: str):
+    """
+    ### INSTRUCTION
+    Identify and evaluate annotation information related to **only the new dataset(s)** introduced by the authors in the paper.
+
+    Follow these strict guidelines:
+    - Only evaluate datasets that are newly introduced in this paper. Do **not** evaluate any pre-existing datasets mentioned in the paper.
+    - Base your judgments **strictly on the content of the paper**. Do **not** infer or speculate beyond what is explicitly stated.
+    
+    For each entry in the list, include only a single annotation process by:
+    - Choose **exactly one** annotator category and describe the annotators involved.
+    - Indicate whether annotation guidelines include instructions, rubrics, and/or examples.
+    - Provide precise references (e.g., 'Section 3.1', 'Appendix B') and brief reasoning from the paper for each judgment.
     
     ### PAPER
     {{ paper_text }}

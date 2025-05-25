@@ -52,7 +52,7 @@ def _request_openai_completion(openai_client, model_id, config, input_item):
             else:
                 logging.exception("Error calling OpenAI API:")
                 raise e
-    logging.exception(f"Could not resolve error after {OPENAI_RETRIES} attempts for input ID: {input_item['data_id']}")
+    logging.exception(f"Could not resolve error after {OPENAI_RETRIES} attempts for input id: {input_item['data_id']}")
     return None
 
 def openai_completion(model_id, config, batched_input):
@@ -74,7 +74,7 @@ def openai_completion(model_id, config, batched_input):
         with tempfile.NamedTemporaryFile(delete=True, suffix=".jsonl", mode="w+", dir=CUR_DIR) as f:
             for input_item in batched_input:
                 request_msg = {
-                    "custom_id": input_item['ID'],
+                    "custom_id": input_item['id'],
                     "method": "POST",
                     "url": "/v1/chat/completions",
                     "body": {
@@ -124,7 +124,7 @@ def openai_completion(model_id, config, batched_input):
                         completion_tokens = usage.get("completion_tokens")
                         total_tokens = usage.get("total_tokens")
                         
-                        results.append({'ID': response_id,
+                        results.append({'id': response_id,
                                         "token_usage": {
                                             "prompt_tokens": prompt_tokens,
                                             "completion_tokens": completion_tokens,
@@ -179,7 +179,7 @@ def gemini_completion(model_id, config, batched_input):
                 **config.get("generation_args", {})
             )
         )
-        results.append({"id": input_item['ID'],
+        results.append({"id": input_item['id'],
                         "response": response.text})
     return results
 
