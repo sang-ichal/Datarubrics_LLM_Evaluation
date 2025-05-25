@@ -1,8 +1,8 @@
 {
-  "name": "annotations_annot_guidelines",
+  "name": "annotations_data_annotations",
   "schema": {
     "type": "array",
-    "description": "List of data annotation guideline evaluations.",
+    "description": "List of annotators along with the data annotation guideline evaluations.",
     "items": {
       "type": "object",
       "description": "Each entry assesses who performed the annotation (human or model), along with the presence and quality of annotation guidelines such as instructions, rubrics, and examples. If all of 'Has Instructions', 'Has Rubrics', and 'Has Examples' are false, then the annotation is considered to have no guidelines.",
@@ -13,16 +13,14 @@
           "properties": {
             "category": {
               "type": "string",
-              "description": "Who performed the annotation. Some definitions: \n- Expert: A subject-matter expert or someone from the task's target demographic. \n- AI Model: An annotation process using LLM or other learned model.\n- Automatic Process: A deterministic or simulated method (e.g., rule-based, physics simulation) that is not an AI model.\n- With Human Verification: The output was verified or corrected by a human.",
+              "description": "Who performed the annotation. Some definitions: \n- Expert: A subject-matter expert or someone from the task's target demographic. \n- AI Model: An annotation process using LLM or other learned model.\n- Automatic Process: A deterministic or simulated method (e.g., rule-based, physics simulation) that is not an AI model.",
               "enum": [
                 "Single Human Expert",
                 "Multiple Human Experts",
                 "Single Human Non-Expert",
                 "Multiple Human Non-Experts",
-                "AI Model With Human Verification",
-                "AI Model Without Human Verification",
-                "Automatic Process With Human Verification",
-                "Automatic Process Without Human Verification"
+                "AI Model",
+                "Automatic Process"
               ]
             },
             "reference": {
