@@ -1,0 +1,5 @@
+{
+    "model_id": "deepseek-reasoner",
+    "num_workers": 12,
+    "generation_args": {}
+}

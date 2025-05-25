@@ -1,0 +1,5 @@
+{
+    "model_id": "gemini-2.0-flash",
+    "num_workers": 12,
+    "generation_args": {}
+}
