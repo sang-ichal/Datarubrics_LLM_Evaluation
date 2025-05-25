@@ -8,35 +8,14 @@ from .constants import *
 from .utils import *
 from .templates import *
 
-# RUBRIC_SCHEMA_INDICES = {
-#     0: (SOURCE_TEXT_RUBRIC, os.path.join(SCHEMA_DIR, "source_text.json")),
-#     1: (SOURCE_IMAGE_RUBRIC, os.path.join(SCHEMA_DIR, "source_image.json")),
-#     2: (SOURCE_VIDEO_RUBRIC, os.path.join(SCHEMA_DIR, "source_video.json")),
-#     3: (SOURCE_AUDIO_RUBRIC, os.path.join(SCHEMA_DIR, "source_audio.json")),
-#     4: (SOURCE_GRAPH_RUBRIC, os.path.join(SCHEMA_DIR, "source_graph.json")),
-#     5: (SOURCE_TABULAR_RUBRIC, os.path.join(SCHEMA_DIR, "source_tabular.json")),
-#     6: (SOURCE_TIME_OR_SIGNAL_RUBRIC, os.path.join(SCHEMA_DIR, "source_time_signal.json")),
-#     7: (ANNOTATIONS_HUMAN_ANNOT_GUIDELINES_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_human_annot_guidelines.json")),
-#     8: (ANNOTATIONS_MODEL_ANNOT_GUIDELINES_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_model_annot_guidelines.json")),
-#     9: (ANNOTATIONS_QUALITY_ASSURANCE_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_quality_assurance.json")),
-#     10: (ANNOTATIONS_DATA_ANNOT_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_data_annot.json")),
-#     11: (UTILITY_DATA_NOVELTY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_data_novelty.json")),
-#     12: (UTILITY_TASK_UTILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_task_utility.json")),
-#     13: (UTILITY_HUMAN_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_human_lang.json")),
-#     14: (UTILITY_NON_HUMAN_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_non_human_lang.json")), 
-#     15: (UTILITY_DOCUMENTATION_RUBRIC, os.path.join(SCHEMA_DIR, "utility_documentation.json")),
-#     16: (UTILITY_REPRODUCIBILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_reproducibility.json")),
-# }
-
 RUBRIC_SCHEMA_INDICES = {
     0: (None, os.path.join(SCHEMA_DIR, "sources.json")),
-    1: (None, os.path.join(SCHEMA_DIR, "annotations_annot_guidelines.json")),
+    1: (None, os.path.join(SCHEMA_DIR, "annotations_data_annotations.json")),
     2: (ANNOTATIONS_QUALITY_ASSURANCE_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_quality_assurance.json")),
-    3: (ANNOTATIONS_DATA_ANNOT_RUBRIC, os.path.join(SCHEMA_DIR, "annotations_data_annot.json")),
-    4: (UTILITY_DATA_NOVELTY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_data_novelty.json")),
-    5: (UTILITY_TASK_UTILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_task_utility.json")),
-    6: (UTILITY_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_lang.json")),
-    7: (UTILITY_REPRODUCIBILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_reproducibility.json")),
+    3: (UTILITY_DATA_NOVELTY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_data_novelty.json")),
+    4: (UTILITY_TASK_UTILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_task_utility.json")),
+    5: (UTILITY_LANG_RUBRIC, os.path.join(SCHEMA_DIR, "utility_lang.json")),
+    6: (UTILITY_REPRODUCIBILITY_RUBRIC, os.path.join(SCHEMA_DIR, "utility_reproducibility.json")),
 }
 
 def extract_natural_text_simple(line):
@@ -100,9 +79,9 @@ def create_dataset(input_folder, output_path,
         # Combine content of the paper into one
         content = ""
         for page_extract in content_list:
-            if isinstance(list, page_extract['content']):
+            if isinstance(page_extract['content'], list):
                 content_line = page_extract['content'][0]
-            elif isinstance(str, page_extract['content']):
+            elif isinstance(page_extract['content'], str):
                 content_line = page_extract['content']
             else:
                 raise ValueError("Seems like `page_extract['content']` is neither string or list, unexpected error!")
@@ -130,7 +109,7 @@ def create_dataset(input_folder, output_path,
                 schema_name = schema_format['name']
                 if len(rubric_pydantic.options) != 0:
                     rubric_with_options.append(rubric_pydantic)
-                    key_name = schema_format['schema']['required'][0]
+                    key_name = schema_format['schema']['required']
                     schema_dicts[schema_name] = schema_format['schema']['properties'][key_name]
                 else:
                     rubric_no_options.append(rubric_pydantic)
@@ -151,7 +130,7 @@ def create_dataset(input_folder, output_path,
             input_list.append({
                     'id': f"{paper_id}",
                     'msg': [{"role": "user", "content": prompt}],
-                    'schema': combined_schema,
+                    'schema': combined_schema['schema'],
                 })
         else:
             rubric_pydantic, rubric_schema_path = RUBRIC_SCHEMA_INDICES[0]
@@ -160,12 +139,22 @@ def create_dataset(input_folder, output_path,
             input_list.append({
                 'id': f"{paper_id}-rubric-0",
                 'msg': [{"role": "user", "content": construct_sources_prompt(content,
-                                                                            json.dumps(schema_format, indent=2))}],
+                                                                            json.dumps(schema_format['schema'], indent=2))}],
+                'schema': schema_format,
+            })
+            
+            rubric_pydantic, rubric_schema_path = RUBRIC_SCHEMA_INDICES[1]
+            with open(rubric_schema_path, 'r', encoding='utf-8') as f:
+                schema_format = json.load(f)
+            input_list.append({
+                'id': f"{paper_id}-rubric-1",
+                'msg': [{"role": "user", "content": construct_data_annotations_prompt(content,
+                                                                            json.dumps(schema_format['schema'], indent=2))}],
                 'schema': schema_format,
             })
             
             # Iterate over the rubric and use that content along with {paper_id}-{rubric_index} as the new id
-            for rubric_index in range(1, len(RUBRIC_SCHEMA_INDICES)):
+            for rubric_index in range(2, len(RUBRIC_SCHEMA_INDICES)):
                 rubric_pydantic, rubric_schema_path = RUBRIC_SCHEMA_INDICES[rubric_index]
                 with open(rubric_schema_path, 'r', encoding='utf-8') as f:
                     schema_format = json.load(f)
@@ -175,7 +164,7 @@ def create_dataset(input_folder, output_path,
                         'id': f"{paper_id}-rubric-{rubric_index}",
                         'msg': [{"role": "user", "content": construct_judge_prompt(content,
                                                                                 rubric_pydantic,
-                                                                                json.dumps(schema_format, indent=2))}],
+                                                                                json.dumps(schema_format['schema'], indent=2))}],
                         'schema': schema_format,
                     })
                 else:
@@ -183,7 +172,7 @@ def create_dataset(input_folder, output_path,
                         'id': f"{paper_id}-rubric-{rubric_index}",
                         'msg': [{"role": "user", "content": construct_judge_nooption_prompt(content,
                                                                                             rubric_pydantic,
-                                                                                            json.dumps(schema_format, indent=2))}],
+                                                                                            json.dumps(schema_format['schema'], indent=2))}],
                         'schema': schema_format,
                     })
         
