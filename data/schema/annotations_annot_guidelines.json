@@ -1,102 +1,111 @@
 {
-    "name": "annotations_annot_guidelines",
-    "schema": {
-      "type": "array",
-      "description": "The metrics evaluates the presence and quality of annotation guidelines provided for data labeling. It focuses on whether clear scoring rubrics and examples are included, particularly for subjective annotation tasks, which is essential for ensuring consistency and reproducibility. This metric allows multiple labels, except for 'N/A', which must be used as single, exclusive labels. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
-      "items": {
-        "Modality": {
-          "type": "string",
-          "description": "The annotation method presents (e.g., 'human', 'model) based on the enum.",
-          "enum": ["human annotation", "model annotation"]
-        },
-        "model_annot_guidelines": {
+  "name": "annotations_annot_guidelines",
+  "schema": {
+    "type": "array",
+    "description": "List of data annotation guideline evaluations.",
+    "items": {
+      "type": "object",
+      "description": "Each entry assesses who performed the annotation (human or model), along with the presence and quality of annotation guidelines such as instructions, rubrics, and examples. If all of 'Has Instructions', 'Has Rubrics', and 'Has Examples' are false, then the annotation is considered to have no guidelines.",
+      "properties": {
+        "Subject Annotators": {
           "type": "object",
-          "description": "A breakdown of the presence and quality of model annotation guidelines provided for data labeling. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
+          "description": "Describes who performed the annotations. Choose exactly one from a predefined list.",
           "properties": {
-            "Has Instructions": {
-              "type": "object",
-              "description": "Model annotation guidelines include detailed instructions.",
-              "properties": {
-                "is_applicable": {
-                  "type": "boolean",
-                  "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
-                },
-                "reference": {
-                  "type": "string",
-                  "description": "The location in the paper where these instructions are described (e.g., 'Section 4.1')."
-                },
-                "reasoning": {
-                  "type": "string",
-                  "description": "Justification based on the paper content explaining why the model annotation guidelines include detailed instructions."
-                }
-              },
-              "required": ["is_applicable", "reference", "reasoning"],
-              "additionalProperties": false
+            "category": {
+              "type": "string",
+              "description": "Who performed the annotation. Some definitions: \n- Expert: A subject-matter expert or someone from the task's target demographic. \n- AI Model: An annotation process using LLM or other learned model.\n- Automatic Process: A deterministic or simulated method (e.g., rule-based, physics simulation) that is not an AI model.\n- With Human Verification: The output was verified or corrected by a human.",
+              "enum": [
+                "Single Human Expert",
+                "Multiple Human Experts",
+                "Single Human Non-Expert",
+                "Multiple Human Non-Experts",
+                "AI Model With Human Verification",
+                "AI Model Without Human Verification",
+                "Automatic Process With Human Verification",
+                "Automatic Process Without Human Verification"
+              ]
             },
-            "Has Rubrics": {
-              "type": "object",
-              "description": "Model annotation guidelines include detailed rubrics.",
-              "properties": {
-                "is_applicable": {
-                  "type": "boolean",
-                  "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
-                },
-                "reference": {
-                  "type": "string",
-                  "description": "The location in the paper where the rubrics are described (e.g., 'Section 4.2')."
-                },
-                "reasoning": {
-                  "type": "string",
-                  "description": "Justification based on the paper content explaining why the model annotation guidelines include scoring rubrics."
-                }
-              },
-              "required": ["is_applicable", "reference", "reasoning"],
-              "additionalProperties": false
+            "reference": {
+              "type": "string",
+              "description": "The location in the paper where this information is discussed (e.g., 'Section 3.1', 'Appendix B')."
             },
-            "Has Examples": {
-              "type": "object",
-              "description": "Model annotation guidelines include clear examples.",
-              "properties": {
-                "is_applicable": {
-                  "type": "boolean",
-                  "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
-                },
-                "reference": {
-                  "type": "string",
-                  "description": "The location in the paper where examples are shown (e.g., 'Appendix B')."
-                },
-                "reasoning": {
-                  "type": "string",
-                  "description": "Justification based on the paper content explaining why the model annotation guidelines have some examples."
-                }
-              },
-              "required": ["is_applicable", "reference", "reasoning"],
-              "additionalProperties": false
-            },
-            "N/A": {
-              "type": "object",
-              "description": "No model annotation guidelines are provided.",
-              "properties": {
-                "is_applicable": {
-                  "type": "boolean",
-                  "description": "Set to true if the dataset has no model annotation guidelines. If true, reasoning must be provided."
-                },
-                "reasoning": {
-                  "type": "string",
-                  "description": "Justification based on the paper content explaining why no guidelines are considered present."
-                }
-              },
-              "required": ["is_applicable", "reasoning"],
-              "additionalProperties": false
+            "reasoning": {
+              "type": "string",
+              "description": "Explanation supporting the selected category based on the paper content."
             }
           },
-          "required": ["Has Instructions", "Has Rubrics", "Has Examples", "N/A"],
+          "required": ["category", "reference", "reasoning"],
+          "additionalProperties": false  
+        },
+        "Has Instructions": {
+          "type": "object",
+          "description": "Indicates whether detailed annotation instructions are provided in the annotation guidelines for the 'Subject' mentioned earlier.",
+          "properties": {
+            "is_applicable": {
+              "type": "boolean",
+              "description": "Set to true if instructions are provided in the annotation guidelines for the 'Subject' mentioned earlier."
+            },
+            "reference": {
+              "type": "string",
+              "description": "The location in the paper where this is described (e.g., 'Section 3.1')."
+            },
+            "reasoning": {
+              "type": "string",
+              "description": "Justification from the paper content supporting the inclusion of instructions."
+            }
+          },
+          "required": ["is_applicable", "reference", "reasoning"],
+          "additionalProperties": false
+        },
+        "Has Rubrics": {
+          "type": "object",
+          "description": "Indicates whether scoring rubrics are provided in the annotation guidelines for the 'Subject' mentioned earlier.",
+          "properties": {
+            "is_applicable": {
+              "type": "boolean",
+              "description": "Set to true if rubrics are provided in the annotation guidelines for the 'Subject' mentioned earlier."
+            },
+            "reference": {
+              "type": "string",
+              "description": "The location in the paper where this is described (e.g., 'Section 3.1')."
+            },
+            "reasoning": {
+              "type": "string",
+              "description": "Justification from the paper content supporting rubric usage."
+            }
+          },
+          "required": ["is_applicable", "reference", "reasoning"],
+          "additionalProperties": false
+        },
+        "Has Examples": {
+          "type": "object",
+          "description": "Indicates whether annotation examples are provided in the annotation guidelines for the 'Subject' mentioned earlier.",
+          "properties": {
+            "is_applicable": {
+              "type": "boolean",
+              "description": "Set to true if examples are provided in the annotation guidelines for the 'Subject' mentioned earlier."
+            },
+            "reference": {
+              "type": "string",
+              "description": "The location in the paper where this is described (e.g., 'Appendix B')."
+            },
+            "reasoning": {
+              "type": "string",
+              "description": "Justification from the paper content supporting the inclusion of examples."
+            }
+          },
+          "required": ["is_applicable", "reference", "reasoning"],
           "additionalProperties": false
         }
       },
-      "required": ["model_annot_guidelines"],
+      "required": [
+        "Subject Annotators",
+        "Has Instructions",
+        "Has Rubrics",
+        "Has Examples"
+      ],
       "additionalProperties": false
-    },
-    "strict": true
-  }
-  
+    }
+  },
+  "strict": true
+}

@@ -2,161 +2,154 @@
   "name": "annotations_quality_assurance",
   "schema": {
     "type": "object",
+    "description": "This metric assesses the rigor and reliability of the quality assurance (QA) process used to validate dataset annotations or content. It captures whether QA was performed by experts, non-experts, machines, or not at all, and whether the process is transparently reported.",
     "properties": {
-      "quality_assurance": {
+      "Single Human Expert": {
         "type": "object",
-        "description": "This metric assesses the rigor and reliability of the quality assurance (QA) process used to validate dataset annotations or content. It captures whether QA was performed by experts, non-experts, machines, or not at all, and whether the process is transparently reported.",
+        "description": "Quality assurance is conducted by a single human annotator who is either a subject matter expert or a member of the target demographic. If there is no information about the annotator, then the annotator is not an expert.",
         "properties": {
-          "Single Human Expert": {
-            "type": "object",
-            "description": "Quality assurance is conducted by a single human annotator who is either a subject matter expert or a member of the target demographic. If there is no information about the annotator, then the annotator is not an expert.",
-            "properties": {
-              "is_applicable": {
-                "type": "boolean",
-                "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
-              },
-              "reference": {
-                "type": "string",
-                "description": "The location in the paper where this is described (e.g., 'Section 3.1')."
-              },
-              "reasoning": {
-                "type": "string",
-                "description": "Justification based on the paper content explaining why the QA was performed by a single human expert."
-              }
-            },
-            "required": ["is_applicable", "reference", "reasoning"],
-            "additionalProperties": false
+          "is_applicable": {
+            "type": "boolean",
+            "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
           },
-          "Multiple Human Experts": {
-            "type": "object",
-            "description": "Quality assurance is performed by multiple human annotators with subject matter expertise or belonging to the target demographic. If there is no information about the annotators, then the annotators are not experts.",
-            "properties": {
-              "is_applicable": {
-                "type": "boolean",
-                "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
-              },
-              "reference": {
-                "type": "string",
-                "description": "The location in the paper where this is described (e.g., 'Section 3.2')."
-              },
-              "reasoning": {
-                "type": "string",
-                "description": "Justification based on the paper content explaining why the QA involved multiple human experts."
-              }
-            },
-            "required": ["is_applicable", "reference", "reasoning"],
-            "additionalProperties": false
+          "reference": {
+            "type": "string",
+            "description": "The location in the paper where this is described (e.g., 'Section 3.1')."
           },
-          "Single Human Non-Expert": {
-            "type": "object",
-            "description": "Quality assurance is conducted by a single human annotator without subject matter expertise.",
-            "properties": {
-              "is_applicable": {
-                "type": "boolean",
-                "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
-              },
-              "reference": {
-                "type": "string",
-                "description": "The location in the paper where this is described (e.g., 'Section 3.3')."
-              },
-              "reasoning": {
-                "type": "string",
-                "description": "Justification based on the paper content explaining why the QA was done by a single non-expert."
-              }
-            },
-            "required": ["is_applicable", "reference", "reasoning"],
-            "additionalProperties": false
-          },
-          "Multiple Human Non-Experts": {
-            "type": "object",
-            "description": "Quality assurance is conducted by multiple human annotators who do not possess subject matter expertise.",
-            "properties": {
-              "is_applicable": {
-                "type": "boolean",
-                "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
-              },
-              "reference": {
-                "type": "string",
-                "description": "The location in the paper where this is described (e.g., 'Section 3.4')."
-              },
-              "reasoning": {
-                "type": "string",
-                "description": "Justification based on the paper content explaining why the QA involved multiple non-expert annotators."
-              }
-            },
-            "required": ["is_applicable", "reference", "reasoning"],
-            "additionalProperties": false
-          },
-          "Automatic Verification": {
-            "type": "object",
-            "description": "Quality assurance is conducted through the automated verification of code or formulas using algorithmic or rule-based techniques.",
-            "properties": {
-              "is_applicable": {
-                "type": "boolean",
-                "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
-              },
-              "reference": {
-                "type": "string",
-                "description": "The location in the paper where this is described (e.g., 'Section 3.5')."
-              },
-              "reasoning": {
-                "type": "string",
-                "description": "Justification based on the paper content explaining why the QA is considered automated verification."
-              }
-            },
-            "required": ["is_applicable", "reference", "reasoning"],
-            "additionalProperties": false
-          },
-          "AI Model": {
-            "type": "object",
-            "description": "Quality assurance is performed by an AI model as a judge.",
-            "properties": {
-              "is_applicable": {
-                "type": "boolean",
-                "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
-              },
-              "reference": {
-                "type": "string",
-                "description": "The location in the paper where this is described (e.g., 'Section 3.6')."
-              },
-              "reasoning": {
-                "type": "string",
-                "description": "Justification based on the paper content explaining why an AI model was used for QA."
-              }
-            },
-            "required": ["is_applicable", "reference", "reasoning"],
-            "additionalProperties": false
-          },
-          "N/A": {
-            "type": "object",
-            "description": "No quality assurance process is applied, or none is documented.",
-            "properties": {
-              "is_applicable": {
-                "type": "boolean",
-                "description": "Set to true if no quality assurance is described or performed. If true, reasoning must be provided."
-              },
-              "reasoning": {
-                "type": "string",
-                "description": "Justification based on the paper content explaining why no QA process is considered present."
-              }
-            },
-            "required": ["is_applicable", "reasoning"],
-            "additionalProperties": false
+          "reasoning": {
+            "type": "string",
+            "description": "Justification based on the paper content explaining why the QA was performed by a single human expert."
           }
         },
-        "required": [
-          "Single Human Expert",
-          "Multiple Human Experts",
-          "Single Human Non-Expert",
-          "Multiple Human Non-Experts",
-          "Automatic Verification",
-          "AI Model",
-          "N/A"
-        ],
+        "required": ["is_applicable", "reference", "reasoning"],
+        "additionalProperties": false
+      },
+      "Multiple Human Experts": {
+        "type": "object",
+        "description": "Quality assurance is performed by multiple human annotators with subject matter expertise or belonging to the target demographic. If there is no information about the annotators, then the annotators are not experts.",
+        "properties": {
+          "is_applicable": {
+            "type": "boolean",
+            "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
+          },
+          "reference": {
+            "type": "string",
+            "description": "The location in the paper where this is described (e.g., 'Section 3.2')."
+          },
+          "reasoning": {
+            "type": "string",
+            "description": "Justification based on the paper content explaining why the QA involved multiple human experts."
+          }
+        },
+        "required": ["is_applicable", "reference", "reasoning"],
+        "additionalProperties": false
+      },
+      "Single Human Non-Expert": {
+        "type": "object",
+        "description": "Quality assurance is conducted by a single human annotator without subject matter expertise.",
+        "properties": {
+          "is_applicable": {
+            "type": "boolean",
+            "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
+          },
+          "reference": {
+            "type": "string",
+            "description": "The location in the paper where this is described (e.g., 'Section 3.3')."
+          },
+          "reasoning": {
+            "type": "string",
+            "description": "Justification based on the paper content explaining why the QA was done by a single non-expert."
+          }
+        },
+        "required": ["is_applicable", "reference", "reasoning"],
+        "additionalProperties": false
+      },
+      "Multiple Human Non-Experts": {
+        "type": "object",
+        "description": "Quality assurance is conducted by multiple human annotators who do not possess subject matter expertise.",
+        "properties": {
+          "is_applicable": {
+            "type": "boolean",
+            "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
+          },
+          "reference": {
+            "type": "string",
+            "description": "The location in the paper where this is described (e.g., 'Section 3.4')."
+          },
+          "reasoning": {
+            "type": "string",
+            "description": "Justification based on the paper content explaining why the QA involved multiple non-expert annotators."
+          }
+        },
+        "required": ["is_applicable", "reference", "reasoning"],
+        "additionalProperties": false
+      },
+      "Automatic Verification": {
+        "type": "object",
+        "description": "Quality assurance is conducted through the automated verification of code or formulas using algorithmic or rule-based techniques.",
+        "properties": {
+          "is_applicable": {
+            "type": "boolean",
+            "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
+          },
+          "reference": {
+            "type": "string",
+            "description": "The location in the paper where this is described (e.g., 'Section 3.5')."
+          },
+          "reasoning": {
+            "type": "string",
+            "description": "Justification based on the paper content explaining why the QA is considered automated verification."
+          }
+        },
+        "required": ["is_applicable", "reference", "reasoning"],
+        "additionalProperties": false
+      },
+      "AI Model": {
+        "type": "object",
+        "description": "Quality assurance is performed by an AI model as a judge.",
+        "properties": {
+          "is_applicable": {
+            "type": "boolean",
+            "description": "Set to true if this label applies to the dataset. If true, reference and reasoning must be provided."
+          },
+          "reference": {
+            "type": "string",
+            "description": "The location in the paper where this is described (e.g., 'Section 3.6')."
+          },
+          "reasoning": {
+            "type": "string",
+            "description": "Justification based on the paper content explaining why an AI model was used for QA."
+          }
+        },
+        "required": ["is_applicable", "reference", "reasoning"],
+        "additionalProperties": false
+      },
+      "N/A": {
+        "type": "object",
+        "description": "No quality assurance process is applied, or none is documented.",
+        "properties": {
+          "is_applicable": {
+            "type": "boolean",
+            "description": "Set to true if no quality assurance is described or performed. If true, reasoning must be provided."
+          },
+          "reasoning": {
+            "type": "string",
+            "description": "Justification based on the paper content explaining why no QA process is considered present."
+          }
+        },
+        "required": ["is_applicable", "reasoning"],
         "additionalProperties": false
       }
     },
-    "required": ["quality_assurance"],
+    "required": [
+      "Single Human Expert",
+      "Multiple Human Experts",
+      "Single Human Non-Expert",
+      "Multiple Human Non-Experts",
+      "Automatic Verification",
+      "AI Model",
+      "N/A"
+    ],
     "additionalProperties": false
   },
   "strict": true

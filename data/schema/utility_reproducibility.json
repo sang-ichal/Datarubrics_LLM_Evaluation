@@ -42,8 +42,8 @@
                 },
                 "required": ["Has Documentation", "reference", "reasoning"],
                 "additionalProperties": false
-            },
-        },
+            }
+        }
     },
     "strict": true
 }
