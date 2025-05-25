@@ -1,5 +1,6 @@
 {
     "model_id": "gpt-4.1-mini",
+    "use_batch": true,
     "num_workers": 8,
     "generation_args": {"max_tokens": 2048}
 }
