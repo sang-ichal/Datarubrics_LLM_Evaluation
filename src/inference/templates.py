@@ -28,7 +28,7 @@ ANNOTATIONS_QUALITY_ASSURANCE_RUBRIC = Rubric(
         "Multiple Human Experts": "Quality assurance is performed by multiple human annotators with subject matter expertise or belonging to the target demographic. If there is no information about the annotators, then the annotators are not experts.",
         "Single Human Non-Expert": "Quality assurance is conducted by a single human annotator without subject matter expertise.",
         "Multiple Human Non-Experts": "Quality assurance is conducted by multiple human annotators who do not possess subject matter expertise.",
-        "Automatic Verification": "Quality assurance is conducted through the automated verification of code or formulas using algorithmic or rule-based techniques.",
+        "Automatic Process": "Quality assurance is conducted through the automated verification of code or formulas using algorithmic or rule-based techniques.",
         "AI Model": "Quality assurance is performed by an AI model as a judge.",
         "N/A": "No quality assurance process is applied, or none is documented."
     }
@@ -57,7 +57,7 @@ UTILITY_TASK_UTILITY_RUBRIC = Rubric(
     metric_description="This metric identifies how the dataset is used within the machine learning pipeline. Understanding its utility helps clarify the dataset's purpose, relevance, and integration into model development or evaluation workflows. Multiple labels may be selected, except for 'N/A', which is exclusive and cannot be combined with other options. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
     options={
         "Pre-Training": "The proposed dataset in the paper is used exclusively for pre-training large models on general patterns, typically in an unsupervised or self-supervised manner.",
-        "Post-Training (Supervised Fine-tuning)": "The proposed dataset in the paperis used to fine-tune a pre-trained model using supervised learning methods.",
+        "Post-Training (Supervised Fine-tuning)": "The proposed dataset in the paper is used to fine-tune a pre-trained model using supervised learning methods.",
         "Post-Training (RL-based Methods)": "The proposed dataset in the paper is used for reinforcement learning post-training techniques such as RLHF.",
         "Evaluation": "The proposed dataset in the paper is used exclusively for evaluation, benchmarking, or performance measurement.",
         "Analysis": "The proposed dataset in the paper is used primarily for analyzing trends, patterns, or characteristics rather than training or evaluation.",
@@ -67,7 +67,7 @@ UTILITY_TASK_UTILITY_RUBRIC = Rubric(
 )
 
 UTILITY_LANG_RUBRIC = Rubric(
-    metric_name="Human Language Coverage",
+    metric_name="Language Coverage",
     metric_description="This metric categorizes the linguistic scope of the dataset, indicating how many and which types of languages are included. This helps assess the dataset's applicability to multilingual or language-specific research. This metric allows multiple labels, except for 'Unknown Origin' and 'N/A', which must be used as single, exclusive labels. Each label indicates whether it applies to the dataset, with supporting evidence from the paper.",
     options={
         "Multilingual": "The proposed dataset in the paper contains entries with more than two human languages.",
@@ -146,15 +146,15 @@ def construct_judge_prompt(paper_text: str, rubric: Rubric, format: str):
     Please follow these rules:
     - **Only assess new datasets** that are introduced by the authors. Do **not** evaluate any pre-existing datasets mentioned in the paper.
     - Base your judgments **strictly on the content of the paper**. Do **not** infer or speculate beyond what is explicitly stated.
-    - {{ rubric.metric_description }}. Provide clear references and reasoning wherever applicable.
+    - Use the rubric definitions to guide your labeling. Provide clear references and reasoning wherever applicable.
     
     ### PAPER
     {{ paper_text }}
 
     ### RUBRIC
     Metric: {{ rubric.metric_name }}
-    Description: 
-
+    Description: {{ rubric.metric_description }}
+    
     Options:
     {% for key, value in rubric.options.items() %}
     {{ key }}: {{ value }}

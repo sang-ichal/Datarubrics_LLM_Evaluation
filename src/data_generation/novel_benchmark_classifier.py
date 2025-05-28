@@ -18,7 +18,7 @@ DEBUG_COUNT = 10
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 INSTRUCTION_FORMAT = """
-    ### Task
+    ### TASK
     Given the title and abstract of a paper, determine whether the paper introduces a new dataset. Respond with "true" if the paper introduces a new dataset; otherwise, respond with "false".
 
     ### INPUT
