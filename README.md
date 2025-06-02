@@ -25,11 +25,13 @@
 ## 📦 Contents
 
 + [🤔 Why DataRubrics?](#-why-datarubrics)
-+ [⚙️ Setup Instructions](#%EF%B8%8F-setup-instruction)
++ [⚙️ Setup Instructions](#-setup-instruction)
 + [🚀 Use DataRubrics](#-use-datarubrics)
 + [📚 Citation](#-citation)
 
 ## 🤔 Why DataRubrics?
+
+We advocate for a more systematic approach to evaluating datasets—moving beyond datasheets and checklists, which are often neither easily decomposable into qualitative and quantitative metrics nor particularly useful for conference paper reviewers. 
 
 ## ⚙️ Setup Instructions
 
