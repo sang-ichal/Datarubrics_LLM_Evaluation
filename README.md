@@ -43,3 +43,16 @@ On the other hand, for performing rubric generation, do `pip install -r requirem
 
 
 ## 📚 Citation
+
+If you found our work helpful, please cite our work using the following citation!
+
+```bibtex
+@article{winata2025datasheets,
+  title={Datasheets Aren’t Enough: DataRubrics for Automated Quality Metrics and Accountability},
+  author={Winata, Genta Indra and Anugraha, David and Liu, Emmy and Aji, Alham Fikri and Hung, Shou-Yi, Parashar, Aditya and Irawan, Patrick Amadeus and Zhang, Ruochen and Yong, Zheng-Xin and Cruz, Jan Christian Blaise and Muennighoff, Niklas and Kim, Seungone and Zhao, Hanyang and Kar, Sudipta and Suryoraharjo, Kezia Erina and Adilazuarda, M. Farid and Lee, En-Shiun Annie and Purwarianti, Ayu and Wijaya, Derry Tanti and Choudhury, Monojit},
+  journal={arXiv preprint arXiv:X},
+  year={2025}
+}
+```
+
+If you have any questions, you can open a [GitHub Issue](https://github.com/datarubrics/datarubrics/issues)!
