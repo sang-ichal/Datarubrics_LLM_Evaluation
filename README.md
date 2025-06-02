@@ -13,15 +13,31 @@
 </p>
 
 <p align="center">
-  <img src="./assets/data_rubrics_logo_orange.png" alt="DataRubrics Logo" width="80%"/>
+  <img src="./assets/data_rubrics_logo_orange.png" alt="DataRubrics Logo" width="22%"/>
+</p>
+
+<p align="center">
   <img src="./assets/aspects.png" alt="DataRubrics Dimensions" width="80%"/>
 </p>
 
-## Quick Start
+**TL;DR**: **DataRubrics** is a structured framework for assessing the quality of both human- and model-generated datasets. Leveraging recent advances in LLM-based evaluation.
+
+## 📦 Contents
+
++ [🤔 Why DataRubrics?](#-why-datarubrics)
++ [⚙️ Setup Instructions](#%EF%B8%8F-setup-instruction)
++ [🚀 Use DataRubrics](#-use-datarubrics)
++ [📚 Citation](#-citation)
+
+## 🤔 Why DataRubrics?
+
+## ⚙️ Setup Instructions
 
 For performing OCR, do `pip install -r requirements_olmocr.txt`.
 
 On the other hand, for performing rubric generation, do `pip install -r requirements_inference.txt`.
 
+## 🚀 Use DataRubrics
 
 
+## 📚 Citation
