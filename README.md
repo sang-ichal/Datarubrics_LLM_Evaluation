@@ -14,9 +14,6 @@
 
 <p align="center">
   <img src="./assets/data_rubrics_logo_orange.png" alt="DataRubrics Logo" width="80%"/>
-</p>
-
-<p align="center">
   <img src="./assets/aspects.png" alt="DataRubrics Dimensions" width="80%"/>
 </p>
 
