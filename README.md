@@ -1,7 +1,7 @@
 # DataRubrics
 
 <p align="left">
-  <a href="[soon](https://arxiv.org/abs/2506.01789)">
+  <a href="https://arxiv.org/abs/2506.01789">
     <img src="https://img.shields.io/badge/arXiv-b31b1b.svg?style=flat&logo=arxiv&logoColor=white" alt="arXiv"/>
   </a>
   <a href="https://datarubrics.github.io">
