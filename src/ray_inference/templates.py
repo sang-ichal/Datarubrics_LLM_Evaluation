@@ -115,17 +115,13 @@ def construct_sources_prompt(paper_text: str, format: str):
 def construct_data_annotations_prompt(paper_text: str, format: str):
     """
     ### INSTRUCTION
-    Identify and evaluate annotation information related to **only the new dataset(s)** introduced by the authors in the paper.
+    List all of annotation information entries from only the **new dataset** introduced in the paper, each with the annotator and whether instructions, rubrics, and/or examples are present.
 
     Follow these strict guidelines:
     - Only evaluate datasets that are newly introduced in this paper. Do **not** evaluate any pre-existing datasets mentioned in the paper.
     - Base your judgments **strictly on the content of the paper**. Do **not** infer or speculate beyond what is explicitly stated.
-    
-    For each entry in the list, include only a single annotation process by:
-    - Choose **exactly one** annotator category and describe the annotators involved.
-    - Indicate whether annotation guidelines include instructions, rubrics, and/or examples.
-    - Provide precise references (e.g., 'Section 3.1', 'Appendix B') and brief reasoning from the paper for each judgment.
-    
+    - Provide clear references and reasoning for each required annotation information.
+
     ### PAPER
     {{ paper_text }}
 

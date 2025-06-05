@@ -6,6 +6,7 @@ import tempfile
 import concurrent.futures
 from functools import partial
 from collections import defaultdict
+import itertools # Import for round-robin
 
 import torch # Keep for torch.cuda.device_count()
 import openai # Ensure openai library is version 1.0.0 or higher
@@ -32,6 +33,10 @@ httpx_logger.setLevel(logging.WARNING)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# --- NEW GLOBAL FOR SGLANG PORTS ---
+SGLANG_SERVER_URLS = []
+# --- NEW GLOBAL FOR SGLANG PORTS ---
+
 
 def _request_openai_completion(openai_client, model_id_for_server, config, input_item):
     """
@@ -44,11 +49,12 @@ def _request_openai_completion(openai_client, model_id_for_server, config, input
                 model=model_id_for_server,
                 messages=input_item['msg'],
                 response_format={"type": "json_schema", "json_schema": input_item['schema']},
-                extra_body=config.get('extra_body', {}), 
+                extra_body=config.get('extra_body', {}),
                 **config.get('generation_args', {})
             )
-            
+
             token_usage = response.usage
+            
             result = {
                 "id": input_item["id"],
                 "token_usage": {
@@ -58,6 +64,7 @@ def _request_openai_completion(openai_client, model_id_for_server, config, input
                 },
                 "response": parse_json(response.choices[0].message.content)
             }
+        
             return result
         except openai.APIError as e: # Catching more specific OpenAI errors
             error_message = str(e).lower()
@@ -94,14 +101,25 @@ def openai_compatible_completion(model_id_in_config, config, batched_input):
     results = []
     api_type = config.get("api_type", "openai") # Default to "openai" if not specified
 
+    # --- MODIFIED: Handle SGLang multi-server setup ---
+    openai_client_base_url_iterator = None
     if api_type == "vllm_openai_compatible":
         base_url = config.get("base_url")
-        if not base_url:
-            logger.error("base_url not provided in config for vllm_openai_compatible model.")
-            raise ValueError("base_url is required for vllm_openai_compatible")
+        if not base_url and not SGLANG_SERVER_URLS: # If base_url not in config and global list not populated
+            logger.error("base_url not provided in config for vllm_openai_compatible model and SGLang server URLs not initialized.")
+            raise ValueError("base_url is required for vllm_openai_compatible or SGLang server URLs must be initialized.")
+        
+        if SGLANG_SERVER_URLS: # Use the initialized SGLang URLs
+            logger.info(f"Using SGLang OpenAI-compatible servers: {SGLANG_SERVER_URLS} for model '{model_id_in_config}'")
+            # Create an iterator for round-robin
+            openai_client_base_url_iterator = itertools.cycle(SGLANG_SERVER_URLS)
+        else: # Fallback to single base_url from config
+            openai_client_base_url_iterator = itertools.cycle([base_url])
+            logger.info(f"Using vLLM OpenAI-compatible server at {base_url} for model '{model_id_in_config}'")
+
+        # openai_client will be created per request in the concurrent executor for distinct base_urls
         api_key = config.get("api_key", "EMPTY") # vLLM default
-        openai_client = OpenAI(base_url=base_url, api_key=api_key)
-        logger.info(f"Using vLLM OpenAI-compatible server at {base_url} for model '{model_id_in_config}'")
+
     elif model_id_in_config.startswith("deepseek"): # model_id_in_config here is the actual model name like "deepseek-coder"
         openai_client = OpenAI(base_url="https://api.deepseek.com", api_key=os.environ.get("DEEPSEEK_API_KEY"))
         logger.info(f"Using DeepSeek API for model '{model_id_in_config}'")
@@ -210,25 +228,39 @@ def openai_compatible_completion(model_id_in_config, config, batched_input):
         logger.info(f"Using ThreadPoolExecutor with {num_workers} workers for model '{model_id_for_server}'.")
         
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
-            future_to_input = {
-                executor.submit(
-                    _request_openai_completion, 
-                    openai_client, 
-                    model_id_for_server, # This is the served model name for vLLM
-                    config, 
-                    input_item
-                ): input_item 
-                for input_item in batched_input
-            }
-            for future in tqdm(concurrent.futures.as_completed(future_to_input), total=len(future_to_input), desc=f"API requests for {model_id_for_server}"):
+            futures = []
+            for input_item in tqdm(batched_input, desc='Sending inputs to servers'):
+                # --- MODIFIED: Select client based on iterator for vLLM/SGLang ---
+                current_openai_client = None
+                if api_type == "vllm_openai_compatible" and openai_client_base_url_iterator:
+                    selected_base_url = next(openai_client_base_url_iterator)
+                    current_openai_client = OpenAI(base_url=selected_base_url, api_key=api_key)
+                elif api_type != "vllm_openai_compatible": # For OpenAI/Deepseek, use the single client initialized earlier
+                    current_openai_client = openai_client
+                else: # Should not happen if logic is correct
+                    logger.error(f"No OpenAI client could be determined for item {input_item.get('id')}. Skipping.")
+                    results.append({"id": input_item.get('id','unknown_id'), "error": "No API client available", "response": None})
+                    continue # Skip to next item
+
+                if current_openai_client:
+                    future = executor.submit(
+                        _request_openai_completion,
+                        current_openai_client,
+                        model_id_for_server, # This is the served model name for vLLM
+                        config,
+                        input_item
+                    )
+                    futures.append((future, input_item))
+                # --- END MODIFIED ---
+
+            for future, input_item in tqdm(futures, total=len(futures), desc=f"API requests for {model_id_for_server}"):
                 try:
                     res = future.result()
                     if res is not None:
                         results.append(res)
                 except Exception as exc:
-                    failed_input_item = future_to_input[future]
-                    logger.error(f"Request for ID {failed_input_item.get('id','unknown_id')} generated an exception in thread: {exc}")
-                    results.append({"id": failed_input_item.get('id','unknown_id'), "error": str(exc), "response": None})
+                    logger.error(f"Request for ID {input_item.get('id','unknown_id')} generated an exception in thread: {exc}")
+                    results.append({"id": input_item.get('id','unknown_id'), "error": str(exc), "response": None})
                         
     return results
 
@@ -396,6 +428,29 @@ def default_hf_completion(model_id_in_config: str, config: dict, batched_input: 
     return [res for res in final_results_list if res is not None] # Filter out any None placeholders if some items were skipped
 
 
+def _initialize_sglang_urls():
+    """
+    Initializes the global SGLANG_SERVER_URLS list based on the logic in serve_sglang.sh.
+    This function should be called once, before any SGLang requests are made.
+    """
+    global SGLANG_SERVER_URLS
+    if SGLANG_SERVER_URLS: # Already initialized
+        return
+
+    # Replicate logic from serve_sglang.sh
+    # Assuming available_nodes are (1 2 3 4) and BASE_PORT_SGLANG=8000
+    available_nodes = [2, 3, 4] #
+    BASE_PORT_SGLANG = 8000 #
+
+    # Dynamically determine the host if needed, or assume localhost
+    sglang_host = os.getenv("SGLANG_HOST", "http://localhost") 
+
+    for i, node_num in enumerate(available_nodes): #
+        current_port = BASE_PORT_SGLANG + i
+        SGLANG_SERVER_URLS.append(f"{sglang_host}:{current_port}/v1") # SGLang uses /v1 for OpenAI API
+    logger.info(f"Initialized SGLang server URLs: {SGLANG_SERVER_URLS}")
+
+
 def generate_responses(model_id_from_config: str, config: dict, final_dataset: list, output_path: str, flush_size: int):
     """
     Generates responses for the dataset using the specified model and configuration.
@@ -405,6 +460,11 @@ def generate_responses(model_id_from_config: str, config: dict, final_dataset: l
     """
     api_type = config.get("api_type") # e.g., "vllm_openai_compatible", "gemini", or None for default/OpenAI
     
+    # --- NEW: Initialize SGLang URLs if using vllm_openai_compatible API type ---
+    if api_type == "vllm_openai_compatible":
+        _initialize_sglang_urls()
+    # --- END NEW ---
+
     # Determine effective flush_size for batching loop
     current_flush_size = flush_size if flush_size > 0 else len(final_dataset)
     if current_flush_size == 0 and len(final_dataset) > 0 : # Handle edge case where flush_size=0 but dataset exists
@@ -441,7 +501,7 @@ def generate_responses(model_id_from_config: str, config: dict, final_dataset: l
             # write_results expects a list of dicts.
             # If flush_size > 0, append. Otherwise, it will be a single write at the end if logic outside loop handles it.
             # For simplicity, always append if flush_size active, or single write if not.
-            is_append_mode = True if flush_size > 0 and i > 0 else False # Append if not the first flushed batch
+            is_append_mode = True if flush_size > 0 else False # Append if not the first flushed batch
             if flush_size <= 0: is_append_mode = False # Single write if no flushing.
 
             write_results(results=current_batch_results, output_path=output_path, append=is_append_mode)
