@@ -1,7 +1,7 @@
 # DataRubrics
 
 <p align="left">
-  <a href="soon">
+  <a href="[soon](https://arxiv.org/abs/2506.01789)">
     <img src="https://img.shields.io/badge/arXiv-b31b1b.svg?style=flat&logo=arxiv&logoColor=white" alt="arXiv"/>
   </a>
   <a href="https://datarubrics.github.io">
@@ -50,7 +50,7 @@ If you found our work helpful, please cite our work using the following citation
 @article{winata2025datasheets,
   title={Datasheets Aren’t Enough: DataRubrics for Automated Quality Metrics and Accountability},
   author={Winata, Genta Indra and Anugraha, David and Liu, Emmy and Aji, Alham Fikri and Hung, Shou-Yi, Parashar, Aditya and Irawan, Patrick Amadeus and Zhang, Ruochen and Yong, Zheng-Xin and Cruz, Jan Christian Blaise and Muennighoff, Niklas and Kim, Seungone and Zhao, Hanyang and Kar, Sudipta and Suryoraharjo, Kezia Erina and Adilazuarda, M. Farid and Lee, En-Shiun Annie and Purwarianti, Ayu and Wijaya, Derry Tanti and Choudhury, Monojit},
-  journal={arXiv preprint arXiv:X},
+  journal={arXiv preprint arXiv:2506.01789},
   year={2025}
 }
 ```
