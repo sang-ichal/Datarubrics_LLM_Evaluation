@@ -1,9 +1,6 @@
 #!/bin/bash
 
-export TRANSFORMERS_OFFLINE=1
-export HF_DATASETS_OFFLINE=1
-
-MODEL_PATH="/data/models/allenai/olmOCR-7B-0225-preview/allenai/olmOCR-7B-0225-preview/"
+MODEL_PATH="allenai/olmOCR-7B-0225-preview"
 
 PORTS=(8100)
 GPU_GROUPS=("4,5")
